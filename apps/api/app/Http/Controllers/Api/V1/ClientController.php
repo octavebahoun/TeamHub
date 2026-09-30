@@ -12,6 +12,7 @@ class ClientController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Client::class);
         $clients = Client::query()
             ->when($request->filled('q'), function ($q) use ($request) {
                 $term = '%'.$request->string('q').'%';
@@ -28,6 +29,7 @@ class ClientController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $this->authorize('create', Client::class);
         $data = $request->validate([
             'name' => ['required', 'string', 'max:200'],
             'company' => ['nullable', 'string', 'max:200'],
@@ -46,6 +48,7 @@ class ClientController extends Controller
 
     public function show(Client $client): JsonResponse
     {
+        $this->authorize('view', $client);
         return response()->json(
             $client->load('owner:id,name', 'opportunities')
         );
@@ -53,6 +56,7 @@ class ClientController extends Controller
 
     public function update(Request $request, Client $client): JsonResponse
     {
+        $this->authorize('update', $client);
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:200'],
             'company' => ['nullable', 'string', 'max:200'],
@@ -69,6 +73,7 @@ class ClientController extends Controller
 
     public function destroy(Request $request, Client $client): JsonResponse
     {
+        $this->authorize('delete', $client);
         Activity::log($client, 'client.deleted', $request->user()->id);
         $client->delete();
 

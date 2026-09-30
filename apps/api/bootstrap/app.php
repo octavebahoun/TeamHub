@@ -15,6 +15,20 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'organization' => \App\Http\Middleware\SetCurrentOrganization::class,
         ]);
+
+        $middleware->throttleApi();
+
+        $middleware->priority([
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \Illuminate\Session\Middleware\AuthenticateSession::class,
+            \Illuminate\Auth\Middleware\Authenticate::class,
+            \App\Http\Middleware\SetCurrentOrganization::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \Illuminate\Auth\Middleware\Authorize::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

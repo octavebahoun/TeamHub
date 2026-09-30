@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\Task;
+use App\Services\RealtimePublisher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -12,6 +13,7 @@ class TaskController extends Controller
 {
     public function index(Request $request, Project $project): JsonResponse
     {
+        $this->authorize('viewAny', Task::class);
         $tasks = $project->tasks()
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
             ->when($request->filled('assignee_id'), fn ($q) => $q->where('assignee_id', $request->integer('assignee_id')))
@@ -22,8 +24,11 @@ class TaskController extends Controller
         return response()->json($tasks);
     }
 
+    public function __construct(protected RealtimePublisher $realtime) {}
+
     public function store(Request $request, Project $project): JsonResponse
     {
+        $this->authorize('create', Task::class);
         $data = $request->validate([
             'title' => ['required', 'string', 'max:200'],
             'description' => ['nullable', 'string'],
@@ -42,16 +47,26 @@ class TaskController extends Controller
 
         $task = Task::create($data);
 
+        if ($task->assignee_id && $task->assignee_id !== $request->user()->id) {
+            $this->realtime->notify($task->assignee_id, 'task.assigned', [
+                'task_id' => $task->id,
+                'title' => $task->title,
+                'project_id' => $task->project_id,
+            ]);
+        }
+
         return response()->json($task, 201);
     }
 
     public function show(Task $task): JsonResponse
     {
+        $this->authorize('view', $task);
         return response()->json($task->load('assignee', 'creator', 'subtasks', 'comments.author'));
     }
 
     public function update(Request $request, Task $task): JsonResponse
     {
+        $this->authorize('update', $task);
         $data = $request->validate([
             'title' => ['sometimes', 'string', 'max:200'],
             'description' => ['nullable', 'string'],
@@ -68,13 +83,26 @@ class TaskController extends Controller
             $data['completed_at'] = null;
         }
 
+        $previousAssignee = $task->assignee_id;
         $task->update($data);
+
+        if (array_key_exists('assignee_id', $data)
+            && $task->assignee_id
+            && $task->assignee_id !== $previousAssignee
+            && $task->assignee_id !== $request->user()->id) {
+            $this->realtime->notify($task->assignee_id, 'task.assigned', [
+                'task_id' => $task->id,
+                'title' => $task->title,
+                'project_id' => $task->project_id,
+            ]);
+        }
 
         return response()->json($task);
     }
 
     public function destroy(Task $task): JsonResponse
     {
+        $this->authorize('delete', $task);
         $task->delete();
 
         return response()->json(['message' => 'Tâche supprimée.']);

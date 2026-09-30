@@ -16,6 +16,7 @@ class OpportunityController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Opportunity::class);
         $opportunities = Opportunity::query()
             ->when($request->filled('stage'), fn ($q) => $q->where('stage', $request->string('stage')))
             ->when($request->filled('client_id'), fn ($q) => $q->where('client_id', $request->integer('client_id')))
@@ -28,6 +29,7 @@ class OpportunityController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $this->authorize('create', Opportunity::class);
         $data = $request->validate([
             'client_id' => ['required', 'exists:clients,id'],
             'title' => ['required', 'string', 'max:200'],
@@ -48,6 +50,7 @@ class OpportunityController extends Controller
 
     public function show(Opportunity $opportunity): JsonResponse
     {
+        $this->authorize('view', $opportunity);
         return response()->json(
             $opportunity->load('client', 'owner:id,name', 'project:id,name')
         );
@@ -55,6 +58,7 @@ class OpportunityController extends Controller
 
     public function update(Request $request, Opportunity $opportunity): JsonResponse
     {
+        $this->authorize('update', $opportunity);
         $data = $request->validate([
             'title' => ['sometimes', 'string', 'max:200'],
             'amount' => ['sometimes', 'numeric', 'min:0'],
@@ -100,6 +104,7 @@ class OpportunityController extends Controller
 
     public function destroy(Request $request, Opportunity $opportunity): JsonResponse
     {
+        $this->authorize('delete', $opportunity);
         Activity::log($opportunity, 'opportunity.deleted', $request->user()->id);
         $opportunity->delete();
 
