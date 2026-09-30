@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\ClientController;
 use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MyTaskController;
+use App\Http\Controllers\Api\V1\OpportunityController;
 use App\Http\Controllers\Api\V1\OrganizationController;
 use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\TaskCommentController;
@@ -36,6 +38,9 @@ Route::prefix('v1')->group(function () {
             Route::delete('tasks/{task}', [TaskController::class, 'destroy']);
             Route::post('tasks/{task}/comments', [TaskCommentController::class, 'store']);
             Route::get('me/tasks', [MyTaskController::class, 'index']);
+
+            Route::apiResource('clients', ClientController::class);
+            Route::apiResource('opportunities', OpportunityController::class);
         });
     });
 });
