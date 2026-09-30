@@ -8,7 +8,12 @@ use App\Http\Controllers\Api\V1\OrganizationController;
 use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\TaskCommentController;
 use App\Http\Controllers\Api\V1\TaskController;
+use App\Http\Controllers\Internal\VerifyController;
 use Illuminate\Support\Facades\Route;
+
+Route::prefix('internal')->group(function () {
+    Route::post('verify', VerifyController::class);
+});
 
 Route::prefix('v1')->group(function () {
     Route::post('auth/register', [AuthController::class, 'register']);
