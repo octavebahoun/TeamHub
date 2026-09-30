@@ -116,13 +116,15 @@ services:
     build:
       context: ./apps/web
       dockerfile: Dockerfile
+      # NEXT_PUBLIC_* doivent être bakés au build (Next.js les fige à ce moment).
+      args:
+        NEXT_PUBLIC_API_URL: https://${DOMAIN:-teamhub.excellenceteam.site}/api
+        NEXT_PUBLIC_WS_URL: https://${DOMAIN:-teamhub.excellenceteam.site}
     restart: unless-stopped
     depends_on:
       - api
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: https://${DOMAIN:-teamhub.excellenceteam.site}/api
-      NEXT_PUBLIC_WS_URL: https://${DOMAIN:-teamhub.excellenceteam.site}
 
   # --------------------------------------------------------------------------
   # Reverse proxy — HTTPS auto Let's Encrypt

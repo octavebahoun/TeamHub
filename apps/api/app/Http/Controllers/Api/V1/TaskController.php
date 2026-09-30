@@ -6,11 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\Task;
 use App\Services\RealtimePublisher;
+use App\Support\CurrentOrganization;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Exists;
 
 class TaskController extends Controller
 {
+    public function __construct(protected RealtimePublisher $realtime) {}
+
     public function index(Request $request, Project $project): JsonResponse
     {
         $this->authorize('viewAny', Task::class);
@@ -24,15 +29,13 @@ class TaskController extends Controller
         return response()->json($tasks);
     }
 
-    public function __construct(protected RealtimePublisher $realtime) {}
-
     public function store(Request $request, Project $project): JsonResponse
     {
         $this->authorize('create', Task::class);
         $data = $request->validate([
             'title' => ['required', 'string', 'max:200'],
             'description' => ['nullable', 'string'],
-            'assignee_id' => ['nullable', 'exists:users,id'],
+            'assignee_id' => ['nullable', $this->orgMemberRule()],
             'parent_id' => ['nullable', 'exists:tasks,id'],
             'status' => ['nullable', 'in:'.implode(',', Task::STATUSES)],
             'priority' => ['nullable', 'in:'.implode(',', Task::PRIORITIES)],
@@ -70,7 +73,7 @@ class TaskController extends Controller
         $data = $request->validate([
             'title' => ['sometimes', 'string', 'max:200'],
             'description' => ['nullable', 'string'],
-            'assignee_id' => ['nullable', 'exists:users,id'],
+            'assignee_id' => ['nullable', $this->orgMemberRule()],
             'status' => ['sometimes', 'in:'.implode(',', Task::STATUSES)],
             'priority' => ['sometimes', 'in:'.implode(',', Task::PRIORITIES)],
             'due_date' => ['nullable', 'date'],
@@ -106,5 +109,11 @@ class TaskController extends Controller
         $task->delete();
 
         return response()->json(['message' => 'Tâche supprimée.']);
+    }
+
+    protected function orgMemberRule(): Exists
+    {
+        return Rule::exists('memberships', 'user_id')
+            ->where('organization_id', CurrentOrganization::id());
     }
 }

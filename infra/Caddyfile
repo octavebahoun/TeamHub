@@ -4,6 +4,12 @@
 {$CADDY_DOMAIN} {
     encode zstd gzip
 
+    # Bloquer les routes internes — jamais accessibles depuis Internet
+    @internal path /api/internal/* /api/v1/internal/*
+    handle @internal {
+        respond "Not Found" 404
+    }
+
     # API Laravel — préfixe /api
     handle_path /api/* {
         reverse_proxy api:80

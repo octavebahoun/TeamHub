@@ -91,6 +91,7 @@ class OpportunityController extends Controller
                         'description' => "Créé depuis l'opportunité gagnée #{$opportunity->id}.",
                         'status' => Project::STATUS_UPCOMING,
                     ]);
+                    $project->members()->syncWithoutDetaching([$request->user()->id]);
                     $opportunity->update(['project_id' => $project->id]);
                     Activity::log($project, 'project.created_from_opportunity', $request->user()->id, [
                         'opportunity_id' => $opportunity->id,
