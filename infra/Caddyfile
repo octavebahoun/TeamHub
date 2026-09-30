@@ -1,0 +1,24 @@
+# TeamHub — 1 domaine, routing par path
+# Caddy gère le TLS automatiquement (Let's Encrypt).
+
+{$CADDY_DOMAIN} {
+    encode zstd gzip
+
+    # API Laravel — préfixe /api
+    handle_path /api/* {
+        reverse_proxy api:80
+    }
+
+    # WebSocket temps réel — préfixe /ws
+    handle /ws/* {
+        reverse_proxy realtime:4000
+    }
+    handle /socket.io/* {
+        reverse_proxy realtime:4000
+    }
+
+    # Frontend Next.js — tout le reste
+    handle {
+        reverse_proxy web:3000
+    }
+}

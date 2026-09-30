@@ -1,0 +1,153 @@
+# TeamHub — pile unique sur 1 serveur (dev + prod V1).
+# Pour passer une DB en managé (RDS/Atlas/ElastiCache), il suffit de changer
+# DATABASE_URL / MONGO_URL / REDIS_URL dans .env et de retirer le service concerné.
+
+name: teamhub
+
+services:
+  # --------------------------------------------------------------------------
+  # Bases de données (modulaire : retirer + changer *_URL pour passer managé)
+  # --------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-teamhub}
+      POSTGRES_USER: ${POSTGRES_USER:-teamhub}
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant}"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-teamhub}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --------------------------------------------------------------------------
+  # Backends
+  # --------------------------------------------------------------------------
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      APP_ENV: production
+      APP_KEY: "${APP_KEY:?APP_KEY manquant — generer avec php artisan key:generate --show}"
+      APP_URL: https://${DOMAIN:-teamhub.excellenceteam.site}
+      DB_CONNECTION: pgsql
+      DB_URL: ${DATABASE_URL:-postgres://teamhub:${POSTGRES_PASSWORD}@postgres:5432/teamhub}
+      REDIS_CLIENT: predis
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      QUEUE_CONNECTION: redis
+      CACHE_STORE: redis
+      SESSION_DRIVER: redis
+      INTERNAL_SECRET: "${INTERNAL_SECRET:?INTERNAL_SECRET manquant}"
+      DATA_SERVICE_URL: http://data:8001
+      CORS_ALLOWED_ORIGINS: https://${DOMAIN:-teamhub.excellenceteam.site}
+      SANCTUM_STATEFUL_DOMAINS: ${DOMAIN:-teamhub.excellenceteam.site}
+      LOG_CHANNEL: stderr
+    volumes:
+      - uploads:/app/storage/app/public
+
+  realtime:
+    build:
+      context: ./apps/realtime
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      api:
+        condition: service_started
+    environment:
+      PORT: 4000
+      API_BASE_URL: http://api:80
+      INTERNAL_SECRET: ${INTERNAL_SECRET}
+      MONGO_URL: ${MONGO_URL:-mongodb://mongo:27017/teamhub}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      CORS_ORIGIN: https://${DOMAIN:-teamhub.excellenceteam.site}
+
+  data:
+    build:
+      context: ./apps/data
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 8001
+      INTERNAL_SECRET: ${INTERNAL_SECRET}
+      DATABASE_URL: ${DATABASE_URL_DATA:-postgresql+psycopg://teamhub:${POSTGRES_PASSWORD}@postgres:5432/teamhub}
+    # Interne uniquement — pas exposé par Caddy.
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: https://${DOMAIN:-teamhub.excellenceteam.site}/api
+      NEXT_PUBLIC_WS_URL: https://${DOMAIN:-teamhub.excellenceteam.site}
+
+  # --------------------------------------------------------------------------
+  # Reverse proxy — HTTPS auto Let's Encrypt
+  # --------------------------------------------------------------------------
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - web
+      - api
+      - realtime
+    environment:
+      CADDY_DOMAIN: ${DOMAIN:-teamhub.excellenceteam.site}
+    volumes:
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  postgres-data:
+  mongo-data:
+  redis-data:
+  uploads:
+  caddy-data:
+  caddy-config:
