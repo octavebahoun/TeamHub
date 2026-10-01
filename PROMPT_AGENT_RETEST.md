@@ -180,8 +180,13 @@ setTimeout(() => { console.log('[FAIL] WSS timeout'); process.exit(2); }, 8000);
 EOF
 node /tmp/sock.mjs
 
-# 3.13 Pest dans le container (tests/ est maintenant inclus dans l'image)
-docker compose exec -T api ./vendor/bin/pest --colors=never 2>&1 | tail -5
+# 3.13 Pest via l'image de test (stage dédié, dev deps incluses)
+docker build --target test -t teamhub-api-test ~/teamhub/apps/api/
+docker run --rm --network teamhub_default \
+  -e APP_KEY="$(grep ^APP_KEY ~/teamhub/.env | cut -d= -f2-)" \
+  -e INTERNAL_SECRET="$(grep ^INTERNAL_SECRET ~/teamhub/.env | cut -d= -f2-)" \
+  -e DB_CONNECTION=sqlite -e DB_DATABASE=:memory: \
+  teamhub-api-test 2>&1 | tail -5
 ```
 
 ## Étape 4 — Rapport

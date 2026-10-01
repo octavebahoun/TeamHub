@@ -53,6 +53,7 @@ services:
     build:
       context: ./apps/api
       dockerfile: Dockerfile
+      target: runtime
     restart: unless-stopped
     depends_on:
       postgres:

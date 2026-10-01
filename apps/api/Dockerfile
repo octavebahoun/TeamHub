@@ -17,7 +17,7 @@ WORKDIR /app
 # Installer Composer
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
-# --- Étape build (dépendances) ---
+# --- Étape build (dépendances prod) ---
 FROM base AS build
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
@@ -26,7 +26,18 @@ COPY . .
 RUN composer dump-autoload --optimize --no-dev \
  && php artisan storage:link || true
 
-# --- Étape runtime ---
+# --- Étape test (dev deps + Pest, utilisée par la CI/l'agent) ---
+# Build: docker build --target test -t teamhub-api-test apps/api/
+# Run:   docker run --rm --network teamhub_default -e APP_KEY=... \
+#          -e INTERNAL_SECRET=... teamhub-api-test ./vendor/bin/pest
+FROM base AS test
+COPY composer.json composer.lock ./
+RUN composer install --no-scripts --no-autoloader --prefer-dist
+COPY . .
+RUN composer dump-autoload --optimize
+CMD ["./vendor/bin/pest", "--colors=never"]
+
+# --- Étape runtime (prod, par défaut) ---
 FROM base AS runtime
 COPY --from=build /app /app
 
