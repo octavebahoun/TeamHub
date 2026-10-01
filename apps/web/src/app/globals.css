@@ -1,27 +1,167 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
+/*
+ * Design tokens WINE — SOURCE UNIQUE des couleurs.
+ * Valeurs relevées sur les maquettes. Ne jamais écrire une couleur en dur dans
+ * un composant : utiliser les utilitaires Tailwind générés ci-dessous
+ * (bg-primary, text-muted-foreground, bg-brand-soft, text-success…).
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Palette brute */
+  --wine-orange-600: #d63a00; /* marque, actions principales */
+  --wine-orange-700: #b33000; /* survol */
+  --wine-orange-800: #8f2700; /* texte sur fond orange pâle, retards */
+  --wine-orange-300: #f4b79b; /* graphiques, état atténué */
+  --wine-orange-100: #fbe3d6; /* fond orange pâle (nav active, badges) */
+  --wine-ink-900: #141413; /* texte principal, puces actives */
+  --wine-ink-600: #5e5d59; /* texte secondaire */
+  --wine-ink-500: #75736d; /* placeholders, icônes discrètes */
+  --wine-sand-50: #faf9f5; /* surfaces atténuées (recherche, colonnes) */
+  --wine-sand-100: #f0eee6; /* badges neutres, pistes de progression */
+  --wine-sand-200: #e3e1da; /* bordures */
+  --wine-green-700: #1f5e3a;
+  --wine-green-100: #e3efe7;
+  --wine-blue-700: #1f4e8c;
+  --wine-blue-100: #e3ebf5;
+  --wine-red-700: #b42318;
+  --wine-white: #ffffff;
+
+  /* Rôles sémantiques (consommés par shadcn et par nos composants) */
+  --background: var(--wine-white);
+  --foreground: var(--wine-ink-900);
+  --card: var(--wine-white);
+  --card-foreground: var(--wine-ink-900);
+  --popover: var(--wine-white);
+  --popover-foreground: var(--wine-ink-900);
+  --primary: var(--wine-orange-600);
+  --primary-hover: var(--wine-orange-700);
+  --primary-foreground: var(--wine-white);
+  --secondary: var(--wine-sand-100);
+  --secondary-foreground: var(--wine-ink-900);
+  --muted: var(--wine-sand-50);
+  --muted-foreground: var(--wine-ink-600);
+  --subtle-foreground: var(--wine-ink-500);
+  --accent: var(--wine-sand-100);
+  --accent-foreground: var(--wine-ink-900);
+  --brand-soft: var(--wine-orange-100);
+  --brand-soft-foreground: var(--wine-orange-800);
+  --brand-light: var(--wine-orange-300);
+  --inverse: var(--wine-ink-900);
+  --inverse-foreground: var(--wine-white);
+  --success: var(--wine-green-700);
+  --success-soft: var(--wine-green-100);
+  --info: var(--wine-blue-700);
+  --info-soft: var(--wine-blue-100);
+  --danger: var(--wine-orange-800);
+  --destructive: var(--wine-red-700);
+  --border: var(--wine-sand-200);
+  --input: var(--wine-sand-200);
+  --ring: var(--wine-orange-600);
+  --chart-1: var(--wine-orange-600);
+  --chart-2: var(--wine-orange-300);
+  --chart-3: var(--wine-orange-800);
+  --chart-4: var(--wine-ink-600);
+  --chart-5: var(--wine-sand-200);
+  --radius: 0.75rem;
+  --sidebar: var(--wine-white);
+  --sidebar-foreground: var(--wine-ink-900);
+  --sidebar-primary: var(--wine-orange-600);
+  --sidebar-primary-foreground: var(--wine-white);
+  --sidebar-accent: var(--wine-orange-100);
+  --sidebar-accent-foreground: var(--wine-orange-800);
+  --sidebar-border: var(--wine-sand-200);
+  --sidebar-ring: var(--wine-orange-600);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-source-serif), ui-serif, Georgia, serif;
+  --font-heading: var(--font-serif);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-soft-foreground: var(--brand-soft-foreground);
+  --color-brand-light: var(--brand-light);
+  --color-inverse: var(--inverse);
+  --color-inverse-foreground: var(--inverse-foreground);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-danger: var(--danger);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: calc(var(--radius) * 0.67);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.33);
+  --radius-2xl: calc(var(--radius) * 1.67);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  html {
+    @apply font-sans;
+  }
+  body {
+    @apply bg-background text-[15px] text-foreground antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-heading font-normal tracking-tight;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  /* Focus clavier toujours visible (accessibilité). */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
