@@ -1,4 +1,5 @@
 import type { Me, Role } from "@/lib/api/types";
+import { ASSIGNABLE_ROLES } from "@/lib/labels";
 
 /**
  * Miroir côté interface des Policies Laravel (qui restent la seule source de
@@ -34,3 +35,10 @@ export function currentRole(me: Me): Role {
 }
 
 export const can = (role: Role, ability: Ability) => RULES[ability].includes(role);
+
+// Nommer ou retirer un Admin est réservé au Propriétaire (doc « Parcours par rôle »).
+export const assignableRoles = (viewer: Role): Role[] =>
+  viewer === "owner" ? ASSIGNABLE_ROLES : ASSIGNABLE_ROLES.filter((r) => r !== "admin");
+
+export const canEditMember = (viewer: Role, target: Role) =>
+  can(viewer, "member.manage") && target !== "owner" && (viewer === "owner" || target !== "admin");

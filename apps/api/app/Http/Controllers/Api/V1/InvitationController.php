@@ -47,6 +47,13 @@ class InvitationController extends Controller
             'role' => ['required', 'in:'.implode(',', self::INVITABLE_ROLES)],
         ]);
 
+        // Doc « Parcours par rôle » : nommer un Admin est réservé au Propriétaire.
+        abort_if(
+            $data['role'] === Membership::ROLE_ADMIN && $role !== Membership::ROLE_OWNER,
+            403,
+            'Seul le propriétaire peut inviter un administrateur.'
+        );
+
         $alreadyMember = Membership::where('organization_id', $organization->id)
             ->whereHas('user', fn ($q) => $q->where('email', $data['email']))
             ->exists();

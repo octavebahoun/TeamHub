@@ -11,13 +11,14 @@ import { useRealtime } from "@/components/realtime/realtime-provider";
 import { removeMember, updateMemberRole } from "@/lib/actions/members";
 import type { Member, Role } from "@/lib/api/types";
 import { ago } from "@/lib/format";
-import { ASSIGNABLE_ROLES, ROLE } from "@/lib/labels";
+import { ROLE } from "@/lib/labels";
+import { assignableRoles, canEditMember } from "@/lib/permissions";
 
-export function MemberRow({ member: m, meId, canManage }: { member: Member; meId: number; canManage: boolean }) {
+export function MemberRow({ member: m, meId, viewerRole }: { member: Member; meId: number; viewerRole: Role }) {
   const { online } = useRealtime();
   const [pending, start] = useTransition();
   const isOnline = m.user_id === meId || online.has(m.user_id);
-  const editable = canManage && m.role !== "owner" && m.user_id !== meId;
+  const editable = canEditMember(viewerRole, m.role) && m.user_id !== meId;
   return (
     <tr className="hover:bg-muted/60" aria-busy={pending}>
       <td className="px-5 py-4">
@@ -46,7 +47,7 @@ export function MemberRow({ member: m, meId, canManage }: { member: Member; meId
                 })
               }
             >
-              {ASSIGNABLE_ROLES.map((r) => <option key={r} value={r}>{ROLE[r].label}</option>)}
+              {assignableRoles(viewerRole).map((r) => <option key={r} value={r}>{ROLE[r].label}</option>)}
             </NativeSelect>
           </>
         ) : (

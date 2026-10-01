@@ -56,6 +56,11 @@ class MeController extends Controller
 
         $user->update(['password' => $data['password']]);
 
+        // Les autres sessions (autres appareils, jeton volé) sont fermées ;
+        // la session courante reste ouverte.
+        $currentId = $user->currentAccessToken()?->id ?? null;
+        $user->tokens()->when($currentId, fn ($q) => $q->whereKeyNot($currentId))->delete();
+
         return response()->json(['message' => 'Mot de passe modifié.']);
     }
 

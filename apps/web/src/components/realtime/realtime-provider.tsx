@@ -19,17 +19,23 @@ export const useRealtime = () => useContext(Ctx);
 
 /**
  * Connexion Socket.io unique pour toute l'application (chat, présence, notifications).
- * Le serveur temps réel vérifie le jeton auprès de l'API à la connexion.
+ * Le jeton n'est jamais exposé au JS : le navigateur envoie le cookie httpOnly
+ * au handshake (même domaine) et le serveur temps réel le vérifie auprès de l'API.
  */
-export function RealtimeProvider({ url, token, organizationId, children }: { url?: string; token?: string; organizationId?: number; children: React.ReactNode }) {
+export function RealtimeProvider({ url, organizationId, children }: { url?: string; organizationId?: number; children: React.ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [connected, setConnected] = useState(false);
   const [online, setOnline] = useState<Set<number>>(new Set());
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
   useEffect(() => {
-    if (!url || !token) return;
-    const s = io(url, { auth: { token, organization_id: organizationId }, transports: ["websocket", "polling"], reconnectionDelayMax: 10_000 });
+    if (!url || !organizationId) return;
+    const s = io(url, {
+      auth: { organization_id: organizationId },
+      withCredentials: true,
+      transports: ["websocket", "polling"],
+      reconnectionDelayMax: 10_000,
+    });
     // La socket n'est exposée qu'une fois connectée (setState dans un rappel, pas dans le corps de l'effet).
     s.on("connect", () => {
       setSocket(s);
@@ -52,7 +58,7 @@ export function RealtimeProvider({ url, token, organizationId, children }: { url
       setSocket(null);
       setConnected(false);
     };
-  }, [url, token, organizationId]);
+  }, [url, organizationId]);
 
   const value = useMemo(
     () => ({ socket, connected, online, notifications, markAllRead: () => setNotifications((p) => p.map((n) => ({ ...n, read: true }))) }),

@@ -41,7 +41,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
       <PageHeader
         title="Membres"
         subtitle={`${me.current_organization?.name ?? ""} · ${plural(members.length, "membre", "membres")}${invitations.length ? `, ${plural(invitations.length, "invitation", "invitations")} en attente` : ""}`}
-        actions={canManage && <InviteDialog />}
+        actions={canManage && <InviteDialog viewerRole={role} />}
       />
       <form role="search" className="mb-6 flex flex-wrap gap-3">
         <div className="relative w-full max-w-md">
@@ -66,7 +66,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
             </tr>
           </thead>
           <tbody className="divide-y">
-            {shown.map((m) => <MemberRow key={m.user_id} member={m} meId={me.user.id} canManage={canManage} />)}
+            {shown.map((m) => <MemberRow key={m.user_id} member={m} meId={me.user.id} viewerRole={role} />)}
           </tbody>
         </table>
         <nav aria-label="Pagination des membres" className="flex items-center justify-between border-t px-5 py-4">

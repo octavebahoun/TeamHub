@@ -526,9 +526,14 @@ const server = createServer(async (req, res) => {
 });
 
 // --- Temps réel (Socket.io) ---------------------------------------------------
-const io = new Server(server, { cors: { origin: true } });
+const io = new Server(server, { cors: { origin: true, credentials: true } });
+// Comme le vrai service realtime : jeton lu dans le cookie httpOnly wine_token (auth.token toléré).
+const cookieToken = (header = "") => {
+  const m = header.match(/(?:^|;\s*)wine_token=([^;]*)/);
+  return m ? decodeURIComponent(m[1]) : undefined;
+};
 io.use((socket, next) => {
-  const uid = tokens.get(socket.handshake.auth?.token);
+  const uid = tokens.get(socket.handshake.auth?.token ?? cookieToken(socket.handshake.headers.cookie));
   if (!uid) return next(new Error("unauthorized"));
   socket.data.userId = uid;
   next();

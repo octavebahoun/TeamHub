@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 import { Server } from 'socket.io';
 import { config } from './config.js';
 import { logger } from './logger.js';
-import { verifyToken } from './auth.js';
+import { handshakeCredentials, verifyToken } from './auth.js';
 import { registerChatHandlers } from './handlers/chat.js';
 import { startRedisSubscriber } from './redisSubscriber.js';
 
@@ -18,19 +18,19 @@ const io = new Server(server, {
 
 io.use(async (socket, next) => {
   try {
-    const token = socket.handshake.auth?.token;
+    const { token, organizationId } = handshakeCredentials(socket.handshake);
     if (!token) return next(new Error('missing_token'));
 
     const verified = await verifyToken(token);
     socket.data.user = verified.user;
     socket.data.organizations = verified.organizations;
-    socket.data.currentOrganizationId =
-      Number(socket.handshake.auth?.organization_id) || verified.current_organization_id;
+    socket.data.currentOrganizationId = organizationId || verified.current_organization_id;
 
-    const inOrg = verified.organizations.some(
+    const membership = verified.organizations.find(
       (o) => o.id === socket.data.currentOrganizationId,
     );
-    if (!inOrg) return next(new Error('not_in_organization'));
+    if (!membership) return next(new Error('not_in_organization'));
+    socket.data.role = membership.role;
 
     next();
   } catch (err) {

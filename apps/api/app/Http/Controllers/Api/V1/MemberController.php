@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Membership;
+use App\Models\Project;
 use App\Models\User;
+use App\Services\RealtimePublisher;
 use App\Support\CurrentOrganization;
 use App\Support\OrganizationRole;
 use Illuminate\Http\JsonResponse;
@@ -14,6 +16,8 @@ use Illuminate\Support\Facades\DB;
 
 class MemberController extends Controller
 {
+    public function __construct(protected RealtimePublisher $realtime) {}
+
     public function index(Request $request): JsonResponse
     {
         // Lecture ouverte: owner/admin/manager/member. Invité: 403.
@@ -50,11 +54,7 @@ class MemberController extends Controller
 
     public function updateRole(Request $request, int $userId): JsonResponse
     {
-        // Seuls owner/admin peuvent changer les rôles (jamais celui du propriétaire).
-        abort_unless(
-            in_array(OrganizationRole::of($request->user()), [Membership::ROLE_OWNER, Membership::ROLE_ADMIN], true),
-            403
-        );
+        $actorRole = $this->guardManageMembers($request);
 
         $data = $request->validate([
             'role' => ['required', 'in:'.implode(',', [
@@ -65,11 +65,16 @@ class MemberController extends Controller
             ])],
         ]);
 
-        $membership = Membership::where('organization_id', CurrentOrganization::id())
-            ->where('user_id', $userId)
-            ->firstOrFail();
+        $membership = $this->findMembership($userId);
 
         abort_if($membership->role === Membership::ROLE_OWNER, 403, 'Impossible de changer le rôle du propriétaire.');
+        // Doc « Parcours par rôle » : nommer ou retirer un Admin est réservé au Propriétaire.
+        abort_if(
+            $actorRole !== Membership::ROLE_OWNER
+                && ($membership->role === Membership::ROLE_ADMIN || $data['role'] === Membership::ROLE_ADMIN),
+            403,
+            'Seul le propriétaire peut nommer ou retirer un administrateur.'
+        );
 
         $membership->update(['role' => $data['role']]);
 
@@ -78,21 +83,53 @@ class MemberController extends Controller
 
     public function destroy(Request $request, int $userId): JsonResponse
     {
-        abort_unless(
-            in_array(OrganizationRole::of($request->user()), [Membership::ROLE_OWNER, Membership::ROLE_ADMIN], true),
-            403
-        );
+        $actorRole = $this->guardManageMembers($request);
 
-        $membership = Membership::where('organization_id', CurrentOrganization::id())
-            ->where('user_id', $userId)
-            ->firstOrFail();
+        $membership = $this->findMembership($userId);
 
         abort_if($membership->role === Membership::ROLE_OWNER, 403, 'Impossible de retirer le propriétaire.');
+        abort_if(
+            $actorRole !== Membership::ROLE_OWNER && $membership->role === Membership::ROLE_ADMIN,
+            403,
+            'Seul le propriétaire peut retirer un administrateur.'
+        );
 
-        $membership->delete();
+        $organizationId = CurrentOrganization::id();
 
-        // TODO: publier user:revoked sur Redis pour couper les sockets ouverts.
+        // Cahier des charges §8 : accès coupé immédiatement. On retire aussi la
+        // personne des projets de l'organisation (et donc de leurs canaux de chat).
+        $projects = Project::whereHas('members', fn ($q) => $q->whereKey($userId))->get();
+
+        DB::transaction(function () use ($membership, $projects, $userId) {
+            foreach ($projects as $project) {
+                $project->members()->detach($userId);
+            }
+            $membership->delete();
+        });
+
+        foreach ($projects as $project) {
+            $this->realtime->projectEvent('project.members_changed', $organizationId, $project->id, [
+                'name' => $project->name,
+                'member_ids' => $project->members()->pluck('users.id')->all(),
+            ]);
+        }
+        $this->realtime->revokeUser($userId, $organizationId);
 
         return response()->json(['message' => 'Membre retiré.']);
+    }
+
+    protected function guardManageMembers(Request $request): ?string
+    {
+        $role = OrganizationRole::of($request->user());
+        abort_unless(in_array($role, [Membership::ROLE_OWNER, Membership::ROLE_ADMIN], true), 403);
+
+        return $role;
+    }
+
+    protected function findMembership(int $userId): Membership
+    {
+        return Membership::where('organization_id', CurrentOrganization::id())
+            ->where('user_id', $userId)
+            ->firstOrFail();
     }
 }

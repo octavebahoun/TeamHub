@@ -30,12 +30,16 @@ async function safeMembers(organizationId) {
   }
 }
 
+// Doc « Parcours par rôle » : l'invité n'accède qu'au canal du projet partagé
+// avec lui — ni canal general, ni messages privés.
+const GUEST = 'guest';
+
 // Canal « general » de l'organisation, créé au besoin ; ses membres suivent l'annuaire.
 async function syncGeneralChannel(organizationId, members) {
   if (!members.length) return;
   await Channel.updateOne(
     { organization_id: organizationId, type: 'project', project_id: null, name: 'general' },
-    { $set: { member_ids: members.map((m) => m.id) } },
+    { $set: { member_ids: members.filter((m) => m.role !== GUEST).map((m) => m.id) } },
     { upsert: true },
   );
 }
@@ -152,11 +156,12 @@ export function registerChatHandlers(io, socket) {
       const userId = socket.data.user.id;
       const otherId = Number(user_id);
       if (!otherId || otherId === userId) return ack?.({ ok: false, error: 'invalid' });
+      if (socket.data.role === GUEST) return ack?.({ ok: false, error: 'forbidden' });
 
       const members = await organizationMembers(organizationId);
-      if (!members.some((m) => m.id === otherId)) {
-        return ack?.({ ok: false, error: 'not_a_member' });
-      }
+      const other = members.find((m) => m.id === otherId);
+      if (!other) return ack?.({ ok: false, error: 'not_a_member' });
+      if (other.role === GUEST) return ack?.({ ok: false, error: 'forbidden' });
 
       const memberIds = [userId, otherId].sort((a, b) => a - b);
       const key = { organization_id: organizationId, type: 'direct', direct_key: memberIds.join(':') };

@@ -10,9 +10,11 @@ import { FieldError } from "@/components/common/field-error";
 import { NativeSelect } from "@/components/common/native-select";
 import { inviteMember } from "@/lib/actions/invitations";
 import { useFormAction } from "@/hooks/use-form-action";
-import { ASSIGNABLE_ROLES, ROLE } from "@/lib/labels";
+import type { Role } from "@/lib/api/types";
+import { ROLE } from "@/lib/labels";
+import { assignableRoles } from "@/lib/permissions";
 
-export function InviteDialog() {
+export function InviteDialog({ viewerRole }: { viewerRole: Role }) {
   const [open, setOpen] = useState(false);
   const [state, action, pending] = useFormAction(inviteMember, { successMessage: "Invitation créée", onSuccess: () => setOpen(false), showErrors: false });
   return (
@@ -37,7 +39,7 @@ export function InviteDialog() {
           <div className="space-y-1.5">
             <Label htmlFor="inv-role">Rôle</Label>
             <NativeSelect id="inv-role" name="role" defaultValue={state?.values?.role ?? "member"} aria-describedby="inv-role-help">
-              {ASSIGNABLE_ROLES.map((r) => <option key={r} value={r}>{ROLE[r].label}</option>)}
+              {assignableRoles(viewerRole).map((r) => <option key={r} value={r}>{ROLE[r].label}</option>)}
             </NativeSelect>
             <p id="inv-role-help" className="text-sm text-muted-foreground">Vous pourrez changer le rôle plus tard.</p>
           </div>

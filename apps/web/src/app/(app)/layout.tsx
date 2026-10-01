@@ -1,11 +1,9 @@
-import { cookies } from "next/headers";
 import { AppSidebar } from "@/components/shell/app-sidebar";
 import { NAV_ITEMS } from "@/components/shell/nav-items";
 import { Topbar } from "@/components/shell/topbar";
 import { RealtimeProvider } from "@/components/realtime/realtime-provider";
 import { getMe, getMembers, getProjects } from "@/lib/api/endpoints";
 import { can, currentRole } from "@/lib/permissions";
-import { TOKEN_COOKIE } from "@/lib/session";
 
 /** Coque de l'application connectée : barre latérale, barre du haut, temps réel. */
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -16,7 +14,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     can(role, "members.view") ? getMembers() : Promise.resolve([]),
     canCreateTask ? getProjects() : Promise.resolve([]),
   ]);
-  const token = (await cookies()).get(TOKEN_COOKIE)?.value;
   const org = {
     name: me.current_organization?.name ?? "Mon organisation",
     members: members.length || undefined,
@@ -25,7 +22,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const hidden = NAV_ITEMS.filter((i) => i.ability && !can(role, i.ability)).map((i) => i.href);
 
   return (
-    <RealtimeProvider url={process.env.NEXT_PUBLIC_WS_URL} token={token} organizationId={me.current_organization?.id}>
+    <RealtimeProvider url={process.env.NEXT_PUBLIC_WS_URL} organizationId={me.current_organization?.id}>
       <a href="#contenu" className="sr-only z-50 rounded-md bg-primary px-4 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:top-3 focus:left-3">
         Aller au contenu
       </a>
