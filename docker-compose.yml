@@ -142,3 +142,14 @@ volumes:
   mongo-data:
   redis-data:
   uploads:
+
+# Réseau nommé fixe pour que le Caddy externe (ex: epitnet-caddy-1) puisse
+# s'y connecter et joindre les conteneurs par nom (api, realtime, web).
+# Côté EPINET, ajouter dans son docker-compose:
+#   networks:
+#     teamhub_default:
+#       external: true
+# puis attacher le service caddy à ce réseau.
+networks:
+  default:
+    name: teamhub_default

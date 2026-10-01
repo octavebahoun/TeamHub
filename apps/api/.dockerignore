@@ -9,5 +9,6 @@ storage/framework/cache/data/*
 storage/framework/sessions/*
 storage/framework/views/*
 database/database.sqlite
-tests
 .phpunit.cache
+# tests/ gardé: permet d'exécuter ./vendor/bin/pest dans l'image (CI, agent).
+# Si on veut une image prod plus légère, créer un .dockerignore.prod.

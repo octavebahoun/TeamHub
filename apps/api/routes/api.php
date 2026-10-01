@@ -19,6 +19,9 @@ use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Internal\VerifyController;
 use Illuminate\Support\Facades\Route;
 
+// Health public (routé par Caddy sous /api/up — jamais sous /up).
+Route::get('up', fn () => response()->json(['ok' => true, 'service' => 'api']));
+
 Route::prefix('internal')->group(function () {
     Route::post('verify', VerifyController::class);
 });
