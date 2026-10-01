@@ -7,7 +7,7 @@ export function FinalCta() {
         <h2 id="cta" className="max-w-2xl font-heading text-[34px] leading-tight sm:text-[44px]">
           Mettez votre équipe au même endroit dès aujourd&apos;hui.
         </h2>
-        <Link href="/inscription" className="inline-flex h-13 shrink-0 items-center rounded-md bg-background px-7 text-[17px] font-semibold text-brand-soft-foreground hover:bg-background/90">
+        <Link href="/inscription" className="inline-flex h-13 shrink-0 items-center rounded-md bg-background px-7 text-[17px] font-semibold text-brand-soft-foreground">
           Créer mon espace
         </Link>
       </div>

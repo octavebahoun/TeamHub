@@ -12,10 +12,10 @@ export function SiteFooter() {
         </p>
         <nav aria-label="Liens légaux">
           <ul className="flex flex-wrap gap-6 text-[15px] text-muted-foreground">
-            <li><Link href="/conditions" className="underline underline-offset-4 hover:text-foreground">Mentions légales</Link></li>
-            <li><Link href="/conditions#donnees" className="underline underline-offset-4 hover:text-foreground">Confidentialité</Link></li>
+            <li><Link href="/conditions" className="underline underline-offset-4">Mentions légales</Link></li>
+            <li><Link href="/conditions#donnees" className="underline underline-offset-4">Confidentialité</Link></li>
             <li>
-              <a href={CONTACT_EMAIL ? `mailto:${CONTACT_EMAIL}` : "#faq"} className="underline underline-offset-4 hover:text-foreground">Contact</a>
+              <a href={CONTACT_EMAIL ? `mailto:${CONTACT_EMAIL}` : "#faq"} className="underline underline-offset-4">Contact</a>
             </li>
           </ul>
         </nav>

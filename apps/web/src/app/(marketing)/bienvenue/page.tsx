@@ -4,7 +4,6 @@ import { Features } from "./_components/features";
 import { FinalCta } from "./_components/final-cta";
 import { Hero } from "./_components/hero";
 import { Problem } from "./_components/problem";
-import { ProofBar } from "./_components/proof-bar";
 import { SiteFooter } from "./_components/site-footer";
 import { SiteHeader } from "./_components/site-header";
 import { Steps } from "./_components/steps";
@@ -24,7 +23,6 @@ export default function LandingPage() {
       <SiteHeader />
       <main id="contenu">
         <Hero />
-        <ProofBar />
         <Problem />
         <Features />
         <Steps />
