@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AnalyticsController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\ClientActivityController;
 use App\Http\Controllers\Api\V1\ClientController;
 use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
@@ -69,6 +70,8 @@ Route::prefix('v1')->group(function () {
             Route::get('me/tasks', [MyTaskController::class, 'index']);
 
             Route::apiResource('clients', ClientController::class);
+            Route::get('clients/{client}/activities', [ClientActivityController::class, 'index']);
+            Route::post('clients/{client}/activities', [ClientActivityController::class, 'store']);
             Route::apiResource('opportunities', OpportunityController::class);
 
             Route::apiResource('posts', PostController::class);
