@@ -16,17 +16,19 @@ def health():
 @app.get("/stats/overview", dependencies=[Depends(require_internal_secret)])
 def stats_overview(
     org: int = Query(..., gt=0),
+    owner_id: int | None = Query(None, gt=0),
     session: Session = Depends(get_session),
 ):
-    return stats.overview(session, org)
+    return stats.overview(session, org, owner_id)
 
 
 @app.get("/stats/pipeline", dependencies=[Depends(require_internal_secret)])
 def stats_pipeline(
     org: int = Query(..., gt=0),
+    owner_id: int | None = Query(None, gt=0),
     session: Session = Depends(get_session),
 ):
-    return stats.pipeline(session, org)
+    return stats.pipeline(session, org, owner_id)
 
 
 @app.get("/stats/activity", dependencies=[Depends(require_internal_secret)])

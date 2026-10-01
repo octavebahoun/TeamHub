@@ -5,9 +5,11 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\ClientController;
 use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
+use App\Http\Controllers\Api\V1\MemberController;
 use App\Http\Controllers\Api\V1\MyTaskController;
 use App\Http\Controllers\Api\V1\OpportunityController;
 use App\Http\Controllers\Api\V1\OrganizationController;
+use App\Http\Controllers\Api\V1\ProjectMemberController;
 use App\Http\Controllers\Api\V1\PostCommentController;
 use App\Http\Controllers\Api\V1\PostController;
 use App\Http\Controllers\Api\V1\PostReactionController;
@@ -34,7 +36,13 @@ Route::prefix('v1')->group(function () {
         Route::middleware('organization')->group(function () {
             Route::post('invitations', [InvitationController::class, 'store']);
 
+            Route::get('members', [MemberController::class, 'index']);
+            Route::patch('members/{user}', [MemberController::class, 'updateRole']);
+            Route::delete('members/{user}', [MemberController::class, 'destroy']);
+
             Route::apiResource('projects', ProjectController::class);
+            Route::post('projects/{project}/members', [ProjectMemberController::class, 'store']);
+            Route::delete('projects/{project}/members/{user}', [ProjectMemberController::class, 'destroy']);
             Route::get('projects/{project}/tasks', [TaskController::class, 'index']);
             Route::post('projects/{project}/tasks', [TaskController::class, 'store']);
             Route::get('tasks/{task}', [TaskController::class, 'show']);

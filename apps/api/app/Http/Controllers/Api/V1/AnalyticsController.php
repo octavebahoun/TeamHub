@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Support\CurrentOrganization;
+use App\Support\OrganizationRole;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -12,20 +13,44 @@ class AnalyticsController extends Controller
 {
     public function overview(Request $request): JsonResponse
     {
-        return $this->fetch('/stats/overview', ['org' => CurrentOrganization::id()]);
+        $this->guard($request);
+        $query = ['org' => CurrentOrganization::id()];
+        if ($userScope = $this->userScope($request)) {
+            $query['owner_id'] = $userScope;
+        }
+        return $this->fetch('/stats/overview', $query);
     }
 
     public function pipeline(Request $request): JsonResponse
     {
-        return $this->fetch('/stats/pipeline', ['org' => CurrentOrganization::id()]);
+        $this->guard($request);
+        $query = ['org' => CurrentOrganization::id()];
+        if ($userScope = $this->userScope($request)) {
+            $query['owner_id'] = $userScope;
+        }
+        return $this->fetch('/stats/pipeline', $query);
     }
 
     public function activity(Request $request): JsonResponse
     {
+        $this->guard($request);
         return $this->fetch('/stats/activity', [
             'org' => CurrentOrganization::id(),
             'days' => (int) $request->integer('days', 30),
         ]);
+    }
+
+    protected function guard(Request $request): void
+    {
+        abort_unless(OrganizationRole::isManager($request->user()), 403,
+            'Analytics réservé aux rôles Owner, Admin et Chef de projet.');
+    }
+
+    protected function userScope(Request $request): ?int
+    {
+        return \App\Support\OrganizationRole::of($request->user()) === \App\Models\Membership::ROLE_MANAGER
+            ? $request->user()->id
+            : null;
     }
 
     protected function fetch(string $path, array $query): JsonResponse
