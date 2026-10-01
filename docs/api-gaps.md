@@ -10,6 +10,19 @@ la référence exécutable du contrat attendu.
 
 Légende : 🔴 bloquant pour l'écran · 🟠 dégradé sans l'extension · 🟢 confort
 
+## État (2026-10-01)
+
+Implémenté sur `feat/backend-extensions` (fusionné dans `feat/frontend-maquettes`) :
+chat temps réel (`channel:list/history/direct` + canal `general`), invitations (liste, annulation,
+renvoi, aperçu public, inscription par lien, refus de `role=owner`), compteurs projets/tâches,
+`joined_at`/`last_active_at`, profil (`PATCH /me`, mot de passe, préférences), historique CRM
+et `clients.address`, `reacted` sur les posts, analytics (`completed_tasks`,
+`completed_per_week`, `late_projects`).
+
+Reste à faire : jalons, fichiers/pièces jointes, activité de projet, `projects.client_id`,
+publications typées (`posts.kind`), mot de passe oublié, suppression de compte, envoi réel des
+e-mails d'invitation.
+
 ## REST (`/api/v1`)
 
 ### Projets

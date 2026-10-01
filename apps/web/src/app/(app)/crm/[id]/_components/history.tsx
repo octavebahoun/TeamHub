@@ -9,7 +9,8 @@ import { NativeSelect } from "@/components/common/native-select";
 import { Panel, PanelTitle } from "@/components/common/panel";
 import { logActivity } from "@/lib/actions/crm";
 import { useFormAction } from "@/hooks/use-form-action";
-import type { Activity } from "@/lib/api/types";
+import type { Activity, OpportunityStage } from "@/lib/api/types";
+import { OPPORTUNITY_STAGE } from "@/lib/labels";
 import { firstName, shortDate } from "@/lib/format";
 
 const KINDS = { note: { label: "Note", icon: FileText }, call: { label: "Appel", icon: Phone }, email: { label: "Email envoyé", icon: Mail }, meeting: { label: "Rendez-vous", icon: Users } } as const;
@@ -19,6 +20,13 @@ function describe(a: Activity) {
   if (a.action === "opportunity.stage_changed" && (a.meta as { to?: string })?.to === "won") return { label: "Opportunité gagnée", icon: Trophy };
   if (a.action.startsWith("opportunity")) return { label: "Opportunité", icon: Trophy };
   return { label: "Mise à jour", icon: FileText };
+}
+
+/** Changement d'étape sans texte libre : « Proposition → Gagné ». */
+function stageChange(a: Activity): string | null {
+  const m = a.meta as { from?: OpportunityStage; to?: OpportunityStage } | null | undefined;
+  if (a.action !== "opportunity.stage_changed" || !m?.from || !m?.to) return null;
+  return `${OPPORTUNITY_STAGE[m.from]?.label ?? m.from} → ${OPPORTUNITY_STAGE[m.to]?.label ?? m.to}`;
 }
 
 export function History({ clientId, items, canEdit }: { clientId: number; items: Activity[]; canEdit: boolean }) {
@@ -62,7 +70,7 @@ export function History({ clientId, items, canEdit }: { clientId: number; items:
                       {firstName(a.user?.name)} · {shortDate(a.created_at)}
                     </span>
                   </p>
-                  {a.body && <p className="mt-1">{a.body}</p>}
+                  {(a.body ?? stageChange(a)) && <p className="mt-1">{a.body ?? stageChange(a)}</p>}
                 </div>
               </li>
             );
