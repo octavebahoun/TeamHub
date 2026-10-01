@@ -1,41 +1,54 @@
-# Prompt — Agent IA de vérification déploiement TeamHub
+# Prompt — Agent IA de déploiement TeamHub (serveur AWS Octave)
 
-À coller tel quel dans une session d'agent IA (Claude Code, Cursor, etc.) disposant d'un shell Linux + Docker + Git.
+À coller tel quel dans une session d'agent IA (Claude Code, Cursor, etc.) qui tourne **sur le serveur AWS** (`ip-172-26-9-140`, Ubuntu 24.04). L'agent dispose d'un shell, de Docker, Git, et de l'accès sudo.
 
 ---
 
-## Contexte
+## Contexte serveur (déjà en place)
 
-TeamHub est une plateforme SaaS (Laravel 12 + Node/Socket.io + FastAPI + Next.js 14) dockerisée en monorepo. Ton rôle : cloner le repo, démarrer la pile locale via Docker Compose, vérifier que tout démarre proprement, exécuter une batterie de tests fonctionnels de bout en bout, puis pousser un rapport sur une nouvelle branche.
+- 10 conteneurs tournent déjà (Contravo, waaloge, mecano, epitnet×5, n8n). **Ne pas y toucher**.
+- Un **Caddy existant** gère déjà 80/443 : conteneur `epitnet-caddy-1`, Caddyfile dans `~/EPINET/infra/caddy/Caddyfile`. Pattern utilisé : chaque site = un bloc avec `reverse_proxy host.docker.internal:PORT` ou `reverse_proxy nom_conteneur:PORT`.
+- Serveur : **3.7 Go RAM**, 4 Go swap, disque à 78% d'usage. **Nettoyer d'abord** le build cache Docker.
+- DNS `teamhub.excellenceteam.site` → IP du serveur. Certificat TLS auto par le Caddy existant.
 
 Repo : https://github.com/octavebahoun/TeamHub
 Branche source : `claude/affectionate-fermi-hskazy`
 
-## Prérequis à vérifier au début
+## Règles non négociables
 
-- Docker Engine ≥ 24 + `docker compose` v2
-- `git`, `curl`, `openssl`, `node` (≥ 18), `jq` (recommandé)
-- 4 Go de RAM libres, 10 Go de disque libres
-- Port 80 libre en local (ou modifier le mapping)
+- **Ne touche à aucun autre projet** (`~/EPINET/`, Contravo, etc.) sauf le Caddyfile — avec backup préalable.
+- **Ne modifie aucun fichier du repo TeamHub** sauf `DEPLOY_REPORT.md`.
+- **Ne pousse jamais sur `main` ni sur `claude/affectionate-fermi-hskazy`**.
+- **Ne crée pas de Pull Request** — Octave la créera après relecture.
+- Si un problème bloque, documente-le dans le rapport et push quand même.
 
-Si un prérequis manque, l'installer si possible, sinon documenter l'échec et arrêter.
+## Étape 0 — Hygiène disque (OBLIGATOIRE)
 
-## Étape 1 — Clone et setup
+Le build cache Docker fait ~37 Go dont ~28 Go récupérables.
 
 ```bash
+docker system df
+docker builder prune -af
+df -h /
+```
+
+Si après ça il reste moins de 5 Go libres sur `/`, **arrête-toi** et documente le disque plein dans le rapport.
+
+## Étape 1 — Clone et secrets
+
+```bash
+cd ~
 git clone -b claude/affectionate-fermi-hskazy https://github.com/octavebahoun/teamhub.git
 cd teamhub
 
-# Générer les secrets
 cp .env.example .env
 INTERNAL_SECRET=$(openssl rand -hex 32)
 POSTGRES_PASSWORD=$(openssl rand -base64 24 | tr -d '/=+' | cut -c1-24)
 sed -i "s|^INTERNAL_SECRET=.*|INTERNAL_SECRET=${INTERNAL_SECRET}|" .env
 sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=${POSTGRES_PASSWORD}|" .env
-# Pour le test local, on utilise localhost sans TLS
-sed -i "s|^DOMAIN=.*|DOMAIN=localhost|" .env
+sed -i "s|^DOMAIN=.*|DOMAIN=teamhub.excellenceteam.site|" .env
 
-# APP_KEY (Laravel)
+# APP_KEY Laravel (1 fois)
 docker compose run --rm --no-deps api php artisan key:generate --show > /tmp/appkey.txt
 APP_KEY=$(cat /tmp/appkey.txt | tr -d '\n')
 sed -i "s|^APP_KEY=.*|APP_KEY=${APP_KEY}|" .env
@@ -43,164 +56,145 @@ sed -i "s|^APP_KEY=.*|APP_KEY=${APP_KEY}|" .env
 
 ## Étape 2 — Build et démarrage
 
+Les services bindent sur `127.0.0.1:PORT` (jamais `0.0.0.0`) : rien n'est exposé publiquement avant que le Caddy existant ne proxy. Ports utilisés : `3100` (web), `8100` (api), `4100` (realtime).
+
 ```bash
-docker compose build 2>&1 | tee /tmp/build.log
+docker compose build 2>&1 | tee /tmp/teamhub-build.log
 docker compose up -d
-sleep 40  # laisser les healthchecks passer + migrations tourner
+sleep 45  # laisser healthchecks + migrations tourner
 docker compose ps
 ```
 
-Si un service reste en `unhealthy` ou `restarting`, lire ses logs :
+Si un service reste `unhealthy` ou en boucle de restart :
 
 ```bash
 docker compose logs --tail 100 <service>
 ```
 
-## Étape 3 — Tests fonctionnels bout en bout
+Documente dans le rapport et continue si possible.
 
-Note : Caddy sert sur port 80. Adapter l'URL de base si le port est mappé différemment. Le domaine étant `localhost`, HTTPS n'est pas garanti — tester en `http://localhost` en local.
+## Étape 3 — Ajouter le bloc dans le Caddy existant
+
+Le fichier `infra/Caddyfile.snippet` du repo contient exactement le bloc à insérer.
 
 ```bash
-BASE="http://localhost"
+# Backup OBLIGATOIRE avant toute modification
+sudo cp ~/EPINET/infra/caddy/Caddyfile ~/EPINET/infra/caddy/Caddyfile.bak-$(date +%s)
 
-# 3.1 Health checks
-curl -sf $BASE/api/up > /dev/null && echo "[OK] API up" || echo "[FAIL] API up"
-curl -sf $BASE/ > /dev/null && echo "[OK] Web up" || echo "[FAIL] Web up"
+# Vérifier que teamhub n'est pas déjà présent
+grep -q "teamhub.excellenceteam.site" ~/EPINET/infra/caddy/Caddyfile && echo "DEJA_PRESENT" || echo "ABSENT"
 
-# 3.2 Register (crée user + organisation + jeton)
+# Si absent, append le bloc :
+cat ~/teamhub/infra/Caddyfile.snippet | sudo tee -a ~/EPINET/infra/caddy/Caddyfile >/dev/null
+
+# Valider la syntaxe AVANT reload (sinon Caddy refuse et garde la config précédente)
+docker exec epitnet-caddy-1 caddy validate --config /etc/caddy/Caddyfile
+
+# Reload à chaud (ne coupe pas les sites existants)
+docker exec epitnet-caddy-1 caddy reload --config /etc/caddy/Caddyfile
+```
+
+Si `caddy validate` échoue : **restaurer le backup**, documenter l'erreur, ne pas reload.
+
+```bash
+sudo cp ~/EPINET/infra/caddy/Caddyfile.bak-* ~/EPINET/infra/caddy/Caddyfile  # dernier backup
+```
+
+## Étape 4 — Tests fonctionnels bout en bout
+
+```bash
+BASE="https://teamhub.excellenceteam.site"
+
+# 4.1 Health checks
+curl -sfI $BASE/api/up > /dev/null && echo "[OK] API up" || echo "[FAIL] API up"
+curl -sfI $BASE/ > /dev/null && echo "[OK] Web up" || echo "[FAIL] Web up"
+
+# 4.2 Vérifier que /api/internal/* est bien bloqué (doit renvoyer 404)
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST $BASE/api/internal/verify)
+[ "$STATUS" = "404" ] && echo "[OK] /api/internal bloqué" || echo "[FAIL] /api/internal expose (status=$STATUS)"
+
+# 4.3 Register
 REG=$(curl -sf -X POST $BASE/api/v1/auth/register \
   -H 'Accept: application/json' -H 'Content-Type: application/json' \
   -d '{"name":"AgentTest","email":"agent+'"$(date +%s)"'@test.local","password":"password123","organization_name":"AgentOrg"}')
-echo "$REG" | head -c 300
 TOKEN=$(echo "$REG" | node -pe "JSON.parse(require('fs').readFileSync(0,'utf8')).token")
 [ -n "$TOKEN" ] && echo "[OK] Register + token" || echo "[FAIL] Register"
 
-# 3.3 GET /me (auth)
+# 4.4 /me
 curl -sf $BASE/api/v1/me -H "Authorization: Bearer $TOKEN" -H 'Accept: application/json' | head -c 200
-echo ""
 
-# 3.4 Créer un projet, une tâche, la lister
+# 4.5 Projet + tâche
 PID=$(curl -sf -X POST $BASE/api/v1/projects -H "Authorization: Bearer $TOKEN" \
   -H 'Accept: application/json' -H 'Content-Type: application/json' \
   -d '{"name":"AgentProject"}' | node -pe "JSON.parse(require('fs').readFileSync(0,'utf8')).id")
-[ -n "$PID" ] && echo "[OK] Projet créé id=$PID" || echo "[FAIL] Créer projet"
+[ -n "$PID" ] && echo "[OK] Projet id=$PID" || echo "[FAIL] Projet"
 
 curl -sf -X POST $BASE/api/v1/projects/$PID/tasks -H "Authorization: Bearer $TOKEN" \
   -H 'Accept: application/json' -H 'Content-Type: application/json' \
-  -d '{"title":"Tache agent","priority":"high"}' > /dev/null && echo "[OK] Tâche créée"
+  -d '{"title":"Tache agent","priority":"high"}' > /dev/null && echo "[OK] Tâche"
 
-curl -sf $BASE/api/v1/me/tasks -H "Authorization: Bearer $TOKEN" -H 'Accept: application/json' | head -c 200
-echo ""
-
-# 3.5 CRM
+# 4.6 CRM — won doit auto-créer un projet
 CID=$(curl -sf -X POST $BASE/api/v1/clients -H "Authorization: Bearer $TOKEN" \
   -H 'Accept: application/json' -H 'Content-Type: application/json' \
   -d '{"name":"Client Agent","email":"c@agent.test"}' | node -pe "JSON.parse(require('fs').readFileSync(0,'utf8')).id")
-
 OID=$(curl -sf -X POST $BASE/api/v1/opportunities -H "Authorization: Bearer $TOKEN" \
   -H 'Accept: application/json' -H 'Content-Type: application/json' \
-  -d "{\"client_id\":$CID,\"title\":\"Deal agent\",\"amount\":1000}" | node -pe "JSON.parse(require('fs').readFileSync(0,'utf8')).id")
-
-WON=$(curl -sf -X PATCH $BASE/api/v1/opportunities/$OID -H "Authorization: Bearer $TOKEN" \
+  -d "{\"client_id\":$CID,\"title\":\"Deal\",\"amount\":1000}" | node -pe "JSON.parse(require('fs').readFileSync(0,'utf8')).id")
+curl -sf -X PATCH $BASE/api/v1/opportunities/$OID -H "Authorization: Bearer $TOKEN" \
   -H 'Accept: application/json' -H 'Content-Type: application/json' \
-  -d '{"stage":"won"}')
-echo "$WON" | grep -q '"project_id":' && echo "[OK] Opportunité gagnée → projet auto-créé" || echo "[FAIL] Auto-projet"
+  -d '{"stage":"won"}' | grep -q '"project_id":' && echo "[OK] won → projet auto" || echo "[FAIL] auto-projet"
 
-# 3.6 Social
+# 4.7 Social
 curl -sf -X POST $BASE/api/v1/posts -H "Authorization: Bearer $TOKEN" \
   -H 'Accept: application/json' -H 'Content-Type: application/json' \
-  -d '{"body":"Hello team from agent"}' > /dev/null && echo "[OK] Post publié"
+  -d '{"body":"Hello"}' > /dev/null && echo "[OK] Post"
 
-# 3.7 Analytics
+# 4.8 Analytics
 curl -sf $BASE/api/v1/analytics/overview -H "Authorization: Bearer $TOKEN" -H 'Accept: application/json' | head -c 200
-echo ""
 
-# 3.8 Socket.io — handshake auth
+# 4.9 Socket.io handshake WSS
 cd /tmp && npm init -y > /dev/null && npm install socket.io-client > /dev/null 2>&1
 cat > /tmp/sock.mjs <<EOF
 import { io } from '/tmp/node_modules/socket.io-client/build/esm/index.js';
 const s = io('$BASE', { auth: { token: '$TOKEN' }, path: '/socket.io', transports: ['websocket'], reconnection: false });
-s.on('connect', () => { console.log('[OK] Socket handshake'); s.disconnect(); process.exit(0); });
-s.on('connect_error', e => { console.log('[FAIL] Socket:', e.message); process.exit(1); });
-setTimeout(() => { console.log('[FAIL] Socket timeout'); process.exit(2); }, 8000);
+s.on('connect', () => { console.log('[OK] WSS handshake'); s.disconnect(); process.exit(0); });
+s.on('connect_error', e => { console.log('[FAIL] WSS:', e.message); process.exit(1); });
+setTimeout(() => { console.log('[FAIL] WSS timeout'); process.exit(2); }, 8000);
 EOF
 node /tmp/sock.mjs
 
-# 3.9 Pest tests dans le container api
-docker compose exec -T api ./vendor/bin/pest --colors=never 2>&1 | tail -5
+# 4.10 Pest tests dans le container api
+docker compose -f ~/teamhub/docker-compose.yml exec -T api ./vendor/bin/pest --colors=never 2>&1 | tail -5
 ```
 
-## Étape 4 — Rapport
+## Étape 5 — Rapport
 
-Rédiger `DEPLOY_REPORT.md` à la racine du repo avec :
+Rédige `~/teamhub/DEPLOY_REPORT.md` avec :
 
-- Environnement (OS, versions Docker, git commit testé)
-- Résultat de chaque test ci-dessus (OK / FAIL avec ligne d'erreur pertinente)
-- Logs pertinents en cas d'échec (10 dernières lignes du service concerné)
-- Métriques (temps de build, RAM et disque utilisés : `docker system df`)
-- Recommandations si des soucis apparaissent
+- Date, commit testé (`git -C ~/teamhub rev-parse HEAD`), uname -a, docker version
+- Avant/après : `df -h /` et `free -h`
+- Résultat de chaque test [OK/FAIL] avec contexte
+- Logs des services en échec (10 dernières lignes)
+- Blocs ajoutés au Caddyfile (chemin du backup créé)
+- Verdict : PROD-READY / ATTENTION / KO
+- Recommandations
 
-## Étape 5 — Push sur une nouvelle branche
+## Étape 6 — Push sur une nouvelle branche
 
 ```bash
+cd ~/teamhub
 git checkout -b agent/deploy-verification-$(date +%Y%m%d-%H%M)
 git add DEPLOY_REPORT.md
-git commit -m "chore(deploy): rapport de vérification par agent IA"
+git commit -m "chore(deploy): rapport de vérification agent IA"
 git push -u origin HEAD
 ```
 
-## Règles importantes
+## En cas de blocage
 
-- **Ne modifie AUCUN autre fichier** du repo : uniquement `DEPLOY_REPORT.md`. Si un fix est nécessaire, le documenter dans le rapport, ne pas le committer.
-- **Ne crée pas de Pull Request** — Octave la créera après relecture.
-- **Ne pousse jamais sur `main` ni sur `claude/affectionate-fermi-hskazy`**.
-- **Nettoie après toi** : `docker compose down -v` à la fin si le test est destiné à être éphémère (le préciser dans le rapport).
-- Si tu es bloqué (build échoue, healthcheck ne passe pas), documente-le précisément dans le rapport et push quand même — un rapport d'échec vaut mieux que pas de rapport.
+Documente précisément :
+- Port 80/443 : si quelque chose d'autre que `epitnet-caddy-1` tient ces ports, STOP et rapporte
+- Build OOM : réduis `docker compose build` à `--parallel 1` et relance
+- Caddy validate failed : restaure le backup, ne reload pas, documente l'erreur
+- Service en crash loop : logs dans le rapport, puis `docker compose stop <service>` pour libérer la RAM
 
-## Format du rapport
-
-```markdown
-# Rapport de vérification déploiement TeamHub
-
-**Date :** YYYY-MM-DD HH:MM UTC
-**Commit testé :** <sha>
-**Agent :** <nom/modèle>
-**OS :** <uname -a>
-**Docker :** <docker --version>
-
-## Résumé
-
-- Services démarrés : X / 8
-- Tests fonctionnels : X / 9 réussis
-- Verdict : PROD-READY / ATTENTION / KO
-
-## Détail
-
-### Build
-- Temps : Xs
-- Warnings : ...
-
-### Healthchecks
-- postgres : OK
-- mongo : OK
-- ...
-
-### Tests fonctionnels
-- [OK/FAIL] Register + login
-- [OK/FAIL] Projet + tâche
-- [OK/FAIL] CRM won → projet auto
-- ...
-
-### Pest (dans le container api)
-- 13 passed, 0 failed
-
-### Logs en cas d'échec
-
-```
-<logs>
-```
-
-## Recommandations
-
-<Si applicable>
-```
+Un rapport d'échec vaut mieux que pas de rapport.

@@ -77,6 +77,8 @@ services:
       LOG_CHANNEL: stderr
     volumes:
       - uploads:/app/storage/app/public
+    ports:
+      - "127.0.0.1:8100:80"
 
   realtime:
     build:
@@ -97,6 +99,8 @@ services:
       MONGO_URL: ${MONGO_URL:-mongodb://mongo:27017/teamhub}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       CORS_ORIGIN: https://${DOMAIN:-teamhub.excellenceteam.site}
+    ports:
+      - "127.0.0.1:4100:4000"
 
   data:
     build:
@@ -125,31 +129,16 @@ services:
       - api
     environment:
       NODE_ENV: production
+    ports:
+      - "127.0.0.1:3100:3000"
 
   # --------------------------------------------------------------------------
-  # Reverse proxy — HTTPS auto Let's Encrypt
+  # Ports exposés uniquement sur localhost : le Caddy du serveur (externe à
+  # cette pile) proxy vers host.docker.internal:PORT pour servir en HTTPS.
   # --------------------------------------------------------------------------
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - web
-      - api
-      - realtime
-    environment:
-      CADDY_DOMAIN: ${DOMAIN:-teamhub.excellenceteam.site}
-    volumes:
-      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy-data:/data
-      - caddy-config:/config
 
 volumes:
   postgres-data:
   mongo-data:
   redis-data:
   uploads:
-  caddy-data:
-  caddy-config:
