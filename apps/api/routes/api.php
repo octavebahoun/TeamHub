@@ -33,6 +33,10 @@ Route::prefix('v1')->group(function () {
     Route::post('auth/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
     Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 
+    // Invitations publiques (lien reçu par e-mail) : aperçu et création de compte.
+    Route::get('invitations/{token}', [InvitationController::class, 'show'])->middleware('throttle:30,1');
+    Route::post('invitations/{token}/register', [InvitationController::class, 'register'])->middleware('throttle:10,1');
+
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::get('me', [MeController::class, 'show']);
@@ -40,7 +44,10 @@ Route::prefix('v1')->group(function () {
         Route::post('invitations/{token}/accept', [InvitationController::class, 'accept']);
 
         Route::middleware('organization')->group(function () {
+            Route::get('invitations', [InvitationController::class, 'index']);
             Route::post('invitations', [InvitationController::class, 'store']);
+            Route::delete('invitations/{invitationId}', [InvitationController::class, 'destroy'])->whereNumber('invitationId');
+            Route::post('invitations/{invitationId}/resend', [InvitationController::class, 'resend'])->whereNumber('invitationId');
 
             Route::get('members', [MemberController::class, 'index']);
             Route::patch('members/{user}', [MemberController::class, 'updateRole']);
