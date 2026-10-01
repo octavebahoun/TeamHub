@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { NewTaskDialog, type Option } from "@/components/tasks/new-task-dialog";
 import { MobileNav } from "./mobile-nav";
 import { NotificationsButton } from "./notifications-button";
@@ -19,7 +20,9 @@ export function Topbar({
   return (
     <header className="sticky top-0 z-30 flex h-19 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur sm:px-8">
       <MobileNav org={org} hidden={hidden} />
-      <SearchForm />
+      <Suspense>
+        <SearchForm />
+      </Suspense>
       <div className="ml-auto flex items-center gap-3">
         {taskOptions && taskOptions.projects.length > 0 && (
           <div className="hidden sm:block">

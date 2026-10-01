@@ -1,22 +1,18 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FieldError } from "@/components/common/field-error";
 import { Panel, PanelTitle } from "@/components/common/panel";
 import { UserAvatar } from "@/components/common/user-avatar";
-import { addTaskComment, type TaskFormState } from "@/lib/actions/tasks";
+import { addTaskComment } from "@/lib/actions/tasks";
+import { useFormAction } from "@/hooks/use-form-action";
 import type { TaskComment } from "@/lib/api/types";
 import { ago } from "@/lib/format";
 
 export function Comments({ taskId, comments, me, canComment }: { taskId: number; comments: TaskComment[]; me: string; canComment: boolean }) {
-  const [state, action, pending] = useActionState<TaskFormState, FormData>(addTaskComment.bind(null, taskId), undefined);
-  const form = useRef<HTMLFormElement>(null);
-  useEffect(() => {
-    if (state?.ok) form.current?.reset();
-  }, [state]);
+  const [state, action, pending] = useFormAction(addTaskComment.bind(null, taskId), { showErrors: false });
   return (
     <Panel className="p-7">
       <PanelTitle className="mb-5">Commentaires · {comments.length}</PanelTitle>
@@ -34,7 +30,7 @@ export function Comments({ taskId, comments, me, canComment }: { taskId: number;
         ))}
       </ul>
       {canComment && (
-        <form ref={form} action={action} className="mt-6 flex gap-4 border-t pt-6">
+        <form action={action} className="mt-6 flex gap-4 border-t pt-6">
           <UserAvatar name={me} tone="dark" decorative />
           <div className="flex-1 space-y-3">
             <Label htmlFor="comment" className="sr-only">Écrire un commentaire</Label>

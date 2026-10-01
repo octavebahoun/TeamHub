@@ -26,7 +26,12 @@ export type User = {
   avatar: string | null;
   current_organization_id: number | null;
   created_at: string;
+  /** Extensions (cf. docs/api-gaps.md). */
+  title?: string | null;
+  phone?: string | null;
 };
+
+export type NotificationPrefs = { task_assigned: boolean; due_reminder: boolean; chat_messages: boolean; weekly_digest: boolean };
 
 export type UserRef = { id: number; name: string; avatar?: string | null };
 
@@ -52,6 +57,7 @@ export type Member = {
   email: string;
   avatar: string | null;
   role: Role;
+  title?: string | null;
   /** Extensions (cf. docs/api-gaps.md) — absentes sur une API non mise à jour. */
   joined_at?: string | null;
   last_active_at?: string | null;
@@ -190,6 +196,9 @@ export type Post = {
   reactions_count?: number;
   comments_count?: number;
   reacted?: boolean;
+  /** Extensions (cf. docs/api-gaps.md) : publication typée (« projet livré »…). */
+  kind?: "project_delivered" | "milestone" | null;
+  meta?: { project?: string } | null;
   comments?: PostComment[];
   reactions?: { id: number; user_id: number; emoji: string }[];
 };

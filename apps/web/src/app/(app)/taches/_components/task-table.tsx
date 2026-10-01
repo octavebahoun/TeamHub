@@ -9,7 +9,7 @@ import { PriorityBadge } from "@/components/tasks/priority-badge";
 /** Vue liste des tâches (tableau sémantique). */
 export function TaskTable({ tasks }: { tasks: Task[] }) {
   return (
-    <div className="overflow-x-auto rounded-xl border bg-card">
+    <div className="relative overflow-x-auto rounded-xl border bg-card">
       <table className="w-full min-w-[720px] text-left">
         <caption className="sr-only">Tâches du projet</caption>
         <thead className="border-b text-[13px] tracking-[0.1em] uppercase">

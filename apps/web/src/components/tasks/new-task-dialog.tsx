@@ -1,8 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { Plus } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -10,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/common/native-select";
 import { FieldError } from "@/components/common/field-error";
-import { createTask, type TaskFormState } from "@/lib/actions/tasks";
+import { createTask } from "@/lib/actions/tasks";
+import { useFormAction } from "@/hooks/use-form-action";
 import { TASK_PRIORITY } from "@/lib/labels";
 
 export type Option = { id: number; name: string };
@@ -28,15 +28,8 @@ export function NewTaskDialog({
   trigger?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const [state, action, pending] = useActionState<TaskFormState, FormData>(createTask, undefined);
+  const [state, action, pending] = useFormAction(createTask, { successMessage: "Tâche créée", onSuccess: () => setOpen(false), showErrors: false });
   const id = useId();
-
-  useEffect(() => {
-    if (state?.ok) {
-      setOpen(false);
-      toast.success("Tâche créée");
-    }
-  }, [state]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

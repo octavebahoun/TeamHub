@@ -1,21 +1,17 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
-import { toast } from "sonner";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { ProjectFormFields } from "@/components/projects/project-form-fields";
 import { ConfirmButton } from "@/components/common/confirm-button";
 import { archiveProject, updateProject } from "@/lib/actions/projects";
-import type { FormState } from "@/lib/actions/session";
+import { useFormAction } from "@/hooks/use-form-action";
 import type { Project } from "@/lib/api/types";
 
 export function EditProjectDialog({ project }: { project: Project }) {
   const [open, setOpen] = useState(false);
-  const [state, action, pending] = useActionState<FormState, FormData>(updateProject.bind(null, project.id), undefined);
-  useEffect(() => {
-    if (state?.ok) (setOpen(false), toast.success("Projet mis à jour"));
-  }, [state]);
+  const [state, action, pending] = useFormAction(updateProject.bind(null, project.id), { successMessage: "Projet mis à jour", onSuccess: () => setOpen(false), showErrors: false });
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>

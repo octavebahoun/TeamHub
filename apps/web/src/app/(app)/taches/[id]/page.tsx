@@ -60,7 +60,7 @@ export default async function TaskPage({ params }: Props) {
         }
         actions={<TaskActions id={task.id} projectId={project.id} title={task.title} done={done} canEdit={canEdit} canDelete={lead} />}
       />
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="min-w-0 space-y-8">
           <Panel className="p-7">
             <PanelTitle className="mb-4">Description</PanelTitle>

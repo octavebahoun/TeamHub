@@ -30,8 +30,11 @@ export function RealtimeProvider({ url, token, organizationId, children }: { url
   useEffect(() => {
     if (!url || !token) return;
     const s = io(url, { auth: { token, organization_id: organizationId }, transports: ["websocket", "polling"], reconnectionDelayMax: 10_000 });
-    setSocket(s);
-    s.on("connect", () => setConnected(true));
+    // La socket n'est exposée qu'une fois connectée (setState dans un rappel, pas dans le corps de l'effet).
+    s.on("connect", () => {
+      setSocket(s);
+      setConnected(true);
+    });
     s.on("disconnect", () => setConnected(false));
     s.on("presence:update", ({ user_id, online: isOnline }: { user_id: number; online: boolean }) =>
       setOnline((prev) => {
@@ -46,6 +49,8 @@ export function RealtimeProvider({ url, token, organizationId, children }: { url
     );
     return () => {
       s.close();
+      setSocket(null);
+      setConnected(false);
     };
   }, [url, token, organizationId]);
 

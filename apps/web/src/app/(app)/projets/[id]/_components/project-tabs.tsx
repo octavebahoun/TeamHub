@@ -7,7 +7,7 @@ export type Tab = { label: string; href: string; current?: boolean };
 export function ProjectTabs({ tabs }: { tabs: Tab[] }) {
   return (
     <nav aria-label="Sections du projet" className="mb-8 border-b">
-      <ul className="-mb-px flex gap-2 overflow-x-auto">
+      <ul className="relative -mb-px flex gap-2 overflow-x-auto">
         {tabs.map((t) => (
           <li key={t.href}>
             <Link

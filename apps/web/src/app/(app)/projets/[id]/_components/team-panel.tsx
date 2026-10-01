@@ -22,8 +22,9 @@ export function TeamPanel({ projectId, ownerId, team, candidates, canManage }: {
   const add = () =>
     start(async () => {
       const res = await addProjectMember(projectId, Number(pick));
-      if (res.error) toast.error(res.error);
-      else (setOpen(false), toast.success("Membre ajouté au projet"));
+      if (res.error) return void toast.error(res.error);
+      setOpen(false);
+      toast.success("Membre ajouté au projet");
     });
 
   return (

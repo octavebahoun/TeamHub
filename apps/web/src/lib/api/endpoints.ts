@@ -10,6 +10,7 @@ import type {
   InvitationPreview,
   Me,
   Member,
+  NotificationPrefs,
   Opportunity,
   OpportunityStage,
   Paginated,
@@ -28,6 +29,10 @@ import type {
  */
 
 export const getMe = cache(() => api<Me>("me"));
+/** Extension. */
+export const getNotificationPrefs = cache(() =>
+  apiOptional<NotificationPrefs | null>("me/notifications", null)
+);
 
 // --- Membres & invitations -------------------------------------------------
 export const getMembers = cache(() => api<Member[]>("members"));

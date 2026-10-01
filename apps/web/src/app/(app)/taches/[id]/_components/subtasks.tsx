@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,8 @@ import { Panel, PanelTitle } from "@/components/common/panel";
 import { ProgressBar } from "@/components/common/progress-bar";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { TaskCheck } from "@/components/tasks/task-check";
-import { createTask, type TaskFormState } from "@/lib/actions/tasks";
+import { createTask } from "@/lib/actions/tasks";
+import { useFormAction } from "@/hooks/use-form-action";
 import type { Task } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
@@ -16,11 +17,7 @@ export function Subtasks({ task, canEdit, canCreate }: { task: Task; canEdit: bo
   const subs = task.subtasks ?? [];
   const done = subs.filter((s) => s.status === "done").length;
   const [adding, setAdding] = useState(false);
-  const [state, action, pending] = useActionState<TaskFormState, FormData>(createTask, undefined);
-  const form = useRef<HTMLFormElement>(null);
-  useEffect(() => {
-    if (state?.ok) form.current?.reset();
-  }, [state]);
+  const [state, action, pending] = useFormAction(createTask);
 
   return (
     <Panel className="p-7">
@@ -40,7 +37,7 @@ export function Subtasks({ task, canEdit, canCreate }: { task: Task; canEdit: bo
       </ul>
       {canCreate &&
         (adding ? (
-          <form ref={form} action={action} className="mt-3 flex gap-2">
+          <form action={action} className="mt-3 flex gap-2">
             <input type="hidden" name="project_id" value={task.project_id} />
             <input type="hidden" name="parent_id" value={task.id} />
             <label htmlFor="new-subtask" className="sr-only">Nouvelle sous-tâche</label>

@@ -18,7 +18,7 @@ export default async function HomePage() {
   const canEdit = currentRole(me) !== "guest";
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-10 xl:grid-cols-[minmax(0,1fr)_340px]">
+    <div className="mx-auto grid grid-cols-1 max-w-7xl gap-10 xl:grid-cols-[minmax(0,1fr)_340px]">
       <div className="min-w-0">
         <header className="mb-9">
           <h1 className="font-heading text-[40px] leading-tight">Bonjour {firstName(me.user.name)}</h1>

@@ -27,7 +27,7 @@ export function InvitationRegisterForm({ token, email, orgName, expiresAt }: { t
       <Button type="submit" size="lg" className="h-12 w-full" disabled={pending}>
         {pending ? "Un instant…" : `Rejoindre ${orgName}`}
       </Button>
-      <p className="text-center text-[15px] text-muted-foreground">Cette invitation expire le {shortDate(expiresAt)}.</p>
+      <p className="text-center text-[15px] text-muted-foreground">Cette invitation expire le {shortDate(expiresAt).replace(/\.$/, "")}.</p>
       <p className="text-center text-[15px] text-muted-foreground">
         Vous avez déjà un compte ?{" "}
         <Link href={`/connexion?next=/invitation/${encodeURIComponent(token)}`} className="text-primary underline underline-offset-4">

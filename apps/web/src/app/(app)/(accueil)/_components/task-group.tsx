@@ -18,7 +18,7 @@ export function TaskGroup({ id, title, tasks, canEdit }: { id: string; title: st
         {tasks.map((t) => {
           const late = isOverdue(t.due_date);
           return (
-            <li key={t.id} className="flex items-center gap-4 px-5 py-4">
+            <li key={t.id} className="flex items-center gap-3 px-4 py-4 sm:gap-4 sm:px-5">
               <TaskCheck id={t.id} projectId={t.project_id} done={t.status === "done"} title={t.title} disabled={!canEdit} />
               <div className="min-w-0 flex-1">
                 <Link href={`/taches/${t.id}`} className="font-medium hover:underline">
@@ -26,8 +26,10 @@ export function TaskGroup({ id, title, tasks, canEdit }: { id: string; title: st
                 </Link>
                 <p className="truncate text-sm text-muted-foreground">{t.project?.name}</p>
               </div>
-              <PriorityBadge priority={t.priority} />
-              <p className={cn("w-28 shrink-0 text-right text-[15px]", late ? "font-semibold text-danger" : "text-muted-foreground")}>
+              <span className="hidden sm:inline-flex">
+                <PriorityBadge priority={t.priority} />
+              </span>
+              <p className={cn("shrink-0 text-right text-[15px] sm:w-28", late ? "font-semibold text-danger" : "text-muted-foreground")}>
                 {late && <span className="sr-only">En retard, échéance </span>}
                 {dueLabel(t.due_date)}
               </p>

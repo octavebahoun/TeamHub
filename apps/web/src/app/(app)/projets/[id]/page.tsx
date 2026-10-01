@@ -80,7 +80,7 @@ export default async function ProjectPage({ params }: Props) {
           { label: "Canal du projet", href: `/chat?projet=${id}` },
         ]}
       />
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_400px]">
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_400px]">
         <div className="min-w-0 space-y-8">
           <Panel className="p-7">
             <PanelTitle className="mb-4">Description</PanelTitle>
