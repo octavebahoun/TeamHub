@@ -3,7 +3,7 @@ import { WineLogo } from "@/components/common/wine-logo";
 import { NavLinks, SettingsLink } from "./nav-links";
 import { OrgCard } from "./org-card";
 
-export type ShellOrg = { name: string; members?: number };
+export type ShellOrg = { name: string; members?: number; settingsHref?: string };
 
 /** Barre latérale fixe (écrans larges). */
 export function AppSidebar({ org, hidden }: { org: ShellOrg; hidden: string[] }) {
@@ -16,8 +16,8 @@ export function AppSidebar({ org, hidden }: { org: ShellOrg; hidden: string[] })
         <NavLinks hidden={hidden} />
       </nav>
       <div className="space-y-3">
-        <SettingsLink />
-        <OrgCard {...org} />
+        <SettingsLink href={org.settingsHref} />
+        <OrgCard name={org.name} members={org.members} />
       </div>
     </aside>
   );

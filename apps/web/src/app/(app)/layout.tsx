@@ -17,7 +17,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     canCreateTask ? getProjects() : Promise.resolve([]),
   ]);
   const token = (await cookies()).get(TOKEN_COOKIE)?.value;
-  const org = { name: me.current_organization?.name ?? "Mon organisation", members: members.length || undefined };
+  const org = {
+    name: me.current_organization?.name ?? "Mon organisation",
+    members: members.length || undefined,
+    settingsHref: can(role, "members.view") ? "/parametres/membres" : "/profil",
+  };
   const hidden = NAV_ITEMS.filter((i) => i.ability && !can(role, i.ability)).map((i) => i.href);
 
   return (
@@ -29,7 +33,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <AppSidebar org={org} hidden={hidden} />
         <div className="flex min-w-0 flex-1 flex-col">
           <Topbar
-            user={{ name: me.user.name, email: me.user.email }}
+            user={{ name: me.user.name, email: me.user.email, canSeeMembers: can(role, "members.view") }}
             org={org}
             hidden={hidden}
             taskOptions={

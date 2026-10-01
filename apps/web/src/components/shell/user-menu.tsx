@@ -13,7 +13,7 @@ import {
 import { initials } from "@/lib/format";
 import { logout } from "@/lib/actions/session";
 
-export function UserMenu({ name, email }: { name: string; email: string }) {
+export function UserMenu({ name, email, canSeeMembers }: { name: string; email: string; canSeeMembers: boolean }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -33,11 +33,13 @@ export function UserMenu({ name, email }: { name: string; email: string }) {
             <UserRound aria-hidden /> Mon profil
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/parametres/membres">
-            <UsersRound aria-hidden /> Membres
-          </Link>
-        </DropdownMenuItem>
+        {canSeeMembers && (
+          <DropdownMenuItem asChild>
+            <Link href="/parametres/membres">
+              <UsersRound aria-hidden /> Membres
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => logout()}>
           <LogOut aria-hidden /> Se déconnecter

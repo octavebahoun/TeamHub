@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { NewTaskDialog, type Option } from "@/components/tasks/new-task-dialog";
 import { MobileNav } from "./mobile-nav";
 import { NotificationsButton } from "./notifications-button";
@@ -12,7 +14,7 @@ export function Topbar({
   hidden,
   taskOptions,
 }: {
-  user: { name: string; email: string };
+  user: { name: string; email: string; canSeeMembers: boolean };
   org: ShellOrg;
   hidden: string[];
   taskOptions: { projects: Option[]; members: Option[] } | null;
@@ -25,12 +27,18 @@ export function Topbar({
       </Suspense>
       <div className="ml-auto flex items-center gap-3">
         {taskOptions && taskOptions.projects.length > 0 && (
-          <div className="hidden sm:block">
-            <NewTaskDialog projects={taskOptions.projects} members={taskOptions.members} />
-          </div>
+          <NewTaskDialog
+            projects={taskOptions.projects}
+            members={taskOptions.members}
+            trigger={
+              <Button size="lg" aria-label="Nouvelle tâche" className="max-sm:size-11 max-sm:px-0">
+                <Plus aria-hidden /> <span className="max-sm:sr-only">Nouvelle tâche</span>
+              </Button>
+            }
+          />
         )}
         <NotificationsButton />
-        <UserMenu name={user.name} email={user.email} />
+        <UserMenu {...user} />
       </div>
     </header>
   );

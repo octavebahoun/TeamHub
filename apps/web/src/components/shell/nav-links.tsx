@@ -32,11 +32,12 @@ export function NavLinks({ hidden = [], onNavigate }: { hidden?: string[]; onNav
   );
 }
 
-export function SettingsLink({ onNavigate }: { onNavigate?: () => void }) {
+/** Paramètres : la page Membres, ou le profil pour les rôles qui ne voient pas l'équipe. */
+export function SettingsLink({ href = "/parametres/membres", onNavigate }: { href?: string; onNavigate?: () => void }) {
   const pathname = usePathname();
-  const active = pathname.startsWith("/parametres");
+  const active = pathname.startsWith("/parametres") || (href === "/profil" && pathname === "/profil");
   return (
-    <Link href="/parametres/membres" onClick={onNavigate} aria-current={active ? "page" : undefined} className={itemClass(active)}>
+    <Link href={href} onClick={onNavigate} aria-current={active ? "page" : undefined} className={itemClass(active)}>
       <Settings aria-hidden className="size-5" strokeWidth={1.75} />
       Paramètres
     </Link>

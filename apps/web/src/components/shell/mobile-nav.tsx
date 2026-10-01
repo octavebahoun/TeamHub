@@ -28,8 +28,8 @@ export function MobileNav({ org, hidden }: { org: ShellOrg; hidden: string[] }) 
           <NavLinks hidden={hidden} onNavigate={close} />
         </nav>
         <div className="space-y-3">
-          <SettingsLink onNavigate={close} />
-          <OrgCard {...org} />
+          <SettingsLink href={org.settingsHref} onNavigate={close} />
+          <OrgCard name={org.name} members={org.members} />
         </div>
       </SheetContent>
     </Sheet>

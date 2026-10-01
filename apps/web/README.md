@@ -84,4 +84,5 @@ dès qu'il sert à deux écrans, il remonte dans `src/components/`.
 | `npm run dev` | serveur de développement |
 | `npm run build` / `npm start` | build et serveur de production |
 | `npm run lint` | ESLint (règles Next + React 19) |
+| `npm test` | tests unitaires Vitest (règles métier, formats) |
 | `npm run mock:api` | API de démonstration |

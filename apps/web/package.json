@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "mock:api": "node dev/mock-api/server.mjs"
+    "mock:api": "node dev/mock-api/server.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
@@ -35,6 +36,7 @@
     "postcss": "^8",
     "socket.io": "^4.8.4",
     "tailwindcss": "^4.3.3",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.3"
   }
 }
