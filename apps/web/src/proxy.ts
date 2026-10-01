@@ -1,14 +1,18 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { TOKEN_COOKIE } from "@/lib/session";
 
-/** Redirige vers /connexion toute page privée sans jeton, et inversement. */
-const PUBLIC = ["/connexion", "/inscription", "/invitation", "/mot-de-passe-oublie", "/conditions", "/deconnexion"];
+/**
+ * « / » : landing page pour les visiteurs, Accueil pour les connectés (même URL).
+ * Toute autre page privée sans jeton redirige vers /connexion, et inversement.
+ */
+const PUBLIC = ["/bienvenue", "/connexion", "/inscription", "/invitation", "/mot-de-passe-oublie", "/conditions", "/deconnexion"];
 
 export function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
   const isPublic = PUBLIC.some((p) => pathname === p || pathname.startsWith(`${p}/`));
   const hasToken = req.cookies.has(TOKEN_COOKIE);
 
+  if (pathname === "/" && !hasToken) return NextResponse.rewrite(new URL("/bienvenue", req.url));
   if (!isPublic && !hasToken) {
     const url = new URL("/connexion", req.url);
     if (pathname !== "/") url.searchParams.set("next", pathname + search);

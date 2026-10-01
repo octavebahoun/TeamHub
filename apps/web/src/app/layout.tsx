@@ -13,6 +13,7 @@ const plex = IBM_Plex_Sans({
 
 const sourceSerif = Source_Serif_4({
   subsets: ["latin"],
+  style: ["normal", "italic"],
   variable: "--font-source-serif",
   display: "swap",
 });

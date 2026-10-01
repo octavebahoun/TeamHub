@@ -139,6 +139,7 @@
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
   }
   body {
     @apply bg-background text-[15px] text-foreground antialiased;
@@ -157,6 +158,9 @@
     @apply outline-2 outline-offset-2 outline-ring;
   }
   @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
     *,
     *::before,
     *::after {
