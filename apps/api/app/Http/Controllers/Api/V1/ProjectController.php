@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Membership;
 use App\Models\Project;
+use App\Models\Task;
 use App\Services\RealtimePublisher;
 use App\Support\OrganizationRole;
 use Illuminate\Http\JsonResponse;
@@ -35,7 +36,8 @@ class ProjectController extends Controller
                     ->where('owner_id', $user->id)
                     ->orWhereHas('members', fn ($m) => $m->whereKey($user->id)))
             )
-            ->with('owner')
+            ->with('owner', 'members:id,name,avatar')
+            ->withCount($this->rootTaskCounts())
             ->latest()
             ->paginate(20);
 
@@ -71,7 +73,7 @@ class ProjectController extends Controller
     {
         $this->authorize('view', $project);
         return response()->json(
-            $project->load('owner', 'members')->loadCount('tasks')
+            $project->load('owner', 'members')->loadCount($this->rootTaskCounts())
         );
     }
 
@@ -97,5 +99,15 @@ class ProjectController extends Controller
         $project->update(['archived_at' => now()]);
 
         return response()->json(['message' => 'Projet archivé.']);
+    }
+
+    // Avancement : tâches racines uniquement (les sous-tâches ne comptent pas).
+    protected function rootTaskCounts(): array
+    {
+        return [
+            'tasks' => fn ($q) => $q->whereNull('parent_id'),
+            'tasks as done_tasks_count' => fn ($q) => $q->whereNull('parent_id')
+                ->where('status', Task::STATUS_DONE),
+        ];
     }
 }

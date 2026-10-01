@@ -23,6 +23,11 @@ class TaskController extends Controller
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
             ->when($request->filled('assignee_id'), fn ($q) => $q->where('assignee_id', $request->integer('assignee_id')))
             ->with('assignee')
+            ->withCount([
+                'subtasks',
+                'subtasks as done_subtasks_count' => fn ($q) => $q->where('status', Task::STATUS_DONE),
+                'comments',
+            ])
             ->orderBy('position')
             ->get();
 
