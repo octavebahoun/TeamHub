@@ -19,7 +19,7 @@ class MemberController extends Controller
         // Lecture ouverte: owner/admin/manager/member. Invité: 403.
         abort_unless(OrganizationRole::canContribute($request->user()), 403);
 
-        $memberships = Membership::with('user:id,name,email,avatar')
+        $memberships = Membership::with('user:id,name,email,avatar,title')
             ->where('organization_id', CurrentOrganization::id())
             ->get();
 
@@ -38,6 +38,7 @@ class MemberController extends Controller
             'email' => $m->user->email,
             'avatar' => $m->user->avatar,
             'role' => $m->role,
+            'title' => $m->user->title,
             'joined_at' => $m->created_at?->toJSON(),
             'last_active_at' => isset($lastActive[$m->user_id])
                 ? Carbon::parse($lastActive[$m->user_id])->toJSON()

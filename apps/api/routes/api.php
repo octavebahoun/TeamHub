@@ -40,6 +40,10 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::get('me', [MeController::class, 'show']);
+        Route::patch('me', [MeController::class, 'update']);
+        Route::put('me/password', [MeController::class, 'updatePassword'])->middleware('throttle:10,1');
+        Route::get('me/notifications', [MeController::class, 'notifications']);
+        Route::put('me/notifications', [MeController::class, 'updateNotifications']);
         Route::post('organizations/{organization}/switch', [OrganizationController::class, 'switch']);
         Route::post('invitations/{token}/accept', [InvitationController::class, 'accept']);
 
