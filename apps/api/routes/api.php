@@ -16,14 +16,17 @@ use App\Http\Controllers\Api\V1\PostReactionController;
 use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\TaskCommentController;
 use App\Http\Controllers\Api\V1\TaskController;
+use App\Http\Controllers\Internal\OrganizationMembersController;
 use App\Http\Controllers\Internal\VerifyController;
 use Illuminate\Support\Facades\Route;
 
 // Health public (routé par Caddy sous /api/up — jamais sous /up).
 Route::get('up', fn () => response()->json(['ok' => true, 'service' => 'api']));
 
-Route::prefix('internal')->group(function () {
+Route::prefix('internal')->middleware('internal')->group(function () {
     Route::post('verify', VerifyController::class);
+    Route::get('organizations/{organizationId}/members', OrganizationMembersController::class)
+        ->whereNumber('organizationId');
 });
 
 Route::prefix('v1')->group(function () {
