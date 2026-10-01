@@ -9,15 +9,9 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class VerifyController extends Controller
 {
+    // Secret interne vérifié par le middleware `internal` (EnsureInternalSecret).
     public function __invoke(Request $request): JsonResponse
     {
-        $secret = $request->header('X-Internal-Secret');
-        abort_unless(
-            $secret && hash_equals(config('services.internal.secret', ''), $secret),
-            401,
-            'Bad internal secret.'
-        );
-
         $bearer = $request->input('token');
         abort_unless($bearer, 422, 'token is required');
 

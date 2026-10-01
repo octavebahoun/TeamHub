@@ -110,3 +110,31 @@ it('does not expose posts from another organization', function () {
     $bodies = collect($response->json('data'))->pluck('body')->all();
     expect($bodies)->not->toContain('secret A');
 });
+
+it('flags posts the current user reacted to', function () {
+    [$alice, $org] = memberOf('SocialE', Membership::ROLE_OWNER);
+    $bob = User::factory()->create();
+    Membership::create(['user_id' => $bob->id, 'organization_id' => $org->id, 'role' => Membership::ROLE_MEMBER]);
+    CurrentOrganization::set($org);
+    $liked = Post::create(['organization_id' => $org->id, 'author_id' => $bob->id, 'body' => 'liked']);
+    $other = Post::create(['organization_id' => $org->id, 'author_id' => $bob->id, 'body' => 'other']);
+    CurrentOrganization::set(null);
+
+    $this->actingAs($alice, 'sanctum')->withHeader('X-Organization-Id', $org->id)
+        ->postJson("/api/v1/posts/{$liked->id}/reactions", ['emoji' => 'bravo'])
+        ->assertCreated();
+
+    $rows = collect($this->actingAs($alice, 'sanctum')->withHeader('X-Organization-Id', $org->id)
+        ->getJson('/api/v1/posts')->assertOk()->json('data'))->keyBy('id');
+    expect($rows[$liked->id]['reacted'])->toBeTrue()
+        ->and($rows[$other->id]['reacted'])->toBeFalse();
+
+    // Bob n'a pas réagi : reacted reste faux pour lui.
+    $rows = collect($this->actingAs($bob, 'sanctum')->withHeader('X-Organization-Id', $org->id)
+        ->getJson('/api/v1/posts')->json('data'))->keyBy('id');
+    expect($rows[$liked->id]['reacted'])->toBeFalse();
+
+    $this->actingAs($alice, 'sanctum')->withHeader('X-Organization-Id', $org->id)
+        ->getJson("/api/v1/posts/{$liked->id}")
+        ->assertJsonPath('reacted', true);
+});

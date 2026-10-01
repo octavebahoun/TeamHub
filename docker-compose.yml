@@ -130,6 +130,9 @@ services:
       - api
     environment:
       NODE_ENV: production
+      # Appels serveur (SSR, server actions) vers Laravel par le réseau Docker interne,
+      # sans repasser par Caddy. Le navigateur, lui, n'appelle jamais l'API directement.
+      API_URL: http://api:80/api
     ports:
       - "127.0.0.1:3100:3000"
 
