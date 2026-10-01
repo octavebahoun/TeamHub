@@ -1,0 +1,49 @@
+# Bloc à ajouter dans le Caddyfile existant du serveur
+# (ex: ~/EPINET/infra/caddy/Caddyfile).
+#
+# PRÉREQUIS : le conteneur Caddy doit être connecté au réseau teamhub_default
+# (créé par docker-compose.yml de TeamHub, nom fixé via `networks.default.name`).
+#
+#   # Attache une seule fois (perdu à la recréation du conteneur):
+#   docker network connect teamhub_default epitnet-caddy-1
+#
+#   # Persistant: ajouter dans le docker-compose du Caddy
+#   networks:
+#     teamhub_default:
+#       external: true
+#   services:
+#     caddy:
+#       networks: [..., teamhub_default]
+#
+# Puis recharger (ne pas utiliser `sed -i` sur un Caddyfile bind-monté,
+# ça remplace l'inode — préférer `tee -a` ou `cat >>`) :
+#   docker exec epitnet-caddy-1 caddy reload --config /etc/caddy/Caddyfile
+
+teamhub.excellenceteam.site {
+	import secure_headers
+	encode gzip zstd
+
+	# Bloquer les routes internes — jamais exposées depuis Internet
+	@internal path /api/internal/* /api/v1/internal/*
+	handle @internal {
+		respond "Not Found" 404
+	}
+
+	# API Laravel (nom du conteneur sur teamhub_default)
+	handle /api/* {
+		reverse_proxy teamhub-api-1:80
+	}
+
+	# WebSocket temps réel
+	handle /ws/* {
+		reverse_proxy teamhub-realtime-1:4000
+	}
+	handle /socket.io/* {
+		reverse_proxy teamhub-realtime-1:4000
+	}
+
+	# Frontend Next.js — tout le reste
+	handle {
+		reverse_proxy teamhub-web-1:3000
+	}
+}
