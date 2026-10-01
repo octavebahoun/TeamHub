@@ -7,7 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "mock:api": "node dev/mock-api/server.mjs",
     "test": "vitest run"
   },
   "dependencies": {
@@ -34,7 +33,6 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.3.8",
     "postcss": "^8",
-    "socket.io": "^4.8.4",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
     "vitest": "^5.0.3"

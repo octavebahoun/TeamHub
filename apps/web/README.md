@@ -4,24 +4,22 @@ Next.js 16 (App Router) · React 19 · Tailwind CSS v4 · shadcn/ui (Radix) · S
 
 ## Démarrer
 
+Le frontend s'appuie uniquement sur le vrai backend : lancer d'abord l'API Laravel
+(`apps/api`, port 8000) et le service temps réel (`apps/realtime`, port 4000).
+
 ```bash
 npm install
-npm run mock:api      # API de démo sur http://localhost:8000/api (+ Socket.io)
 npm run dev           # http://localhost:3000
 ```
 
 `.env.local` (non versionné) :
 
 ```
-API_URL=http://localhost:8000/api      # appels serveur vers l'API (Laravel ou mock)
-NEXT_PUBLIC_WS_URL=http://localhost:8000
+API_URL=http://localhost:8000/api      # appels serveur vers l'API Laravel
+NEXT_PUBLIC_WS_URL=http://localhost:4000
 ```
 
-Compte de démo du mock : `octave@exemple.com` / `password` (propriétaire).
-Autres rôles : `aicha@` (admin), `koffi@` (chef de projet), `mariam@` (membre), `nadege@` (invitée) — même mot de passe.
-Invitation de démo : `/invitation/demo-invitation`.
-
-Pour viser le vrai backend, remplacer `API_URL` par l'URL de Laravel (`…/api`).
+Créer un compte via `/inscription` (crée aussi l'organisation).
 
 ## Organisation du code
 
@@ -54,7 +52,6 @@ src/
 │   ├── labels.ts · format.ts · permissions.ts
 └── hooks/
 proxy.ts                        # redirection des pages privées sans session
-dev/mock-api/                   # mock de développement (non embarqué dans le build)
 ```
 
 Règle : un composant utilisé par une seule page vit dans le `_components/` de cette page ;
@@ -72,6 +69,7 @@ dès qu'il sert à deux écrans, il remonte dans `src/components/`.
 ## Données et session
 
 - Le jeton Sanctum est stocké dans un cookie `httpOnly` ; le navigateur n'appelle jamais l'API REST.
+  Le WebSocket s'authentifie avec ce même cookie (envoyé au handshake), jamais via le JS.
   Lectures dans les server components (`lib/api/endpoints.ts`), écritures en server actions (`lib/actions`).
 - Les rôles masquent les actions interdites (`lib/permissions.ts`) ; Laravel reste seul juge.
 - Les besoins non couverts par l'API actuelle sont listés dans [`docs/api-gaps.md`](../../docs/api-gaps.md) :
@@ -85,4 +83,3 @@ dès qu'il sert à deux écrans, il remonte dans `src/components/`.
 | `npm run build` / `npm start` | build et serveur de production |
 | `npm run lint` | ESLint (règles Next + React 19) |
 | `npm test` | tests unitaires Vitest (règles métier, formats) |
-| `npm run mock:api` | API de démonstration |

@@ -5,8 +5,8 @@ que l'API ne fournit pas encore, il appelle l'**extension** décrite ici, avec u
 l'écran reste utilisable sur une API non mise à jour (section masquée, calcul côté client, ou
 message « pas encore disponible »).
 
-Le mock de développement (`apps/web/dev/mock-api`) implémente déjà toutes ces extensions : c'est
-la référence exécutable du contrat attendu.
+Le mock de développement a été supprimé : le frontend ne s'appuie plus que sur le vrai backend,
+et les tests Pest de `apps/api` sont la référence exécutable du contrat.
 
 Légende : 🔴 bloquant pour l'écran · 🟠 dégradé sans l'extension · 🟢 confort
 
