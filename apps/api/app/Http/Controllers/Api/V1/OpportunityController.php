@@ -8,6 +8,7 @@ use App\Models\Membership;
 use App\Models\Opportunity;
 use App\Models\Project;
 use App\Support\CurrentOrganization;
+use App\Support\OrganizationRole;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,9 +18,15 @@ class OpportunityController extends Controller
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Opportunity::class);
+        $user = $request->user();
+
         $opportunities = Opportunity::query()
             ->when($request->filled('stage'), fn ($q) => $q->where('stage', $request->string('stage')))
             ->when($request->filled('client_id'), fn ($q) => $q->where('client_id', $request->integer('client_id')))
+            ->when(
+                OrganizationRole::of($user) === Membership::ROLE_MANAGER,
+                fn ($q) => $q->where('owner_id', $user->id)
+            )
             ->with('client:id,name,company', 'owner:id,name', 'project:id,name')
             ->latest()
             ->paginate(20);

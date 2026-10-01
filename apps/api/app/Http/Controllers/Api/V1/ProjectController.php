@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Membership;
 use App\Models\Project;
 use App\Services\RealtimePublisher;
+use App\Support\OrganizationRole;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -15,11 +17,24 @@ class ProjectController extends Controller
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Project::class);
+        $user = $request->user();
+        $role = OrganizationRole::of($user);
+
         $projects = Project::query()
             ->when($request->boolean('archived'),
                 fn ($q) => $q->whereNotNull('archived_at'),
                 fn ($q) => $q->whereNull('archived_at'))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
+            ->when(
+                in_array($role, [Membership::ROLE_MEMBER, Membership::ROLE_GUEST], true),
+                fn ($q) => $q->whereHas('members', fn ($m) => $m->whereKey($user->id))
+            )
+            ->when(
+                $role === Membership::ROLE_MANAGER,
+                fn ($q) => $q->where(fn ($w) => $w
+                    ->where('owner_id', $user->id)
+                    ->orWhereHas('members', fn ($m) => $m->whereKey($user->id)))
+            )
             ->with('owner')
             ->latest()
             ->paginate(20);

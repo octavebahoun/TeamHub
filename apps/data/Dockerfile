@@ -5,7 +5,7 @@ WORKDIR /app
 RUN pip install --no-cache-dir uv
 
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev && uv pip install --system "psycopg[binary]"
+RUN uv sync --frozen --no-dev
 
 COPY app ./app
 COPY main.py ./main.py

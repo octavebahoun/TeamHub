@@ -15,7 +15,7 @@ class TaskCommentController extends Controller
 
     public function store(Request $request, Task $task): JsonResponse
     {
-        $this->authorize('view', $task);
+        $this->authorize('comment', $task);
 
         $data = $request->validate([
             'body' => ['required', 'string'],

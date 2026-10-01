@@ -48,8 +48,10 @@ sed -i "s|^INTERNAL_SECRET=.*|INTERNAL_SECRET=${INTERNAL_SECRET}|" .env
 sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=${POSTGRES_PASSWORD}|" .env
 sed -i "s|^DOMAIN=.*|DOMAIN=teamhub.excellenceteam.site|" .env
 
-# APP_KEY Laravel (1 fois)
-docker compose run --rm --no-deps api php artisan key:generate --show > /tmp/appkey.txt
+# APP_KEY Laravel (1 fois) — attention: APP_KEY est required, il faut
+# en passer un placeholder le temps de générer, puis l'écraser.
+APP_KEY=base64:placeholder docker compose build api
+APP_KEY=base64:placeholder docker compose run --rm --no-deps --entrypoint php api artisan key:generate --show > /tmp/appkey.txt
 APP_KEY=$(cat /tmp/appkey.txt | tr -d '\n')
 sed -i "s|^APP_KEY=.*|APP_KEY=${APP_KEY}|" .env
 ```
@@ -75,22 +77,28 @@ Documente dans le rapport et continue si possible.
 
 ## Étape 3 — Ajouter le bloc dans le Caddy existant
 
-Le fichier `infra/Caddyfile.snippet` du repo contient exactement le bloc à insérer.
+Le fichier `infra/Caddyfile.snippet` du repo contient exactement le bloc à insérer. Les conteneurs TeamHub utilisent le réseau nommé `teamhub_default` (déclaré dans `docker-compose.yml`), le Caddy externe doit s'y connecter pour résoudre `teamhub-api-1`, `teamhub-realtime-1`, `teamhub-web-1`.
 
 ```bash
-# Backup OBLIGATOIRE avant toute modification
+# 1) Connecter le Caddy externe au réseau TeamHub (une seule fois).
+#    Attention: lost on container recreation — ajouter aussi dans le
+#    docker-compose EPINET (networks: teamhub_default: external: true).
+docker network connect teamhub_default epitnet-caddy-1 2>/dev/null || true
+
+# 2) Backup OBLIGATOIRE avant toute modification
 sudo cp ~/EPINET/infra/caddy/Caddyfile ~/EPINET/infra/caddy/Caddyfile.bak-$(date +%s)
 
-# Vérifier que teamhub n'est pas déjà présent
+# 3) Vérifier que teamhub n'est pas déjà présent
 grep -q "teamhub.excellenceteam.site" ~/EPINET/infra/caddy/Caddyfile && echo "DEJA_PRESENT" || echo "ABSENT"
 
-# Si absent, append le bloc :
+# 4) Append le bloc — JAMAIS `sed -i` (remplace l'inode, bind-mount périmé).
+#    Utiliser `tee -a` qui écrit sur place.
 cat ~/teamhub/infra/Caddyfile.snippet | sudo tee -a ~/EPINET/infra/caddy/Caddyfile >/dev/null
 
-# Valider la syntaxe AVANT reload (sinon Caddy refuse et garde la config précédente)
+# 5) Valider la syntaxe AVANT reload (sinon Caddy refuse et garde l'ancienne config)
 docker exec epitnet-caddy-1 caddy validate --config /etc/caddy/Caddyfile
 
-# Reload à chaud (ne coupe pas les sites existants)
+# 6) Reload à chaud (ne coupe pas les sites existants)
 docker exec epitnet-caddy-1 caddy reload --config /etc/caddy/Caddyfile
 ```
 
@@ -105,8 +113,8 @@ sudo cp ~/EPINET/infra/caddy/Caddyfile.bak-* ~/EPINET/infra/caddy/Caddyfile  # d
 ```bash
 BASE="https://teamhub.excellenceteam.site"
 
-# 4.1 Health checks
-curl -sfI $BASE/api/up > /dev/null && echo "[OK] API up" || echo "[FAIL] API up"
+# 4.1 Health checks — /api/up est désormais une route Laravel dédiée
+curl -sf $BASE/api/up | grep -q '"ok":true' && echo "[OK] API up" || echo "[FAIL] API up"
 curl -sfI $BASE/ > /dev/null && echo "[OK] Web up" || echo "[FAIL] Web up"
 
 # 4.2 Vérifier que /api/internal/* est bien bloqué (doit renvoyer 404)

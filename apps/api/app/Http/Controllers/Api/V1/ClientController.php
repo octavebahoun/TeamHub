@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Activity;
 use App\Models\Client;
+use App\Models\Membership;
+use App\Support\OrganizationRole;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -13,6 +15,8 @@ class ClientController extends Controller
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Client::class);
+        $user = $request->user();
+
         $clients = Client::query()
             ->when($request->filled('q'), function ($q) use ($request) {
                 $term = '%'.$request->string('q').'%';
@@ -20,6 +24,10 @@ class ClientController extends Controller
                     ->orWhere('company', 'like', $term)
                     ->orWhere('email', 'like', $term));
             })
+            ->when(
+                OrganizationRole::of($user) === Membership::ROLE_MANAGER,
+                fn ($q) => $q->where('owner_id', $user->id)
+            )
             ->with('owner:id,name')
             ->latest()
             ->paginate(20);
