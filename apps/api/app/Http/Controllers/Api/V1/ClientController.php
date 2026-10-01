@@ -43,6 +43,7 @@ class ClientController extends Controller
             'company' => ['nullable', 'string', 'max:200'],
             'email' => ['nullable', 'email'],
             'phone' => ['nullable', 'string', 'max:40'],
+            'address' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
         ]);
 
@@ -70,6 +71,7 @@ class ClientController extends Controller
             'company' => ['nullable', 'string', 'max:200'],
             'email' => ['nullable', 'email'],
             'phone' => ['nullable', 'string', 'max:40'],
+            'address' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
         ]);
 

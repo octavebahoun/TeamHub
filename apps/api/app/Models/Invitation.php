@@ -15,6 +15,7 @@ class Invitation extends Model
         'organization_id',
         'email',
         'role',
+        'invited_by',
         'token',
         'expires_at',
     ];
@@ -37,6 +38,11 @@ class Invitation extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    public function invitedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'invited_by');
     }
 
     public function isExpired(): bool

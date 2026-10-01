@@ -12,12 +12,17 @@ class Activity extends Model
 {
     use BelongsToOrganization, HasFactory;
 
+    // Échanges CRM saisis à la main (POST /clients/{id}/activities).
+    public const KINDS = ['note', 'call', 'email', 'meeting'];
+
     protected $fillable = [
         'organization_id',
         'user_id',
         'subject_type',
         'subject_id',
         'action',
+        'kind',
+        'body',
         'meta',
     ];
 

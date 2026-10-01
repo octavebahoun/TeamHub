@@ -21,6 +21,8 @@ class PostController extends Controller
             ->when($request->boolean('pinned_only'), fn ($q) => $q->where('pinned', true))
             ->with('author:id,name,avatar')
             ->withCount('reactions', 'comments')
+            // reacted : l'utilisateur courant a réagi (quel que soit l'emoji, « bravo » compris).
+            ->withExists(['reactions as reacted' => fn ($q) => $q->where('user_id', $request->user()->id)])
             ->orderByDesc('pinned')
             ->orderByDesc('pinned_at')
             ->orderByDesc('created_at')
@@ -51,13 +53,14 @@ class PostController extends Controller
         return response()->json($post->load('author:id,name,avatar'), 201);
     }
 
-    public function show(Post $post): JsonResponse
+    public function show(Request $request, Post $post): JsonResponse
     {
         $this->authorize('view', $post);
 
-        return response()->json(
-            $post->load('author:id,name,avatar', 'comments.author:id,name', 'reactions')
-        );
+        $post->load('author:id,name,avatar', 'comments.author:id,name', 'reactions');
+        $post->setAttribute('reacted', $post->reactions->contains('user_id', $request->user()->id));
+
+        return response()->json($post);
     }
 
     public function update(Request $request, Post $post): JsonResponse

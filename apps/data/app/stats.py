@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -42,11 +42,81 @@ def overview(session: Session, organization_id: int, owner_id: int | None = None
         {"org": organization_id},
     ).mappings().all()
 
+    today = date.today()
+    completed_tasks = session.execute(
+        text(
+            f"SELECT COUNT(*) FROM tasks "
+            f"WHERE organization_id = :org AND status = 'done' "
+            f"AND completed_at IS NOT NULL AND completed_at >= :since {task_scope}"
+        ),
+        {**params, "since": (today - timedelta(days=30)).isoformat()},
+    ).scalar_one()
+
+    late_scope = "AND p.owner_id = :owner" if owner_id else ""
+    late_projects = session.execute(
+        text(
+            f"SELECT p.id, p.name, COUNT(t.id) AS overdue "
+            f"FROM projects p "
+            f"JOIN tasks t ON t.project_id = p.id "
+            f"WHERE p.organization_id = :org AND p.archived_at IS NULL "
+            f"AND t.status != 'done' AND t.due_date IS NOT NULL AND t.due_date < :today "
+            f"{late_scope} "
+            f"GROUP BY p.id, p.name "
+            f"ORDER BY overdue DESC, p.name"
+        ),
+        {**params, "today": today.isoformat()},
+    ).mappings().all()
+
     return {
         "active_projects": active_projects,
         "overdue_tasks": overdue_tasks,
         "workload": [dict(row) for row in workload],
+        "completed_tasks": completed_tasks,
+        "completed_per_week": completed_per_week(session, params, task_scope, today),
+        "late_projects": [dict(row) for row in late_projects],
     }
+
+
+def _as_date(value) -> date:
+    # SQLite renvoie des chaînes, Postgres des date/datetime.
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    return date.fromisoformat(str(value)[:10])
+
+
+def completed_per_week(
+    session: Session, params: dict, task_scope: str, today: date, weeks: int = 5
+) -> list[dict]:
+    """Tâches terminées par semaine ISO sur les `weeks` dernières semaines (courante incluse).
+
+    Libellé « S » + numéro de semaine ISO (ex. « S36 »). Agrégation par jour en SQL
+    (portable SQLite/Postgres), regroupement par semaine en Python.
+    """
+    first_monday = today - timedelta(days=today.weekday()) - timedelta(weeks=weeks - 1)
+
+    rows = session.execute(
+        text(
+            f"SELECT DATE(completed_at) AS day, COUNT(*) AS count "
+            f"FROM tasks "
+            f"WHERE organization_id = :org AND status = 'done' "
+            f"AND completed_at IS NOT NULL AND completed_at >= :since {task_scope} "
+            f"GROUP BY DATE(completed_at)"
+        ),
+        {**params, "since": first_monday.isoformat()},
+    ).mappings().all()
+
+    buckets: dict[tuple[int, int], int] = {}
+    for row in rows:
+        year, week, _ = _as_date(row["day"]).isocalendar()
+        buckets[(year, week)] = buckets.get((year, week), 0) + row["count"]
+
+    result = []
+    for i in range(weeks):
+        year, week, _ = (first_monday + timedelta(weeks=i)).isocalendar()
+        result.append({"week": f"S{week}", "count": buckets.get((year, week), 0)})
+    return result
 
 
 def pipeline(session: Session, organization_id: int, owner_id: int | None = None) -> dict:

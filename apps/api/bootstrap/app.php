@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'organization' => \App\Http\Middleware\SetCurrentOrganization::class,
+            'internal' => \App\Http\Middleware\EnsureInternalSecret::class,
         ]);
 
         $middleware->throttleApi();
