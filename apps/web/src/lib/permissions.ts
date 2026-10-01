@@ -13,6 +13,7 @@ export type Ability =
   | "crm.view"
   | "crm.edit"
   | "analytics.view"
+  | "social.view"
   | "post.create"
   | "post.pin"
   | "members.view";
@@ -25,6 +26,7 @@ const RULES: Record<Ability, Role[]> = {
   "crm.view": ["owner", "admin", "manager"],
   "crm.edit": ["owner", "admin", "manager"],
   "analytics.view": ["owner", "admin", "manager"],
+  "social.view": ["owner", "admin", "manager", "member"],
   "post.create": ["owner", "admin", "manager", "member"],
   "post.pin": ["owner", "admin"],
 };

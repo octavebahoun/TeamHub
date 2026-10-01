@@ -16,6 +16,11 @@ describe("permissions — doc « Parcours par rôle »", () => {
     expect(canEditMember("manager", "member")).toBe(false);
   });
 
+  it("cache le fil Social à l'Invité seulement", () => {
+    expect(can("guest", "social.view")).toBe(false);
+    expect(can("member", "social.view")).toBe(true);
+  });
+
   it("cache CRM et Analytics au Membre et à l'Invité", () => {
     for (const role of ["member", "guest"] as const) {
       expect(can(role, "crm.view")).toBe(false);

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { differenceInCalendarDays, isSameMonth } from "date-fns";
 import { getMe, getMembers, getPosts, getProjects } from "@/lib/api/endpoints";
 import { ago, toDate } from "@/lib/format";
@@ -14,6 +15,7 @@ export const metadata: Metadata = { title: "Social" };
 export default async function SocialPage() {
   const me = await getMe();
   const role = currentRole(me);
+  if (!can(role, "social.view")) notFound();
   const [posts, members, projects] = await Promise.all([getPosts(), can(role, "members.view") ? getMembers() : Promise.resolve([]), getProjects()]);
   const now = new Date();
   const orgName = me.current_organization?.name ?? "l'équipe";

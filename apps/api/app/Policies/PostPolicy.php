@@ -9,14 +9,15 @@ use App\Support\OrganizationRole;
 
 class PostPolicy
 {
+    // Doc « Parcours par rôle » : le fil Social n'existe pas pour l'invité.
     public function viewAny(User $user): bool
     {
-        return OrganizationRole::of($user) !== null;
+        return OrganizationRole::canContribute($user);
     }
 
     public function view(User $user, Post $post): bool
     {
-        return OrganizationRole::of($user) !== null;
+        return OrganizationRole::canContribute($user);
     }
 
     public function create(User $user): bool

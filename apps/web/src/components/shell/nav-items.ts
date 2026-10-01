@@ -8,7 +8,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/projets", label: "Projets", icon: FolderClosed },
   { href: "/taches", label: "Tâches", icon: SquareCheck },
   { href: "/chat", label: "Chat", icon: MessageSquare },
-  { href: "/social", label: "Social", icon: Users },
+  { href: "/social", label: "Social", icon: Users, ability: "social.view" },
   { href: "/analytics", label: "Analytics", icon: BarChart3, ability: "analytics.view" },
   { href: "/crm", label: "CRM", icon: Briefcase, ability: "crm.view" },
 ];
