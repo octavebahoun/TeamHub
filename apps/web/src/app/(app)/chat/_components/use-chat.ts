@@ -96,9 +96,11 @@ export function useChat(initialChannel?: string, initialProjectId?: number) {
     [socket, select]
   );
 
+  const mocks = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
+
   return {
     connected,
-    available: !!socket,
+    available: !!socket || mocks,
     channels,
     active: channels?.find((c) => c.id === activeId),
     setActiveId: select,

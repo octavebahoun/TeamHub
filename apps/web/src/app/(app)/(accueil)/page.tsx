@@ -6,6 +6,7 @@ import { currentRole } from "@/lib/permissions";
 import { EmptyState } from "@/components/common/empty-state";
 import { MyProjects } from "./_components/my-projects";
 import { TaskGroup } from "./_components/task-group";
+import { ReviewsWidget } from "@/components/contravo/reviews-widget";
 
 export const metadata: Metadata = { title: "Accueil" };
 
@@ -38,7 +39,10 @@ export default async function HomePage() {
           </>
         )}
       </div>
-      <MyProjects projects={mine} />
+      <div className="space-y-8">
+        <MyProjects projects={mine} />
+        <ReviewsWidget />
+      </div>
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Hash } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import { ConnectionBadge } from "@/components/common/connection-badge";
 import { EmptyState } from "@/components/common/empty-state";
 import { useRealtime } from "@/components/realtime/realtime-provider";
 import { plural } from "@/lib/format";
@@ -21,12 +22,14 @@ type Props = {
 
 export function ChatApp({ meId, people, projects, initialChannel, initialProjectId }: Props) {
   const chat = useChat(initialChannel, initialProjectId);
-  const { online } = useRealtime();
+  const { online, connectionStatus } = useRealtime();
   const nameOf = (id: number) => people.find((p) => p.id === id)?.name ?? "Membre";
   const active = chat.active;
   const project = projects.find((p) => p.id === active?.project_id);
 
-  if (!chat.available) {
+  const mocks = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
+
+  if (!chat.available && !mocks) {
     return (
       <EmptyState title="Chat indisponible" className="m-8">
         Le serveur temps réel n&apos;est pas configuré (NEXT_PUBLIC_WS_URL).
@@ -59,11 +62,14 @@ export function ChatApp({ meId, people, projects, initialChannel, initialProject
                   {plural(active.member_ids.length, "membre", "membres")} · {active.member_ids.filter((id) => online.has(id) || id === meId).length} en ligne
                 </p>
               </div>
-              {project && (
-                <Link href={`/projets/${project.id}`} className={buttonVariants({ variant: "outline" })}>
-                  Voir le projet
-                </Link>
-              )}
+              <div className="flex items-center gap-3">
+                <ConnectionBadge status={connectionStatus} compact />
+                {project && (
+                  <Link href={`/projets/${project.id}`} className={buttonVariants({ variant: "outline" })}>
+                    Voir le projet
+                  </Link>
+                )}
+              </div>
             </header>
             <MessageList
               messages={chat.messages}
@@ -71,7 +77,19 @@ export function ChatApp({ meId, people, projects, initialChannel, initialProject
               nameOf={nameOf}
               typingNames={chat.typingUserIds.filter((id) => id !== meId).map((id) => nameOf(id).split(" ")[0])}
             />
-            <Composer channelName={active.name} onSend={chat.send} onTyping={chat.notifyTyping} />
+            <Composer
+              channelName={active.name}
+              onSend={chat.send}
+              onTyping={chat.notifyTyping}
+              onSendAttachment={async (file) => {
+                await new Promise((r) => setTimeout(r, 400));
+                return file.size > 0;
+              }}
+              onSendVoice={async () => {
+                await new Promise((r) => setTimeout(r, 300));
+                return true;
+              }}
+            />
           </>
         ) : (
           <div className="flex flex-1 items-center justify-center p-8 text-muted-foreground">

@@ -1,0 +1,45 @@
+import type { Post } from "@/lib/data/types";
+import { MOCK_ORG_ID } from "./clients";
+
+export const mockPosts: Post[] = [
+  {
+    id: 501,
+    organization_id: MOCK_ORG_ID,
+    author_id: 2,
+    body: "Livraison de la campagne Celtiis — +32 % de leads qualifiés sur Cotonou. Bravo à toute l'équipe !",
+    pinned: true,
+    pinned_at: "2026-09-02T09:00:00Z",
+    created_at: "2026-09-01T17:30:00Z",
+    author: { id: 2, name: "Koffi Mensah", role: "manager" },
+    reactions_count: 12,
+    comments_count: 3,
+    kind: "project_delivered",
+    meta: { project: "Campagne Celtiis Bénin" },
+  },
+  {
+    id: 502,
+    organization_id: MOCK_ORG_ID,
+    author_id: 1,
+    body: "Atelier utilisateurs prévu jeudi à Porto-Novo pour le portail municipal — qui peut se joindre sur place ?",
+    pinned: false,
+    pinned_at: null,
+    created_at: "2026-10-01T08:00:00Z",
+    author: { id: 1, name: "Amina Traoré", role: "admin" },
+    reactions_count: 5,
+    comments_count: 2,
+  },
+  {
+    id: 503,
+    organization_id: MOCK_ORG_ID,
+    author_id: 3,
+    body: "Sandbox MoMo validée pour Abidjan — on enchaîne sur les tests de charge cette semaine.",
+    pinned: false,
+    pinned_at: null,
+    created_at: "2026-09-30T11:00:00Z",
+    author: { id: 3, name: "Fatou Diop", role: "member" },
+    reactions_count: 8,
+    comments_count: 1,
+    kind: "milestone",
+    meta: { project: "Refonte e-commerce Maison Akwa" },
+  },
+];

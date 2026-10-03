@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { CalendarDays, MessageSquare, MoreHorizontal, SquareCheck } from "lucide-react";
 import type { Task, TaskStatus } from "@/lib/api/types";
-import { isOverdue, shortDate } from "@/lib/format";
+import { isDueSoon, isOverdue, shortDate } from "@/lib/format";
 import { TASK_STATUS, TASK_STATUS_ORDER } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ToneBadge } from "@/components/common/tone-badge";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { PriorityBadge } from "@/components/tasks/priority-badge";
 
@@ -20,6 +21,7 @@ export function TaskCard({ task, canMove, onMove, dragging, onDragStart, onDragE
   onDragEnd: () => void;
 }) {
   const late = task.status !== "done" && isOverdue(task.due_date);
+  const dueSoon = task.status !== "done" && !late && isDueSoon(task.due_date);
   return (
     <article
       draggable={canMove}
@@ -32,12 +34,16 @@ export function TaskCard({ task, canMove, onMove, dragging, onDragStart, onDragE
       className={cn(
         "relative rounded-xl border bg-card p-4 shadow-xs transition focus-within:ring-2 focus-within:ring-ring",
         canMove && "cursor-grab active:cursor-grabbing",
-        dragging && "opacity-40"
+        dragging && "opacity-40",
+        late && "border-danger/40",
+        dueSoon && "border-primary/35"
       )}
     >
       <div className="mb-3 flex items-start justify-between gap-2">
         <div className="flex flex-wrap gap-2">
           <PriorityBadge priority={task.priority} />
+          {late && <ToneBadge tone="brand">En retard</ToneBadge>}
+          {dueSoon && <ToneBadge tone="neutral">Échéance proche</ToneBadge>}
         </div>
         {canMove && (
           <DropdownMenu>

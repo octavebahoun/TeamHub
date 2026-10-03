@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compactMoney, dueLabel, initials, isOverdue, longToday, money, plural } from "@/lib/format";
+import { compactMoney, dueLabel, initials, isDueSoon, isOverdue, longToday, money, plural } from "@/lib/format";
 
 const NOW = new Date("2026-10-01T09:00:00");
 
@@ -16,6 +16,9 @@ describe("format", () => {
     expect(dueLabel("2026-10-05", NOW)).toMatch(/^Lun\.? 5 oct\.?$/);
     expect(dueLabel(null, NOW)).toBe("Sans échéance");
     expect(isOverdue("2026-09-30", NOW)).toBe(true);
+    expect(isDueSoon("2026-10-01", NOW)).toBe(true);
+    expect(isDueSoon("2026-10-02", NOW)).toBe(true);
+    expect(isDueSoon("2026-10-05", NOW)).toBe(false);
   });
   it("écrit la date du jour à la française", () => {
     expect(longToday(NOW)).toBe("Jeudi 1er octobre");

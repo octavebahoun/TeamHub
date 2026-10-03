@@ -1,14 +1,33 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useRef, useState } from "react";
 import { ArrowUp, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
-export function Composer({ channelName, onSend, onTyping }: { channelName: string; onSend: (body: string) => Promise<boolean>; onTyping: () => void }) {
+const VoiceRecorder = dynamic(() => import("@/components/media/voice-recorder").then((m) => ({ default: m.VoiceRecorder })), {
+  ssr: false,
+  loading: () => null,
+});
+
+export function Composer({
+  channelName,
+  onSend,
+  onTyping,
+  onSendAttachment,
+  onSendVoice,
+}: {
+  channelName: string;
+  onSend: (body: string) => Promise<boolean>;
+  onTyping: () => void;
+  onSendAttachment?: (file: File) => Promise<boolean>;
+  onSendVoice?: (blob: Blob, mimeType: string) => Promise<boolean>;
+}) {
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const lastTyping = useRef(0);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,12 +40,40 @@ export function Composer({ channelName, onSend, onTyping }: { channelName: strin
     else toast.error("Message non envoyé. Vérifiez votre connexion.");
   };
 
+  const attach = async (list: FileList | null) => {
+    const file = list?.[0];
+    if (!file || !onSendAttachment) return;
+    setSending(true);
+    const ok = await onSendAttachment(file);
+    setSending(false);
+    if (!ok) toast.error("Pièce jointe non envoyée.");
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const sendVoice = async (blob: Blob, mime: string) => {
+    if (!onSendVoice) return;
+    setSending(true);
+    const ok = await onSendVoice(blob, mime);
+    setSending(false);
+    if (ok) toast.success("Message vocal envoyé.");
+    else toast.error("Message vocal non envoyé.");
+  };
+
   return (
-    <form onSubmit={submit} className="border-t px-6 py-5 sm:px-8">
+    <form onSubmit={submit} className="space-y-3 border-t px-6 py-5 sm:px-8">
       <div className="flex items-center gap-3 rounded-2xl border bg-background py-2 pr-2 pl-4 focus-within:ring-2 focus-within:ring-ring">
-        <Button type="button" variant="ghost" size="icon-sm" aria-label="Joindre un fichier (bientôt disponible)" disabled>
+        <input ref={fileRef} type="file" className="sr-only" onChange={(e) => void attach(e.target.files)} />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Joindre un fichier"
+          disabled={!onSendAttachment || sending}
+          onClick={() => fileRef.current?.click()}
+        >
           <Paperclip aria-hidden />
         </Button>
+        {onSendVoice && <VoiceRecorder onSend={sendVoice} />}
         <label htmlFor="chat-input" className="sr-only">
           Écrire dans #{channelName}
         </label>

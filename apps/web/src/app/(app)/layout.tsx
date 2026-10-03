@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/shell/app-sidebar";
+import { CommandPalette } from "@/components/shell/command-palette";
 import { NAV_ITEMS } from "@/components/shell/nav-items";
 import { Topbar } from "@/components/shell/topbar";
 import { RealtimeProvider } from "@/components/realtime/realtime-provider";
@@ -47,6 +48,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </main>
         </div>
       </div>
+      <CommandPalette />
     </RealtimeProvider>
   );
 }

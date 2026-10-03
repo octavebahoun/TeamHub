@@ -9,9 +9,12 @@ import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
 import { Panel, PanelTitle } from "@/components/common/panel";
 import { ToneBadge } from "@/components/common/tone-badge";
+import { AiSummaryCard } from "./_components/ai-summary-card";
 import { BarList } from "./_components/bar-list";
 import { ColumnChart } from "./_components/column-chart";
 import { ExportButton } from "./_components/export-button";
+import { FinancialHealth } from "./_components/financial-health";
+import { FollowUpAssistant } from "./_components/follow-up-assistant";
 import { KpiTile } from "./_components/kpi-tile";
 
 export const metadata: Metadata = { title: "Analytics" };
@@ -71,6 +74,14 @@ export default async function AnalyticsPage() {
         />
         <KpiTile label="Tâches en retard" value={String(overview.overdue_tasks)} hint={plural(late.length, "projet concerné", "projets concernés")} />
         <KpiTile label="Pipeline en cours" value={compactMoney(openAmount)} hint={`FCFA, ${plural(openCount, "opportunité", "opportunités")}`} />
+      </section>
+
+      <section aria-label="IA et finances" className="mb-8 grid gap-6 xl:grid-cols-2">
+        <AiSummaryCard />
+        <FinancialHealth />
+      </section>
+      <section aria-label="Relances" className="mb-8">
+        <FollowUpAssistant />
       </section>
 
       <div className="grid gap-6 xl:grid-cols-2">

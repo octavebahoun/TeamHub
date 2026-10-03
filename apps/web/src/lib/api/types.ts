@@ -100,6 +100,8 @@ export type Project = {
   /** Extensions (cf. docs/api-gaps.md). */
   milestones?: { code: string; title: string; done: boolean; current: boolean }[];
   attachments?: { id: number; kind: string; name: string; size: string }[];
+  contravo_invoice_id?: string | null;
+  contravo_contract_id?: string | null;
 };
 
 export type Task = {
@@ -152,6 +154,8 @@ export type Client = {
   created_at: string;
   owner?: UserRef | null;
   opportunities?: Opportunity[];
+  /** Extension Contravo (Laravel). */
+  contravo_client_id?: string | null;
 };
 
 export type Opportunity = {
@@ -170,6 +174,7 @@ export type Opportunity = {
   client?: { id: number; name: string; company: string | null };
   owner?: UserRef | null;
   project?: { id: number; name: string } | null;
+  contravo_quote_id?: string | null;
 };
 
 export type ActivityKind = "note" | "call" | "email" | "meeting";
