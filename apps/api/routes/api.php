@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AnalyticsController;
+use App\Http\Controllers\Api\V1\AttachmentController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\ClientActivityController;
 use App\Http\Controllers\Api\V1\ClientController;
@@ -75,11 +76,18 @@ Route::prefix('v1')->group(function () {
             Route::delete('projects/{project}/members/{user}', [ProjectMemberController::class, 'destroy']);
             Route::get('projects/{project}/tasks', [TaskController::class, 'index']);
             Route::post('projects/{project}/tasks', [TaskController::class, 'store']);
+            Route::post('projects/{project}/attachments', [AttachmentController::class, 'storeForProject']);
             Route::get('tasks/{task}', [TaskController::class, 'show']);
             Route::patch('tasks/{task}', [TaskController::class, 'update']);
             Route::delete('tasks/{task}', [TaskController::class, 'destroy']);
             Route::post('tasks/{task}/comments', [TaskCommentController::class, 'store']);
+            Route::post('tasks/{task}/attachments', [AttachmentController::class, 'storeForTask']);
             Route::get('me/tasks', [MyTaskController::class, 'index']);
+
+            // Métadonnée seulement : le fichier vit chez Contravo (scan antivirus inclus).
+            Route::patch('attachments/{attachment}', [AttachmentController::class, 'update']);
+            Route::get('attachments/{attachment}/download', [AttachmentController::class, 'download']);
+            Route::delete('attachments/{attachment}', [AttachmentController::class, 'destroy']);
 
             Route::apiResource('clients', ClientController::class);
             Route::get('clients/{client}/activities', [ClientActivityController::class, 'index']);

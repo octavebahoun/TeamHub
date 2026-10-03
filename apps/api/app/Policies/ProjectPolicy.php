@@ -49,4 +49,14 @@ class ProjectPolicy
         return in_array(OrganizationRole::of($user), [Membership::ROLE_OWNER, Membership::ROLE_ADMIN], true)
             || $project->owner_id === $user->id;
     }
+
+    // Déposer un fichier : comme voir le projet, mais l'invité reste lecture seule.
+    public function attach(User $user, Project $project): bool
+    {
+        if (OrganizationRole::of($user) === Membership::ROLE_GUEST) {
+            return false;
+        }
+
+        return $this->view($user, $project);
+    }
 }

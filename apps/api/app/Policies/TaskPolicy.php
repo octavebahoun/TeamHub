@@ -74,4 +74,10 @@ class TaskPolicy
         }
         return $this->view($user, $task);
     }
+
+    // Déposer un fichier sur une tâche : même règle que commenter.
+    public function attach(User $user, Task $task): bool
+    {
+        return $this->comment($user, $task);
+    }
 }

@@ -72,9 +72,12 @@ class ProjectController extends Controller
     public function show(Project $project): JsonResponse
     {
         $this->authorize('view', $project);
-        return response()->json(
-            $project->load('owner', 'members')->loadCount($this->rootTaskCounts())
-        );
+        $project->load('owner', 'members', 'attachments')->loadCount($this->rootTaskCounts());
+
+        $payload = $project->toArray();
+        $payload['attachments'] = $project->attachments->map(fn ($a) => $a->toSummary())->values();
+
+        return response()->json($payload);
     }
 
     public function update(Request $request, Project $project): JsonResponse

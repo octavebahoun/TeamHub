@@ -69,7 +69,12 @@ class TaskController extends Controller
     public function show(Task $task): JsonResponse
     {
         $this->authorize('view', $task);
-        return response()->json($task->load('assignee', 'creator', 'subtasks', 'comments.author'));
+        $task->load('assignee', 'creator', 'subtasks', 'comments.author', 'attachments');
+
+        $payload = $task->toArray();
+        $payload['attachments'] = $task->attachments->map(fn ($a) => $a->toSummary())->values();
+
+        return response()->json($payload);
     }
 
     public function update(Request $request, Task $task): JsonResponse
