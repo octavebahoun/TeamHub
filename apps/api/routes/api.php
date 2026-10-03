@@ -8,8 +8,10 @@ use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MemberController;
 use App\Http\Controllers\Api\V1\MyTaskController;
+use App\Http\Controllers\Api\V1\NotificationInboxController;
 use App\Http\Controllers\Api\V1\OpportunityController;
 use App\Http\Controllers\Api\V1\OrganizationController;
+use App\Http\Controllers\Api\V1\PasswordResetController;
 use App\Http\Controllers\Api\V1\ProjectMemberController;
 use App\Http\Controllers\Api\V1\PostCommentController;
 use App\Http\Controllers\Api\V1\PostController;
@@ -33,6 +35,8 @@ Route::prefix('internal')->middleware('internal')->group(function () {
 Route::prefix('v1')->group(function () {
     Route::post('auth/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
     Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+    Route::post('auth/forgot-password', [PasswordResetController::class, 'forgot'])->middleware('throttle:5,1');
+    Route::post('auth/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:5,1');
 
     // Invitations publiques (lien reçu par e-mail) : aperçu et création de compte.
     Route::get('invitations/{token}', [InvitationController::class, 'show'])->middleware('throttle:30,1');
@@ -49,6 +53,10 @@ Route::prefix('v1')->group(function () {
         Route::post('invitations/{token}/accept', [InvitationController::class, 'accept']);
 
         Route::middleware('organization')->group(function () {
+            Route::get('notifications', [NotificationInboxController::class, 'index']);
+            Route::post('notifications/read', [NotificationInboxController::class, 'markAllRead']);
+            Route::post('notifications/{notification}/read', [NotificationInboxController::class, 'markAsRead'])->whereNumber('notification');
+
             Route::get('invitations', [InvitationController::class, 'index']);
             Route::post('invitations', [InvitationController::class, 'store']);
             Route::delete('invitations/{invitationId}', [InvitationController::class, 'destroy'])->whereNumber('invitationId');

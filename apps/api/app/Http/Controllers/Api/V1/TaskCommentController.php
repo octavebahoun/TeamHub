@@ -5,13 +5,13 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\TaskComment;
-use App\Services\RealtimePublisher;
+use App\Services\InboxNotifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class TaskCommentController extends Controller
 {
-    public function __construct(protected RealtimePublisher $realtime) {}
+    public function __construct(protected InboxNotifier $inbox) {}
 
     public function store(Request $request, Task $task): JsonResponse
     {
@@ -28,7 +28,7 @@ class TaskCommentController extends Controller
         ]);
 
         if ($task->assignee_id && $task->assignee_id !== $request->user()->id) {
-            $this->realtime->notify($task->assignee_id, 'task.commented', [
+            $this->inbox->toUser($task->assignee_id, 'task.commented', 'Nouveau commentaire sur une de vos tâches', $request->user()->name, '/taches/'.$task->id, [
                 'task_id' => $task->id,
                 'comment_id' => $comment->id,
                 'by' => $request->user()->name,

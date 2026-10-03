@@ -6,8 +6,8 @@ export const metadata: Metadata = { title: "Connexion" };
 
 const MODULES = ["Projets", "Tâches", "Chat", "Social", "Analytics", "CRM"];
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
-  const { next } = await searchParams;
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; reset?: string }> }) {
+  const { next, reset } = await searchParams;
   return (
     <AuthShell
       aside={
@@ -24,7 +24,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         </>
       }
     >
-      <LoginForm next={next} />
+      <LoginForm next={next} justReset={reset === "1"} />
     </AuthShell>
   );
 }

@@ -64,6 +64,15 @@ services:
       APP_ENV: production
       APP_KEY: "${APP_KEY:?APP_KEY manquant — generer avec php artisan key:generate --show}"
       APP_URL: https://${DOMAIN:-teamhub.excellenceteam.site}
+      FRONTEND_URL: https://${DOMAIN:-teamhub.excellenceteam.site}
+      # E-mails internes uniquement. Laisser log tant que Brevo/Resend n'est pas branché.
+      MAIL_MAILER: ${MAIL_MAILER:-log}
+      MAIL_HOST: ${MAIL_HOST:-127.0.0.1}
+      MAIL_PORT: ${MAIL_PORT:-2525}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-hello@example.com}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-WINE}
       DB_CONNECTION: pgsql
       DB_URL: ${DATABASE_URL:-postgres://teamhub:${POSTGRES_PASSWORD}@postgres:5432/teamhub}
       REDIS_CLIENT: predis

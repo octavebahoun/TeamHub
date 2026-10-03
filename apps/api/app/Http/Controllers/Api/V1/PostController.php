@@ -3,15 +3,17 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Membership;
 use App\Models\Post;
-use App\Services\RealtimePublisher;
+use App\Services\InboxNotifier;
 use App\Support\CurrentOrganization;
+use App\Support\OrganizationRole;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PostController extends Controller
 {
-    public function __construct(protected RealtimePublisher $realtime) {}
+    public function __construct(protected InboxNotifier $inbox) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -44,9 +46,21 @@ class PostController extends Controller
             'body' => $data['body'],
         ]);
 
-        $this->realtime->notifyOrganization(
-            CurrentOrganization::id(),
+        $organizationId = CurrentOrganization::id();
+        $recipients = Membership::query()
+            ->where('organization_id', $organizationId)
+            ->whereIn('role', OrganizationRole::CONTRIBUTOR_ROLES)
+            ->where('user_id', '!=', $request->user()->id)
+            ->pluck('user_id')
+            ->all();
+
+        $this->inbox->toUsers(
+            $recipients,
+            $organizationId,
             'post.created',
+            'Nouvelle publication dans le fil de l\'équipe',
+            $request->user()->name,
+            '/social',
             ['post_id' => $post->id, 'author' => $request->user()->name]
         );
 

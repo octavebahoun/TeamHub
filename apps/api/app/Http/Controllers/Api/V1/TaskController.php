@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\Task;
-use App\Services\RealtimePublisher;
+use App\Services\InboxNotifier;
 use App\Support\CurrentOrganization;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,7 +14,7 @@ use Illuminate\Validation\Rules\Exists;
 
 class TaskController extends Controller
 {
-    public function __construct(protected RealtimePublisher $realtime) {}
+    public function __construct(protected InboxNotifier $inbox) {}
 
     public function index(Request $request, Project $project): JsonResponse
     {
@@ -56,7 +56,7 @@ class TaskController extends Controller
         $task = Task::create($data);
 
         if ($task->assignee_id && $task->assignee_id !== $request->user()->id) {
-            $this->realtime->notify($task->assignee_id, 'task.assigned', [
+            $this->inbox->toUser($task->assignee_id, 'task.assigned', 'Nouvelle tâche assignée', $task->title, '/taches/'.$task->id, [
                 'task_id' => $task->id,
                 'title' => $task->title,
                 'project_id' => $task->project_id,
@@ -98,7 +98,7 @@ class TaskController extends Controller
             && $task->assignee_id
             && $task->assignee_id !== $previousAssignee
             && $task->assignee_id !== $request->user()->id) {
-            $this->realtime->notify($task->assignee_id, 'task.assigned', [
+            $this->inbox->toUser($task->assignee_id, 'task.assigned', 'Nouvelle tâche assignée', $task->title, '/taches/'.$task->id, [
                 'task_id' => $task->id,
                 'title' => $task->title,
                 'project_id' => $task->project_id,

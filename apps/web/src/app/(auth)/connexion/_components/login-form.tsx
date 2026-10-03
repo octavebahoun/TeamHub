@@ -9,13 +9,18 @@ import { login, type FormState } from "@/lib/actions/session";
 import { AuthHeading } from "../../_components/auth-shell";
 import { FormField } from "../../_components/form-field";
 
-export function LoginForm({ next }: { next?: string }) {
+export function LoginForm({ next, justReset }: { next?: string; justReset?: boolean }) {
   const [state, action, pending] = useActionState<FormState, FormData>(login, undefined);
   return (
     <>
       <AuthHeading title="Connexion" subtitle="Content de vous revoir." />
       <form action={action} className="space-y-6" noValidate>
         <input type="hidden" name="next" value={next ?? "/"} />
+        {justReset && !state?.error && (
+          <p role="status" className="rounded-md bg-muted px-4 py-3 text-sm">
+            Mot de passe mis à jour. Vous pouvez vous connecter.
+          </p>
+        )}
         {state?.error && (
           <p role="alert" className="rounded-md bg-brand-soft px-4 py-3 text-sm text-brand-soft-foreground">
             {state.error}
