@@ -60,7 +60,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    environment:
+    environment: &api-env
       APP_ENV: production
       APP_KEY: "${APP_KEY:?APP_KEY manquant — generer avec php artisan key:generate --show}"
       APP_URL: https://${DOMAIN:-teamhub.excellenceteam.site}
@@ -89,6 +89,48 @@ services:
       - uploads:/app/storage/app/public
     ports:
       - "127.0.0.1:8100:80"
+
+  # Sans ce worker, les jobs mis en queue (ex: SendTaskDueReminders) restent
+  # coincés dans Redis indéfiniment — rien ne les exécute jamais.
+  queue:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+      target: runtime
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_started
+    environment:
+      <<: *api-env
+      RUN_MIGRATIONS: "false" # déjà fait par le service api au démarrage
+    volumes:
+      - uploads:/app/storage/app/public
+    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--max-time=3600"]
+
+  # Sans ce service, Schedule::job(...)->hourly() (routes/console.php) ne se
+  # déclenche jamais : personne n'appelle `php artisan schedule:run`.
+  scheduler:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+      target: runtime
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_started
+    environment:
+      <<: *api-env
+      RUN_MIGRATIONS: "false"
+    command: ["php", "artisan", "schedule:work"]
 
   realtime:
     build:

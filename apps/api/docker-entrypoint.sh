@@ -10,7 +10,10 @@ if [ "$APP_ENV" = "production" ]; then
     php artisan view:cache || true
 fi
 
-# Migrations (idempotent)
-php artisan migrate --force
+# Migrations (idempotent) — un seul service doit les lancer pour éviter les
+# collisions de verrou si api/queue/scheduler démarrent en même temps.
+if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
+    php artisan migrate --force
+fi
 
 exec "$@"
