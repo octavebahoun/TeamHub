@@ -11,6 +11,7 @@ use App\Models\Post;
 use App\Models\Project;
 use App\Models\Task;
 use App\Services\InboxNotifier;
+use App\Support\ContravoWebhookSignature;
 use App\Support\CurrentOrganization;
 use App\Support\OrganizationRole;
 use Illuminate\Http\JsonResponse;
@@ -64,13 +65,24 @@ class ContravoWebhookController extends Controller
 
     protected function verifySignature(Request $request): void
     {
-        $secret = config('services.contravo.webhook_secret');
+        $secret = (string) config('services.contravo.webhook_secret');
         abort_if(blank($secret), 500, 'CONTRAVO_WEBHOOK_SECRET manquant.');
 
-        $signature = (string) $request->header('X-Webhook-Signature');
-        $expected = hash_hmac('sha256', $request->getContent(), $secret);
+        $header = (string) ($request->header('X-Webhook-Signature') ?: $request->header('Webhook-Signature'));
+        $body = $request->getContent();
 
-        abort_unless($signature !== '' && hash_equals($expected, $signature), 401, 'Signature invalide.');
+        if (ContravoWebhookSignature::matches($secret, $body, $header)) {
+            return;
+        }
+
+        Log::warning('Webhook Contravo: signature refusée', [
+            'header_present' => $header !== '',
+            'header_shape' => ContravoWebhookSignature::describeHeader($header),
+            'header_len' => strlen($header),
+            'body_len' => strlen($body),
+        ]);
+
+        abort(401, 'Signature invalide.');
     }
 
     protected function handleQuoteAccepted(array $data): void

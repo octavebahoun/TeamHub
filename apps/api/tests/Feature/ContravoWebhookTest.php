@@ -64,6 +64,16 @@ it('rejects a webhook with a missing or wrong signature', function () {
         ->assertUnauthorized();
 });
 
+it('accepts a webhook signed with a sha256= prefix', function () {
+    $payload = ['event' => 'something.else', 'data' => []];
+    $raw = json_encode($payload);
+    $signature = 'sha256='.hash_hmac('sha256', $raw, config('services.contravo.webhook_secret'));
+
+    test()->withHeader('X-Webhook-Signature', $signature)
+        ->postJson('/api/v1/webhooks/contravo', $payload)
+        ->assertOk();
+});
+
 it('marks the opportunity won and creates an on-hold project on quote.accepted', function () {
     [$owner, $org, $opportunity] = contravoOrgWithOpportunity('ContravoWon');
 
