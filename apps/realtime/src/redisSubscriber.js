@@ -25,6 +25,32 @@ async function syncProjectChannel(payload) {
   }
 }
 
+export async function handleRedisMessage(io, channel, raw) {
+  let payload;
+  try {
+    payload = JSON.parse(raw);
+  } catch {
+    return logger.warn({ raw }, 'invalid Redis payload');
+  }
+
+  if (channel === NOTIFICATIONS) {
+    if (payload.user_id) {
+      io.to(`user:${payload.user_id}`).emit('notification:new', payload);
+    } else if (payload.organization_id) {
+      io.to(`org:${payload.organization_id}`).emit('notification:new', payload);
+    }
+    return;
+  }
+  if (channel === USER_REVOKED) {
+    io.in(`user:${payload.user_id}`).disconnectSockets(true);
+    logger.info({ user_id: payload.user_id }, 'user revoked, sockets closed');
+    return;
+  }
+  if (channel === PROJECT_EVENTS) {
+    await syncProjectChannel(payload);
+  }
+}
+
 export function startRedisSubscriber(io) {
   const sub = new Redis(config.redisUrl);
 
@@ -34,26 +60,8 @@ export function startRedisSubscriber(io) {
   });
 
   sub.on('message', async (channel, raw) => {
-    let payload;
     try {
-      payload = JSON.parse(raw);
-    } catch {
-      return logger.warn({ raw }, 'invalid Redis payload');
-    }
-
-    try {
-      if (channel === NOTIFICATIONS) {
-        if (payload.user_id) {
-          io.to(`user:${payload.user_id}`).emit('notification:new', payload);
-        } else if (payload.organization_id) {
-          io.to(`org:${payload.organization_id}`).emit('notification:new', payload);
-        }
-      } else if (channel === USER_REVOKED) {
-        io.in(`user:${payload.user_id}`).disconnectSockets(true);
-        logger.info({ user_id: payload.user_id }, 'user revoked, sockets closed');
-      } else if (channel === PROJECT_EVENTS) {
-        await syncProjectChannel(payload);
-      }
+      await handleRedisMessage(io, channel, raw);
     } catch (err) {
       logger.error({ err, channel }, 'Redis handler failed');
     }

@@ -82,7 +82,10 @@ Route::prefix('v1')->group(function () {
 
             Route::get('analytics/overview', [AnalyticsController::class, 'overview']);
             Route::get('analytics/pipeline', [AnalyticsController::class, 'pipeline']);
+            Route::get('analytics/profitability', [AnalyticsController::class, 'profitability']);
             Route::get('analytics/activity', [AnalyticsController::class, 'activity']);
+            Route::get('analytics/summary', [AnalyticsController::class, 'summary']);
+            Route::get('analytics/relances', [AnalyticsController::class, 'relances']);
         });
     });
 });

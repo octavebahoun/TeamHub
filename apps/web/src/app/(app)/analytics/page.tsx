@@ -70,7 +70,15 @@ export default async function AnalyticsPage() {
           hint="Sur les 30 derniers jours"
         />
         <KpiTile label="Tâches en retard" value={String(overview.overdue_tasks)} hint={plural(late.length, "projet concerné", "projets concernés")} />
-        <KpiTile label="Pipeline en cours" value={compactMoney(openAmount)} hint={`FCFA, ${plural(openCount, "opportunité", "opportunités")}`} />
+        <KpiTile
+          label="Pipeline en cours"
+          value={compactMoney(overview.profitability?.open_amount ?? openAmount)}
+          hint={
+            overview.profitability
+              ? `${compactMoney(overview.profitability.won_amount)} gagnés · ${Math.round(overview.profitability.win_rate * 100)} % de conversion`
+              : `FCFA, ${plural(openCount, "opportunité", "opportunités")}`
+          }
+        />
       </section>
 
       <div className="grid gap-6 xl:grid-cols-2">
