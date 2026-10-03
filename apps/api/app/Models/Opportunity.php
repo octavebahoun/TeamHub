@@ -30,6 +30,7 @@ class Opportunity extends Model
         'client_id',
         'owner_id',
         'project_id',
+        'contravo_quote_id',
         'title',
         'amount',
         'stage',

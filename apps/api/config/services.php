@@ -39,6 +39,11 @@ return [
         'secret' => env('INTERNAL_SECRET'),
     ],
 
+    'contravo' => [
+        // Secret HMAC-SHA256 fourni par Contravo pour signer ses webhooks entrants.
+        'webhook_secret' => env('CONTRAVO_WEBHOOK_SECRET'),
+    ],
+
     'data' => [
         'base_url' => env('DATA_SERVICE_URL', 'http://127.0.0.1:8001'),
         'internal_secret' => env('INTERNAL_SECRET'),

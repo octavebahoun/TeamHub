@@ -39,6 +39,7 @@ class Task extends Model
         'due_date',
         'position',
         'completed_at',
+        'contravo_deliverable_id',
     ];
 
     protected function casts(): array

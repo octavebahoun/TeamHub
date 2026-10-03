@@ -16,6 +16,7 @@ class Client extends Model
     protected $fillable = [
         'organization_id',
         'owner_id',
+        'contravo_client_id',
         'name',
         'company',
         'email',

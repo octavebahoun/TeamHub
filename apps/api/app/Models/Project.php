@@ -32,6 +32,8 @@ class Project extends Model
         'name',
         'description',
         'status',
+        'contravo_invoice_id',
+        'contravo_contract_id',
         'start_date',
         'end_date',
         'archived_at',

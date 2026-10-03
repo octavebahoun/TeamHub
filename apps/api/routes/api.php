@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\AnalyticsController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\ClientActivityController;
 use App\Http\Controllers\Api\V1\ClientController;
+use App\Http\Controllers\Api\V1\ContravoWebhookController;
 use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MemberController;
@@ -37,6 +38,9 @@ Route::prefix('v1')->group(function () {
     Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
     Route::post('auth/forgot-password', [PasswordResetController::class, 'forgot'])->middleware('throttle:5,1');
     Route::post('auth/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:5,1');
+
+    // Webhooks Contravo : public, protégé uniquement par la signature HMAC-SHA256 (voir le contrôleur).
+    Route::post('webhooks/contravo', ContravoWebhookController::class)->middleware('throttle:60,1');
 
     // Invitations publiques (lien reçu par e-mail) : aperçu et création de compte.
     Route::get('invitations/{token}', [InvitationController::class, 'show'])->middleware('throttle:30,1');
