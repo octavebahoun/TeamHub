@@ -212,6 +212,17 @@ export type PostComment = {
   author?: UserRef;
 };
 
+export type AnalyticsProfitability = {
+  won_amount: number;
+  lost_amount: number;
+  open_amount: number;
+  won_count: number;
+  lost_count: number;
+  open_count: number;
+  win_rate: number;
+  won_amount_30d: number;
+};
+
 export type AnalyticsOverview = {
   active_projects: number;
   overdue_tasks: number;
@@ -220,10 +231,60 @@ export type AnalyticsOverview = {
   completed_per_week?: { week: string; count: number }[];
   late_projects?: { id: number; name: string; overdue: number }[];
   completed_tasks?: number;
+  profitability?: AnalyticsProfitability;
 };
 
 export type AnalyticsPipeline = {
   by_stage: { stage: OpportunityStage; count: number; amount: number }[];
+};
+
+export type WeeklySummary = {
+  period: { from: string; to: string };
+  source: "gemini" | "fallback";
+  kpis: {
+    active_projects: number;
+    overdue_tasks: number;
+    completed_tasks_week: number;
+    new_opportunities: number;
+    won_count: number;
+    won_amount: number;
+    open_amount: number;
+    win_rate: number;
+    messages: number;
+    active_channels: number;
+  };
+  workload: { user_id: number; name: string; open_tasks: number }[];
+  profitability: AnalyticsProfitability;
+  chat: { messages: number; active_channels: number; available: boolean };
+  headline: string;
+  narrative: string;
+  priorities: string[];
+};
+
+export type RelanceSuggestion = {
+  client_id: number;
+  client_name: string;
+  company: string | null;
+  email: string | null;
+  opportunity_id: number;
+  opportunity_title: string;
+  stage: OpportunityStage;
+  amount: number;
+  next_follow_up: string | null;
+  overdue_days: number;
+  last_activity_at: string | null;
+  priority: "high" | "medium" | "low";
+  reason: string;
+  channel: "email" | "call" | "note" | "meeting";
+  suggested_message: string;
+  history: { action: string; kind: string | null; body: string | null; created_at: string | null }[];
+};
+
+export type Relances = {
+  as_of: string;
+  source: "gemini" | "fallback";
+  count: number;
+  suggestions: RelanceSuggestion[];
 };
 
 export type Channel = {

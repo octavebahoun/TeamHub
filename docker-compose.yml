@@ -111,10 +111,15 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      mongo:
+        condition: service_healthy
     environment:
       PORT: 8001
       INTERNAL_SECRET: ${INTERNAL_SECRET}
       DATABASE_URL: ${DATABASE_URL_DATA:-postgresql+psycopg://teamhub:${POSTGRES_PASSWORD}@postgres:5432/teamhub}
+      MONGO_URL: ${MONGO_URL:-mongodb://mongo:27017/teamhub}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.0-flash}
     # Interne uniquement — pas exposé par Caddy.
 
   web:
