@@ -48,7 +48,12 @@ class ContravoWebhookController extends Controller
             'invoice.overdue' => $this->handleInvoiceOverdue($data),
             'contract.signed' => $this->handleContractSigned($data),
             'deliverable.approved' => $this->handleDeliverableApproved($data),
-            'deliverable.rejected' => $this->handleDeliverableRejected($data),
+            // Le statut Contravo distingue `rejected` et `revision_requested` ;
+            // sans accès au catalogue d'événements exact (scope webhooks:read
+            // manquant sur la clé actuelle), on traite les deux pareil : créer
+            // une tâche de révision. À affiner si Contravo distingue vraiment
+            // les deux côté notification.
+            'deliverable.rejected', 'deliverable.revision_requested' => $this->handleDeliverableRejected($data),
             'conversation.message_received' => $this->handleConversationMessageReceived($data),
             'review.submitted' => $this->handleReviewSubmitted($data),
             default => Log::info('Webhook Contravo ignoré', ['event' => $event]),
@@ -62,7 +67,7 @@ class ContravoWebhookController extends Controller
         $secret = config('services.contravo.webhook_secret');
         abort_if(blank($secret), 500, 'CONTRAVO_WEBHOOK_SECRET manquant.');
 
-        $signature = (string) $request->header('X-Contravo-Signature');
+        $signature = (string) $request->header('X-Webhook-Signature');
         $expected = hash_hmac('sha256', $request->getContent(), $secret);
 
         abort_unless($signature !== '' && hash_equals($expected, $signature), 401, 'Signature invalide.');

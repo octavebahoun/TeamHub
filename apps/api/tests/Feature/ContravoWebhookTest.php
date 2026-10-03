@@ -48,7 +48,7 @@ function signedWebhook(array $payload): \Illuminate\Testing\TestResponse
     $raw = json_encode($payload);
     $signature = hash_hmac('sha256', $raw, config('services.contravo.webhook_secret'));
 
-    return test()->withHeader('X-Contravo-Signature', $signature)
+    return test()->withHeader('X-Webhook-Signature', $signature)
         ->postJson('/api/v1/webhooks/contravo', $payload);
 }
 
@@ -59,7 +59,7 @@ it('rejects a webhook with a missing or wrong signature', function () {
 
     test()->postJson('/api/v1/webhooks/contravo', $payload)->assertUnauthorized();
 
-    test()->withHeader('X-Contravo-Signature', 'faux-signature')
+    test()->withHeader('X-Webhook-Signature', 'faux-signature')
         ->postJson('/api/v1/webhooks/contravo', $payload)
         ->assertUnauthorized();
 });
