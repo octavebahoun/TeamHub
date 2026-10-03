@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\V1\PostCommentController;
 use App\Http\Controllers\Api\V1\PostController;
 use App\Http\Controllers\Api\V1\PostReactionController;
 use App\Http\Controllers\Api\V1\ProjectController;
+use App\Http\Controllers\Api\V1\SearchController;
 use App\Http\Controllers\Api\V1\TaskCommentController;
 use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Internal\OrganizationMembersController;
@@ -99,6 +100,8 @@ Route::prefix('v1')->group(function () {
             Route::post('posts/{post}/reactions', [PostReactionController::class, 'store']);
             Route::delete('posts/{post}/reactions/{emoji}', [PostReactionController::class, 'destroy']);
             Route::post('posts/{post}/comments', [PostCommentController::class, 'store']);
+
+            Route::get('search', [SearchController::class, 'index']);
 
             Route::get('analytics/overview', [AnalyticsController::class, 'overview']);
             Route::get('analytics/pipeline', [AnalyticsController::class, 'pipeline']);
