@@ -85,7 +85,7 @@ class ContravoWebhookController extends Controller
                 $opportunity->update([
                     'stage' => Opportunity::STAGE_WON,
                     'closed_at' => now(),
-                    'contravo_quote_id' => $this->externalId($data, 'quote_id') ?? $opportunity->contravo_quote_id,
+                    'contravo_quote_id' => $this->externalId($data, 'quoteId') ?? $opportunity->contravo_quote_id,
                 ]);
 
                 Activity::log($opportunity, 'opportunity.stage_changed', null, [
@@ -146,7 +146,7 @@ class ContravoWebhookController extends Controller
         if ($project->status === Project::STATUS_ON_HOLD) {
             $project->update([
                 'status' => Project::STATUS_IN_PROGRESS,
-                'contravo_invoice_id' => $this->externalId($data, 'invoice_id') ?? $project->contravo_invoice_id,
+                'contravo_invoice_id' => $this->externalId($data, 'invoiceId') ?? $project->contravo_invoice_id,
             ]);
 
             Activity::log($project, 'project.unlocked_by_payment', null, ['source' => 'contravo_webhook']);
@@ -187,7 +187,7 @@ class ContravoWebhookController extends Controller
         CurrentOrganization::set($project->organization);
 
         $project->update([
-            'contravo_contract_id' => $this->externalId($data, 'contract_id') ?? $project->contravo_contract_id,
+            'contravo_contract_id' => $this->externalId($data, 'contractId') ?? $project->contravo_contract_id,
         ]);
 
         $this->notifyTeam($project, 'contract.signed', 'Contrat signé', $project->name, '/projets/'.$project->id, [
@@ -208,7 +208,7 @@ class ContravoWebhookController extends Controller
             $task->update([
                 'status' => Task::STATUS_DONE,
                 'completed_at' => now(),
-                'contravo_deliverable_id' => $this->externalId($data, 'deliverable_id') ?? $task->contravo_deliverable_id,
+                'contravo_deliverable_id' => $this->externalId($data, 'deliverableId') ?? $task->contravo_deliverable_id,
             ]);
 
             Activity::log($task, 'task.deliverable_approved', null, ['source' => 'contravo_webhook']);
@@ -225,7 +225,7 @@ class ContravoWebhookController extends Controller
         CurrentOrganization::set($task->organization);
 
         $task->update([
-            'contravo_deliverable_id' => $this->externalId($data, 'deliverable_id') ?? $task->contravo_deliverable_id,
+            'contravo_deliverable_id' => $this->externalId($data, 'deliverableId') ?? $task->contravo_deliverable_id,
         ]);
 
         // Idempotent : si une révision est déjà en cours pour ce livrable, on n'en recrée pas une.
@@ -275,7 +275,7 @@ class ContravoWebhookController extends Controller
 
         CurrentOrganization::set($client->organization);
 
-        $clientId = $this->externalId($data, 'client_id');
+        $clientId = $this->externalId($data, 'clientId');
         if ($clientId && ! $client->contravo_client_id) {
             $client->update(['contravo_client_id' => $clientId]);
         }
@@ -301,7 +301,7 @@ class ContravoWebhookController extends Controller
 
         CurrentOrganization::set($project->organization);
 
-        $reviewId = $this->externalId($data, 'review_id');
+        $reviewId = $this->externalId($data, 'reviewId');
 
         $alreadyPosted = $reviewId !== null && Activity::query()
             ->where('subject_type', $project->getMorphClass())
@@ -350,8 +350,12 @@ class ContravoWebhookController extends Controller
 
     protected function findOpportunity(array $data): ?Opportunity
     {
-        $quoteId = $this->externalId($data, 'quote_id');
+        $quoteId = $this->externalId($data, 'quoteId');
         $reference = $data['reference'] ?? null;
+
+        if (! $quoteId && ! $reference) {
+            return null; // sinon : where(fn () => {}) ne filtre rien, on matcherait n'importe quelle opportunité.
+        }
 
         return Opportunity::query()
             ->where(function ($query) use ($quoteId, $reference) {
@@ -367,8 +371,12 @@ class ContravoWebhookController extends Controller
 
     protected function findProjectByInvoice(array $data): ?Project
     {
-        $invoiceId = $this->externalId($data, 'invoice_id');
+        $invoiceId = $this->externalId($data, 'invoiceId');
         $reference = $data['reference'] ?? null;
+
+        if (! $invoiceId && ! $reference) {
+            return null;
+        }
 
         return Project::query()
             ->where(function ($query) use ($invoiceId, $reference) {
@@ -384,8 +392,12 @@ class ContravoWebhookController extends Controller
 
     protected function findProjectByContract(array $data): ?Project
     {
-        $contractId = $this->externalId($data, 'contract_id');
+        $contractId = $this->externalId($data, 'contractId');
         $reference = $data['reference'] ?? null;
+
+        if (! $contractId && ! $reference) {
+            return null;
+        }
 
         return Project::query()
             ->where(function ($query) use ($contractId, $reference) {
@@ -401,8 +413,12 @@ class ContravoWebhookController extends Controller
 
     protected function findTaskByDeliverable(array $data): ?Task
     {
-        $deliverableId = $this->externalId($data, 'deliverable_id');
+        $deliverableId = $this->externalId($data, 'deliverableId');
         $reference = $data['reference'] ?? null;
+
+        if (! $deliverableId && ! $reference) {
+            return null;
+        }
 
         return Task::query()
             ->where(function ($query) use ($deliverableId, $reference) {
@@ -418,8 +434,12 @@ class ContravoWebhookController extends Controller
 
     protected function findClientByConversation(array $data): ?Client
     {
-        $clientId = $this->externalId($data, 'client_id');
+        $clientId = $this->externalId($data, 'clientId');
         $reference = $data['reference'] ?? null;
+
+        if (! $clientId && ! $reference) {
+            return null;
+        }
 
         return Client::query()
             ->where(function ($query) use ($clientId, $reference) {
