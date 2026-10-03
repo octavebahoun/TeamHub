@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\AttachmentController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\ClientActivityController;
 use App\Http\Controllers\Api\V1\ClientController;
+use App\Http\Controllers\Api\V1\ContravoLinkController;
 use App\Http\Controllers\Api\V1\ContravoWebhookController;
 use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
@@ -102,6 +103,10 @@ Route::prefix('v1')->group(function () {
             Route::post('posts/{post}/comments', [PostCommentController::class, 'store']);
 
             Route::get('search', [SearchController::class, 'index']);
+
+            // Appelé par le frontend juste après avoir créé un objet chez Contravo,
+            // pour que le webhook retour (quote.accepted, etc.) puisse le retrouver.
+            Route::post('contravo/links', [ContravoLinkController::class, 'store']);
 
             Route::get('analytics/overview', [AnalyticsController::class, 'overview']);
             Route::get('analytics/pipeline', [AnalyticsController::class, 'pipeline']);
