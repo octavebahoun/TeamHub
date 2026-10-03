@@ -85,6 +85,10 @@ services:
       CORS_ALLOWED_ORIGINS: https://${DOMAIN:-teamhub.excellenceteam.site}
       SANCTUM_STATEFUL_DOMAINS: ${DOMAIN:-teamhub.excellenceteam.site}
       LOG_CHANNEL: stderr
+      # Signature HMAC-SHA256 des webhooks entrants (voir ContravoWebhookController).
+      # Optionnel ici pour ne pas bloquer le démarrage : tant que c'est vide, la
+      # route /webhooks/contravo répond 500, le reste de l'API fonctionne normalement.
+      CONTRAVO_WEBHOOK_SECRET: ${CONTRAVO_WEBHOOK_SECRET:-}
     volumes:
       - uploads:/app/storage/app/public
     ports:
@@ -184,6 +188,9 @@ services:
       # Appels serveur (SSR, server actions) vers Laravel par le réseau Docker interne,
       # sans repasser par Caddy. Le navigateur, lui, n'appelle jamais l'API directement.
       API_URL: http://api:80/api
+      # Clé serveur pour les appels sortants vers Contravo (devis, factures...).
+      # Vide tant que apps/web/src/lib/contravo n'existe pas encore.
+      CONTRAVO_API_KEY: ${CONTRAVO_API_KEY:-}
     ports:
       - "127.0.0.1:3100:3000"
 
