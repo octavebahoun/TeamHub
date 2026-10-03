@@ -96,6 +96,11 @@ class TaskController extends Controller
             $data['completed_at'] = null;
         }
 
+        // Nouvelle échéance : le rappel déjà envoyé ne correspond plus, on autorise un nouvel envoi.
+        if (array_key_exists('due_date', $data) && $data['due_date'] !== $task->due_date?->toDateString()) {
+            $data['due_reminder_sent_at'] = null;
+        }
+
         $previousAssignee = $task->assignee_id;
         $task->update($data);
 

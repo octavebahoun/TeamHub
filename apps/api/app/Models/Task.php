@@ -40,14 +40,19 @@ class Task extends Model
         'due_date',
         'position',
         'completed_at',
+        'due_reminder_sent_at',
         'contravo_deliverable_id',
     ];
+
+    // Priorités considérées "critiques" pour le rappel d'échéance (SendTaskDueReminders).
+    public const CRITICAL_PRIORITIES = ['high', 'urgent'];
 
     protected function casts(): array
     {
         return [
             'due_date' => 'date',
             'completed_at' => 'datetime',
+            'due_reminder_sent_at' => 'datetime',
         ];
     }
 
