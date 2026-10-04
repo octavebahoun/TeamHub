@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { WineLogo } from "@/components/common/wine-logo";
 
 /** Écrans publics : panneau de marque à gauche, formulaire à droite. */
@@ -18,7 +19,9 @@ export function AuthShell({ aside, children }: { aside: React.ReactNode; childre
           }}
         />
         <div className="relative flex flex-1 flex-col">
-          <WineLogo inverted withMark />
+          <Link href="/" aria-label="WINE, retour à l'accueil" className="w-fit rounded-md transition-opacity hover:opacity-90">
+            <WineLogo inverted withMark />
+          </Link>
           <div className="flex flex-1 flex-col justify-center py-10">{aside}</div>
           <p className="hidden text-[15px] text-primary-foreground/80 lg:block">Un produit Excellence Team</p>
         </div>
