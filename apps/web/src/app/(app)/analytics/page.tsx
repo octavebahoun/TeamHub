@@ -14,7 +14,6 @@ import { BarList } from "./_components/bar-list";
 import { ColumnChart } from "./_components/column-chart";
 import { ExportButton } from "./_components/export-button";
 import { FinancialHealth } from "./_components/financial-health";
-import { FollowUpAssistant } from "./_components/follow-up-assistant";
 import { KpiTile } from "./_components/kpi-tile";
 
 export const metadata: Metadata = { title: "Analytics" };
@@ -79,9 +78,6 @@ export default async function AnalyticsPage() {
       <section aria-label="IA et finances" className="mb-8 grid gap-6 xl:grid-cols-2">
         <AiSummaryCard />
         <FinancialHealth />
-      </section>
-      <section aria-label="Relances" className="mb-8">
-        <FollowUpAssistant />
       </section>
 
       <div className="grid gap-6 xl:grid-cols-2">
