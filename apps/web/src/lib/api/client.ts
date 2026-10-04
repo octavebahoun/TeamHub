@@ -1,30 +1,22 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { USE_MOCKS } from "@/lib/data/mode";
 import { ORG_COOKIE, TOKEN_COOKIE } from "@/lib/session";
+import { ApiError } from "./errors";
+import { resolveMock } from "./mock-router";
+
+export { ApiError };
 
 /**
  * Client HTTP de l'API Laravel, utilisable uniquement côté serveur.
  * Le jeton Sanctum vit dans un cookie httpOnly (jamais exposé au JS du
  * navigateur) ; l'organisation active part dans l'en-tête X-Organization-Id.
+ *
+ * Si NEXT_PUBLIC_USE_MOCKS=true, aucune requête réseau : réponses via mock-router.
  */
 
 const API_URL = (process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api").replace(/\/$/, "");
-
-export class ApiError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-    public errors: Record<string, string[]> = {}
-  ) {
-    super(message);
-  }
-
-  /** Premier message d'erreur d'un champ (validation 422). */
-  field(name: string): string | undefined {
-    return this.errors[name]?.[0];
-  }
-}
 
 type Options = {
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
@@ -37,6 +29,10 @@ type Options = {
 };
 
 export async function api<T>(path: string, { method = "GET", body, query, anonymous, allowUnauthorized }: Options = {}): Promise<T> {
+  if (USE_MOCKS) {
+    return resolveMock<T>(path, { method, body, query, anonymous });
+  }
+
   const jar = await cookies();
   const token = jar.get(TOKEN_COOKIE)?.value;
   const org = jar.get(ORG_COOKIE)?.value;
@@ -51,12 +47,20 @@ export async function api<T>(path: string, { method = "GET", body, query, anonym
   if (!anonymous && token) headers.Authorization = `Bearer ${token}`;
   if (!anonymous && org) headers["X-Organization-Id"] = org;
 
-  const res = await fetch(url, {
-    method,
-    headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
-    cache: "no-store",
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+      cache: "no-store",
+    });
+  } catch {
+    throw new ApiError(
+      503,
+      "API indisponible (connexion refusée). Démarrez Laravel sur le port 8000, ou activez NEXT_PUBLIC_USE_MOCKS=true dans .env.local."
+    );
+  }
 
   if (res.status === 401 && !anonymous && !allowUnauthorized) redirect("/deconnexion");
 
@@ -72,7 +76,7 @@ export async function apiOptional<T>(path: string, fallback: T, options?: Option
   try {
     return await api<T>(path, options);
   } catch (e) {
-    if (e instanceof ApiError && (e.status === 404 || e.status === 405)) return fallback;
+    if (e instanceof ApiError && (e.status === 404 || e.status === 405 || e.status === 503)) return fallback;
     throw e;
   }
 }

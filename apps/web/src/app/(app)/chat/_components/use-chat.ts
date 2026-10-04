@@ -35,10 +35,14 @@ export function useChat(initialChannel?: string, initialProjectId?: number) {
   useEffect(() => {
     if (!socket || !connected) return;
     socket.timeout(5000).emit("channel:list", (err: Error | null, res?: Ack<{ channels: Channel[] }>) => {
-      if (err || !res?.ok) return setError("La liste des canaux n'est pas disponible sur ce serveur.");
-      const first = initialChannel ?? res.channels.find((c) => c.project_id === initialProjectId)?.id ?? res.channels[0]?.id;
-      setChannels(res.channels.map((c) => (c.id === first ? { ...c, unread_count: 0 } : c)));
+      const list = res?.channels ?? [];
+      if (err || !res?.ok || list.length === 0) {
+        return setError("La liste des canaux n'est pas disponible sur ce serveur.");
+      }
+      const first = initialChannel ?? list.find((c) => c.project_id === initialProjectId)?.id ?? list[0]?.id;
+      setChannels(list.map((c) => (c.id === first ? { ...c, unread_count: 0 } : c)));
       setActiveId((cur) => cur ?? first);
+      setError(null);
     });
   }, [socket, connected, initialChannel, initialProjectId]);
 

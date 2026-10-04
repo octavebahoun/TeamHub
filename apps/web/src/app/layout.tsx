@@ -44,7 +44,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <meta name="theme-color" content="#d63a00" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
-      <body>
+      {/* suppressHydrationWarning : next-themes + extensions navigateur (ex. cz-shortcut-listen) */}
+      <body suppressHydrationWarning>
         <ThemeProvider>
           <InstallPromptProvider>
             {children}

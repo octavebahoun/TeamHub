@@ -19,14 +19,17 @@ export function MessageList({ messages, meId, nameOf, typingNames }: { messages:
   return (
     <div role="log" aria-live="polite" aria-label="Messages" tabIndex={0} className="flex-1 space-y-6 overflow-y-auto px-6 py-6 sm:px-8">
       {messages.map((m, i) => {
-        const d = toDate(m.created_at)!;
+        const d = toDate(m.created_at);
         const prev = messages[i - 1];
-        const newDay = !prev || !isSameDay(toDate(prev.created_at)!, d);
-        const mine = m.sender_id === meId;
-        const read = m.read_by.some((r) => r.user_id !== meId);
+        const prevD = prev ? toDate(prev.created_at) : null;
+        const newDay = !!d && (!prevD || !isSameDay(prevD, d));
+        const senderId = m.sender_id ?? (m as { user_id?: number }).user_id ?? 0;
+        const mine = senderId === meId;
+        const read = (m.read_by ?? []).some((r) => r.user_id !== meId);
+        const attachments = m.attachments ?? [];
         return (
           <div key={m._id}>
-            {newDay && (
+            {newDay && d && (
               <p className="relative my-2 text-center text-sm text-muted-foreground before:absolute before:top-1/2 before:left-0 before:h-px before:w-full before:bg-border">
                 <span className="relative bg-background px-4">{dayLabel(d)}</span>
               </p>
@@ -41,13 +44,13 @@ export function MessageList({ messages, meId, nameOf, typingNames }: { messages:
               </div>
             ) : (
               <div className="flex max-w-[80%] gap-3.5">
-                <UserAvatar name={nameOf(m.sender_id)} decorative />
+                <UserAvatar name={nameOf(senderId)} decorative />
                 <div>
                   <p className="mb-1.5 text-sm">
-                    <span className="font-semibold">{nameOf(m.sender_id)}</span> <span className="text-muted-foreground">{time(m.created_at)}</span>
+                    <span className="font-semibold">{nameOf(senderId)}</span> <span className="text-muted-foreground">{time(m.created_at)}</span>
                   </p>
                   {m.body && <p className="inline-block rounded-2xl rounded-tl-md bg-secondary px-5 py-3">{m.body}</p>}
-                  {m.attachments.map((a) => (
+                  {attachments.map((a) => (
                     <p key={a.path} className="mt-2 flex w-72 items-center gap-3 rounded-xl border px-4 py-3">
                       <span aria-hidden className="rounded-md bg-brand-soft px-2 py-2 text-xs font-bold text-brand-soft-foreground">
                         {a.name.split(".").pop()?.toUpperCase()}

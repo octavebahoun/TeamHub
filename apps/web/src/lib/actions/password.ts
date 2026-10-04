@@ -14,7 +14,8 @@ export async function requestPasswordReset(_: FormState, form: FormData): Promis
     if (e instanceof ApiError && e.status === 429) return { error: "Trop de tentatives. Réessayez dans une minute.", values };
     if (e instanceof ApiError && e.status === 422) return { fields: fieldErrors(e), values };
     if (e instanceof ApiError) return { error: e.message, values };
-    throw e;
+    // Message neutre (anti-énumération) même si l'API est down.
+    return { ok: true, values };
   }
   return { ok: true, values };
 }
@@ -38,7 +39,7 @@ export async function resetPassword(_: FormState, form: FormData): Promise<FormS
     if (e instanceof ApiError && e.status === 429) return { error: "Trop de tentatives. Réessayez dans une minute.", values };
     if (e instanceof ApiError && e.status === 422) return { fields: fieldErrors(e), values };
     if (e instanceof ApiError) return { error: e.message, values };
-    throw e;
+    return { error: "Réinitialisation impossible. Activez le mode mock ou démarrez l'API.", values };
   }
   redirect("/connexion?reset=1");
 }

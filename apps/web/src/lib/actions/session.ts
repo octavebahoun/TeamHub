@@ -34,9 +34,10 @@ export async function login(_: FormState, form: FormData): Promise<FormState> {
   } catch (e) {
     if (e instanceof ApiError) {
       if (e.status === 429) return { error: "Trop de tentatives. Réessayez dans une minute.", values };
+      if (e.status === 503) return { error: e.message, values };
       return { error: e.field("email") ?? e.message, fields: fieldErrors(e), values };
     }
-    throw e;
+    return { error: "Connexion impossible pour le moment. Vérifiez que l'API est démarrée ou activez le mode mock.", values };
   }
   redirect(nextPath(form.get("next")));
 }
@@ -60,7 +61,7 @@ export async function register(_: FormState, form: FormData): Promise<FormState>
   } catch (e) {
     if (e instanceof ApiError && e.status === 422) return { fields: fieldErrors(e), values };
     if (e instanceof ApiError) return { error: e.message, values };
-    throw e;
+    return { error: "Inscription impossible pour le moment. Vérifiez que l'API est démarrée ou activez le mode mock.", values };
   }
   redirect("/");
 }
