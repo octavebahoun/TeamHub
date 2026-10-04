@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { loadFollowUps } from "@/lib/actions/follow-ups";
 import { getAnalyticsOverview, getAnalyticsPipeline, getMe, getProjectTasks, getProjects } from "@/lib/api/endpoints";
 import { compactMoney, isOverdue, money, plural } from "@/lib/format";
 import { OPPORTUNITY_STAGE, PROJECT_STATUS } from "@/lib/labels";
@@ -14,6 +15,7 @@ import { BarList } from "./_components/bar-list";
 import { ColumnChart } from "./_components/column-chart";
 import { ExportButton } from "./_components/export-button";
 import { FinancialHealth } from "./_components/financial-health";
+import { FollowUpAssistant } from "./_components/follow-up-assistant";
 import { KpiTile } from "./_components/kpi-tile";
 
 export const metadata: Metadata = { title: "Analytics" };
@@ -24,7 +26,12 @@ const OVERLOAD = 8;
 export default async function AnalyticsPage() {
   const me = await getMe();
   if (!can(currentRole(me), "analytics.view")) notFound();
-  const [overview, pipeline, projects] = await Promise.all([getAnalyticsOverview(), getAnalyticsPipeline(), getProjects()]);
+  const [overview, pipeline, projects, followUps] = await Promise.all([
+    getAnalyticsOverview(),
+    getAnalyticsPipeline(),
+    getProjects(),
+    loadFollowUps(),
+  ]);
 
   // Projets en retard : extension d'API si présente, sinon calcul sur les tâches des projets actifs.
   const late =
@@ -78,6 +85,9 @@ export default async function AnalyticsPage() {
       <section aria-label="IA et finances" className="mb-8 grid gap-6 xl:grid-cols-2">
         <AiSummaryCard />
         <FinancialHealth />
+      </section>
+      <section aria-label="Relances" className="mb-8">
+        <FollowUpAssistant items={followUps} />
       </section>
 
       <div className="grid gap-6 xl:grid-cols-2">
