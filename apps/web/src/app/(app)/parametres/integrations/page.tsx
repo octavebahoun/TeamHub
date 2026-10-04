@@ -10,41 +10,55 @@ import { buttonVariants } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Intégrations" };
 
+const EVENT_LABEL: Record<string, string> = {
+  "quote.accepted": "Devis accepté",
+  "quote.rejected": "Devis refusé",
+  "invoice.paid": "Facture payée",
+  "invoice.overdue": "Facture en retard",
+  "contract.signed": "Contrat signé",
+  "deliverable.approved": "Livrable validé",
+  "deliverable.rejected": "Livrable refusé",
+  "conversation.message_received": "Message client",
+  "review.submitted": "Avis client",
+};
+
+function eventLabel(event: string) {
+  return EVENT_LABEL[event] ?? event.replaceAll(".", " ").replaceAll("_", " ");
+}
+
 export default async function IntegrationsPage() {
   const me = await getMe();
   const role = currentRole(me);
   if (!can(role, "members.view")) notFound();
 
   const endpoints = await webhooks.listWebhookEndpoints().catch(() => []);
+  const notices = [...new Set(endpoints.flatMap((ep) => ep.events.map(eventLabel)))];
 
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader
         crumbs={[{ label: "Paramètres", href: "/parametres/membres" }, { label: "Intégrations" }]}
-        title="Intégrations Contravo"
-        subtitle="Pont de facturation et webhooks — clé API uniquement côté serveur (CONTRAVO_API_KEY)."
+        title="Contravo"
+        subtitle="Devis, factures et contrats sont gérés dans Contravo."
       />
       <Panel className="mb-8 p-7">
-        <PanelTitle className="mb-3">Contravo</PanelTitle>
+        <PanelTitle className="mb-3">Ouvrir la facturation</PanelTitle>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Les appels navigateur passent par <code className="text-xs">/api/contravo/*</code>. Définissez{" "}
-          <code className="text-xs">CONTRAVO_API_KEY</code> sur le conteneur Next.js et{" "}
-          <code className="text-xs">NEXT_PUBLIC_USE_MOCKS=true</code> pour la démo hors ligne.
+          Créez et suivez les devis, factures et contrats dans Contravo. WINE reçoit ensuite les nouvelles : devis accepté, facture payée, contrat signé.
         </p>
         <Link href="https://contravo.excellenceteam.site" className={buttonVariants({ variant: "outline", size: "lg", className: "mt-4" })} target="_blank" rel="noopener noreferrer">
           Ouvrir Contravo
         </Link>
       </Panel>
       <Panel className="p-7">
-        <PanelTitle className="mb-4">Webhooks sortants</PanelTitle>
-        {endpoints.length === 0 ? (
-          <p className="text-muted-foreground">Aucun endpoint configuré ou clé absente.</p>
+        <PanelTitle className="mb-4">Nouvelles reçues</PanelTitle>
+        {notices.length === 0 ? (
+          <p className="text-muted-foreground">Aucune nouvelle n&apos;est reliée pour le moment.</p>
         ) : (
           <ul className="space-y-3">
-            {endpoints.map((ep) => (
-              <li key={ep.id} className="rounded-lg border p-4 text-sm">
-                <p className="font-medium break-all">{ep.url}</p>
-                <p className="mt-1 text-muted-foreground">{ep.events.join(", ")}</p>
+            {notices.map((label) => (
+              <li key={label} className="rounded-lg border px-4 py-3 text-sm">
+                {label}
               </li>
             ))}
           </ul>
