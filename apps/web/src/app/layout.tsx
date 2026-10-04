@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { InstallPromptProvider } from "@/components/pwa/install-prompt";
 import { PushPrompt } from "@/components/pwa/push-prompt";
 import { RegisterSW } from "@/components/pwa/register-sw";
+import { ScrollReveal } from "@/components/motion/scroll-reveal";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <ThemeProvider>
           <InstallPromptProvider>
             {children}
+            <ScrollReveal />
             <RegisterSW />
             <PushPrompt />
           </InstallPromptProvider>

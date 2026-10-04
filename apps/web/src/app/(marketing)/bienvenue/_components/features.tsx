@@ -43,12 +43,14 @@ export function Features() {
         </p>
 
         <ul className="mt-8 grid grid-cols-1 gap-4 sm:mt-10 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-          {MODULES.map((m) => {
+          {MODULES.map((m, i) => {
             const Icon = MODULE_ICONS[m.icon];
             return (
               <li
                 key={m.title}
-                className="rounded-2xl border bg-card p-5 shadow-xs transition-shadow hover:shadow-md sm:p-7 dark:glass"
+                data-reveal
+                data-reveal-delay={String(Math.min(i, 5))}
+                className="reveal surface-lift rounded-2xl border bg-card p-5 shadow-xs sm:p-7 dark:glass"
               >
                 <span
                   aria-hidden
@@ -65,10 +67,15 @@ export function Features() {
 
         <h3 className="mt-12 font-heading text-[22px] sm:mt-16 sm:text-[26px]">Aussi dans WINE</h3>
         <ul className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {HIGHLIGHTS.map((h) => {
+          {HIGHLIGHTS.map((h, i) => {
             const Icon = HIGHLIGHT_ICONS[h.icon];
             return (
-              <li key={h.title} className="rounded-2xl border border-dashed bg-background/80 p-5">
+              <li
+                key={h.title}
+                data-reveal
+                data-reveal-delay={String(Math.min(i, 5))}
+                className="reveal surface-lift rounded-2xl border border-dashed bg-background/80 p-5"
+              >
                 <span
                   aria-hidden
                   className="mb-3 inline-flex size-10 items-center justify-center rounded-lg bg-secondary text-foreground"

@@ -3,6 +3,7 @@ import { BottomNav } from "@/components/shell/bottom-nav";
 import { CommandPalette } from "@/components/shell/command-palette";
 import { NAV_ITEMS } from "@/components/shell/nav-items";
 import { Topbar } from "@/components/shell/topbar";
+import { PageEnter } from "@/components/motion/page-enter";
 import { RealtimeProvider } from "@/components/realtime/realtime-provider";
 import { getMe, getMembers, getProjects } from "@/lib/api/endpoints";
 import { can, currentRole } from "@/lib/permissions";
@@ -28,7 +29,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <a href="#contenu" className="sr-only z-50 rounded-md bg-primary px-4 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:top-3 focus:left-3">
         Aller au contenu
       </a>
-      <div className="flex min-h-dvh">
+      <div className="app-mesh flex min-h-dvh">
         <AppSidebar org={org} hidden={hidden} />
         <div className="flex min-w-0 flex-1 flex-col">
           <Topbar
@@ -49,7 +50,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             tabIndex={-1}
             className="flex-1 overflow-x-clip px-3 py-6 outline-none pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:py-8 lg:px-8 lg:pb-10"
           >
-            {children}
+            <PageEnter>{children}</PageEnter>
           </main>
         </div>
       </div>

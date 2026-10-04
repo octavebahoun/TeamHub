@@ -32,11 +32,11 @@ export function TaskCard({ task, canMove, onMove, dragging, onDragStart, onDragE
       }}
       onDragEnd={onDragEnd}
       className={cn(
-        "relative rounded-xl border bg-card p-4 shadow-xs transition focus-within:ring-2 focus-within:ring-ring",
+        "surface-lift relative rounded-xl border bg-card p-4 shadow-xs transition focus-within:ring-2 focus-within:ring-ring",
         canMove && "cursor-grab active:cursor-grabbing",
         dragging && "opacity-40",
         late && "border-danger/40",
-        dueSoon && "border-primary/35"
+        dueSoon && "border-primary/35 glow-active"
       )}
     >
       <div className="mb-3 flex items-start justify-between gap-2">

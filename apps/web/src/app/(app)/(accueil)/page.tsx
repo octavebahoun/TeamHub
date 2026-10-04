@@ -19,11 +19,13 @@ export default async function HomePage() {
   const canEdit = currentRole(me) !== "guest";
 
   return (
-    <div className="mx-auto grid grid-cols-1 max-w-7xl gap-10 xl:grid-cols-[minmax(0,1fr)_340px]">
+    <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 xl:grid-cols-[minmax(0,1fr)_340px]">
       <div className="min-w-0">
-        <header className="mb-9">
-          <h1 className="font-heading text-[40px] leading-tight">Bonjour {firstName(me.user.name)}</h1>
-          <p className="mt-2 text-[17px] text-muted-foreground">
+        <header data-reveal className="reveal mb-9">
+          <h1 className="title-shine font-heading text-[clamp(1.75rem,5vw,2.5rem)] leading-tight">
+            Bonjour {firstName(me.user.name)}
+          </h1>
+          <p className="mt-2 text-[16px] text-muted-foreground sm:text-[17px]">
             {longToday()} · {plural(groups.today.length, "tâche", "tâches")} pour aujourd&apos;hui
             {groups.overdue.length > 0 && `, ${groups.overdue.length} en retard`}
           </p>
@@ -39,10 +41,10 @@ export default async function HomePage() {
           </>
         )}
       </div>
-      <div className="space-y-8">
+      <aside data-reveal data-reveal-delay="2" className="reveal space-y-8">
         <MyProjects projects={mine} />
         <ReviewsWidget />
-      </div>
+      </aside>
     </div>
   );
 }

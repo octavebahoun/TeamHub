@@ -278,4 +278,149 @@
   .scrollbar-none::-webkit-scrollbar {
     display: none;
   }
+
+  /* Atmosphère légère sur toute l'app */
+  .app-mesh {
+    background-color: var(--background);
+    background-image:
+      radial-gradient(ellipse 90% 50% at 0% -10%, color-mix(in oklch, var(--primary), transparent 92%), transparent 50%),
+      radial-gradient(ellipse 70% 40% at 100% 0%, color-mix(in oklch, var(--info), transparent 94%), transparent 45%),
+      radial-gradient(ellipse 50% 30% at 50% 100%, color-mix(in oklch, var(--primary), transparent 96%), transparent 40%);
+    background-attachment: fixed;
+  }
+
+  .dark .app-mesh {
+    background-image:
+      radial-gradient(ellipse 90% 55% at 10% -15%, color-mix(in oklch, var(--primary), transparent 78%), transparent 55%),
+      radial-gradient(ellipse 60% 45% at 100% 10%, rgb(31 78 140 / 0.18), transparent 50%),
+      radial-gradient(ellipse 40% 35% at 50% 110%, color-mix(in oklch, var(--primary), transparent 88%), transparent 45%);
+  }
+
+  /* Cartes interactives */
+  .surface-lift {
+    transition:
+      transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 220ms ease;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .surface-lift:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 12px 28px -18px color-mix(in oklch, var(--foreground), transparent 82%),
+        0 0 0 1px color-mix(in oklch, var(--primary), transparent 88%);
+    }
+  }
+
+  .btn-glow {
+    box-shadow: 0 8px 24px -10px color-mix(in oklch, var(--primary), transparent 45%);
+    transition:
+      box-shadow 200ms ease,
+      background-color 150ms ease,
+      transform 150ms ease;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .btn-glow:hover {
+      box-shadow: 0 12px 32px -8px color-mix(in oklch, var(--primary), transparent 35%);
+    }
+    .btn-glow:active {
+      transform: translateY(1px);
+    }
+  }
+
+  /* Entrée de page */
+  .page-enter {
+    animation: page-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes page-enter {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Reveal au scroll */
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity 600ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+  .reveal[data-reveal-variant="fade"] {
+    transform: none;
+  }
+  .reveal[data-reveal-variant="scale"] {
+    transform: scale(0.97);
+  }
+  .reveal[data-reveal-variant="left"] {
+    transform: translateX(-18px);
+  }
+  .reveal[data-reveal-variant="right"] {
+    transform: translateX(18px);
+  }
+  .reveal[data-reveal-delay="1"] {
+    transition-delay: 70ms;
+  }
+  .reveal[data-reveal-delay="2"] {
+    transition-delay: 140ms;
+  }
+  .reveal[data-reveal-delay="3"] {
+    transition-delay: 210ms;
+  }
+  .reveal[data-reveal-delay="4"] {
+    transition-delay: 280ms;
+  }
+  .reveal[data-reveal-delay="5"] {
+    transition-delay: 350ms;
+  }
+  .reveal.is-inview {
+    opacity: 1;
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .page-enter,
+    .reveal {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+  }
+
+  /* Lueur douce sur titres clés */
+  .title-shine {
+    background: linear-gradient(
+      120deg,
+      var(--foreground) 0%,
+      var(--foreground) 40%,
+      color-mix(in oklch, var(--primary), var(--foreground) 35%) 50%,
+      var(--foreground) 60%,
+      var(--foreground) 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .title-shine {
+      animation: title-shine 8s ease-in-out infinite;
+    }
+  }
+  @keyframes title-shine {
+    0%,
+    100% {
+      background-position: 100% 50%;
+    }
+    50% {
+      background-position: 0% 50%;
+    }
+  }
 }

@@ -8,8 +8,10 @@ import { isActive, NAV_ITEMS } from "./nav-items";
 
 const itemClass = (active: boolean) =>
   cn(
-    "flex h-11 items-center gap-3 rounded-lg px-3.5 text-[15px] transition-colors",
-    active ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground" : "hover:bg-muted"
+    "flex h-11 items-center gap-3 rounded-xl px-3.5 text-[15px] transition-all duration-200",
+    active
+      ? "glow-active bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
+      : "hover:bg-muted hover:translate-x-0.5"
   );
 
 /** Liens de navigation principale ; `hidden` = entrées interdites au rôle courant. */

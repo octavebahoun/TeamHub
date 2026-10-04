@@ -12,7 +12,8 @@ export function Hero() {
           <Eyebrow>{HERO.eyebrow}</Eyebrow>
           <h1
             id="hero-title"
-            className="mt-3 font-heading text-[clamp(1.85rem,6.5vw,3.75rem)] leading-[1.12] tracking-tight"
+            data-reveal
+            className="reveal mt-3 font-heading text-[clamp(1.85rem,6.5vw,3.75rem)] leading-[1.12] tracking-tight"
           >
             <span className="block text-foreground">{HERO.titleLead}</span>
             <em className="text-primary italic">{HERO.titleAccent}</em>.

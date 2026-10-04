@@ -54,8 +54,10 @@ function NavTab({ item, active }: { item: NavItem; active: boolean }) {
       <Link
         href={item.href}
         className={cn(
-          "flex h-14 min-w-11 flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-medium transition-colors",
-          active ? "bg-brand-soft text-brand-soft-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          "flex h-14 min-w-11 flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-medium transition-all duration-200",
+          active
+            ? "glow-active bg-brand-soft text-brand-soft-foreground"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground"
         )}
         aria-current={active ? "page" : undefined}
       >
