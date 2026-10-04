@@ -5,7 +5,7 @@ export function EmptyState({ title, children, className }: { title: string; chil
     <div
       data-reveal
       className={cn(
-        "reveal rounded-2xl border border-dashed bg-muted/80 px-6 py-12 text-center backdrop-blur-sm",
+        "reveal panel-premium rounded-2xl border-dashed px-6 py-12 text-center",
         className
       )}
     >

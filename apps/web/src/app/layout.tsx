@@ -42,7 +42,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="fr" className={cn(plex.variable, sourceSerif.variable)} suppressHydrationWarning>
       <head>
-        <meta name="theme-color" content="#d63a00" />
+        <meta name="theme-color" content="#0b0d12" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       {/* suppressHydrationWarning : next-themes + extensions navigateur (ex. cz-shortcut-listen) */}

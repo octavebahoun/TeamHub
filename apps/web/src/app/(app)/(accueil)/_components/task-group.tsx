@@ -14,13 +14,13 @@ export function TaskGroup({ id, title, tasks, canEdit }: { id: string; title: st
       <SectionLabel id={id} count={tasks.length}>
         {title}
       </SectionLabel>
-      <ul className="divide-y overflow-hidden rounded-2xl border bg-card shadow-xs">
+      <ul className="panel-premium divide-y divide-border/50 overflow-hidden rounded-2xl">
         {tasks.map((t) => {
           const late = isOverdue(t.due_date);
           return (
             <li
               key={t.id}
-              className="flex items-center gap-3 px-4 py-4 transition-colors hover:bg-muted/60 sm:gap-4 sm:px-5"
+              className="flex items-center gap-3 px-4 py-4 transition-colors hover:bg-muted/40 sm:gap-4 sm:px-5"
             >
               <TaskCheck id={t.id} projectId={t.project_id} done={t.status === "done"} title={t.title} disabled={!canEdit} />
               <div className="min-w-0 flex-1">

@@ -32,7 +32,7 @@ const HIGHLIGHT_ICONS: Record<(typeof HIGHLIGHTS)[number]["icon"], LucideIcon> =
 
 export function Features() {
   return (
-    <section id="fonctionnalites" aria-labelledby="modules" className="scroll-mt-20 border-y bg-muted/70">
+    <section id="fonctionnalites" aria-labelledby="modules" className="scroll-mt-20 border-y bg-muted/40">
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-8 sm:py-24">
         <Eyebrow>Fonctionnalités</Eyebrow>
         <SectionTitle id="modules">
@@ -50,16 +50,20 @@ export function Features() {
                 key={m.title}
                 data-reveal
                 data-reveal-delay={String(Math.min(i, 5))}
-                className="reveal surface-lift rounded-2xl border bg-card p-5 shadow-xs sm:p-7 dark:glass"
+                className="reveal panel-premium surface-lift group relative overflow-hidden rounded-2xl p-5 sm:p-7"
               >
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute -top-10 -right-8 size-28 rounded-full bg-primary/10 blur-2xl transition-opacity group-hover:opacity-100"
+                />
                 <span
                   aria-hidden
-                  className="mb-4 inline-flex size-11 items-center justify-center rounded-xl bg-brand-soft text-brand-soft-foreground sm:mb-5 sm:size-12"
+                  className="mb-4 inline-flex size-11 items-center justify-center rounded-xl bg-brand-soft text-brand-soft-foreground ring-1 ring-primary/15 sm:mb-5 sm:size-12"
                 >
                   <Icon className="size-5" strokeWidth={1.75} />
                 </span>
-                <h3 className="font-heading text-[22px] sm:text-[24px]">{m.title}</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground sm:mt-3">{m.text}</p>
+                <h3 className="relative font-heading text-[22px] sm:text-[24px]">{m.title}</h3>
+                <p className="relative mt-2 text-[15px] leading-relaxed text-muted-foreground sm:mt-3">{m.text}</p>
               </li>
             );
           })}
@@ -74,7 +78,7 @@ export function Features() {
                 key={h.title}
                 data-reveal
                 data-reveal-delay={String(Math.min(i, 5))}
-                className="reveal surface-lift rounded-2xl border border-dashed bg-background/80 p-5"
+                className="reveal surface-lift rounded-2xl border border-dashed border-border/70 bg-background/60 p-5 backdrop-blur-sm"
               >
                 <span
                   aria-hidden

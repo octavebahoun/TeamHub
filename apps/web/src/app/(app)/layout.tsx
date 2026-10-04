@@ -48,7 +48,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <main
             id="contenu"
             tabIndex={-1}
-            className="flex-1 overflow-x-clip px-3 py-6 outline-none pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:py-8 lg:px-8 lg:pb-10"
+            className="flex-1 overflow-x-clip px-3 py-5 outline-none pb-[calc(5.25rem+env(safe-area-inset-bottom))] sm:px-5 sm:py-7 lg:px-7 lg:pb-10"
           >
             <PageEnter>{children}</PageEnter>
           </main>

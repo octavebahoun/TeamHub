@@ -27,18 +27,27 @@ export function Faq() {
             )}
           </p>
         </div>
-        <div className="border-t">
+        <div className="space-y-3">
           {FAQ.map((item, i) => (
-            <details key={item.q} open={i === 0} className="group border-b py-6">
-              <summary className="flex cursor-pointer list-none items-center gap-6 rounded-md [&::-webkit-details-marker]:hidden">
-                <span aria-hidden className="w-6 text-sm font-semibold text-muted-foreground">{String(i + 1).padStart(2, "0")}</span>
-                <span className="flex-1 text-[18px] font-semibold">{item.q}</span>
-                <span aria-hidden className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary group-open:bg-primary group-open:text-primary-foreground">
+            <details
+              key={item.q}
+              open={i === 0}
+              className="group panel-premium rounded-2xl px-4 py-1 transition-shadow open:shadow-md sm:px-5"
+            >
+              <summary className="flex cursor-pointer list-none items-center gap-4 rounded-md py-5 [&::-webkit-details-marker]:hidden">
+                <span aria-hidden className="w-6 text-sm font-semibold text-muted-foreground">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span className="flex-1 text-[17px] font-semibold sm:text-[18px]">{item.q}</span>
+                <span
+                  aria-hidden
+                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary transition-colors group-open:bg-primary group-open:text-primary-foreground"
+                >
                   <Plus className="size-4 group-open:hidden" />
                   <Minus className="hidden size-4 group-open:block" />
                 </span>
               </summary>
-              <p className="mt-4 pr-16 pl-12 leading-relaxed text-muted-foreground">{item.a}</p>
+              <p className="pr-12 pb-5 pl-10 leading-relaxed text-muted-foreground sm:pl-12">{item.a}</p>
             </details>
           ))}
         </div>

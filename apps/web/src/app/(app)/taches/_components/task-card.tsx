@@ -32,7 +32,7 @@ export function TaskCard({ task, canMove, onMove, dragging, onDragStart, onDragE
       }}
       onDragEnd={onDragEnd}
       className={cn(
-        "surface-lift relative rounded-xl border bg-card p-4 shadow-xs transition focus-within:ring-2 focus-within:ring-ring",
+        "panel-premium surface-lift relative rounded-xl p-4 transition focus-within:ring-2 focus-within:ring-ring",
         canMove && "cursor-grab active:cursor-grabbing",
         dragging && "opacity-40",
         late && "border-danger/40",
