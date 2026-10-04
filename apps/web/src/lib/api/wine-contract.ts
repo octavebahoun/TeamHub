@@ -1,3 +1,4 @@
+import { plural } from "@/lib/format";
 import type { AnalyticsOverview, AnalyticsPipeline, ProjectStatus, TaskStatus } from "@/lib/api/types";
 import type { AiSummary, AttachmentStatus, SearchResults } from "@/lib/data/types";
 
@@ -123,19 +124,21 @@ function xof(amount: number): string {
 /** Bilan rédigé à partir des analytics déjà exposées. Pas d'appel à /ai/summary. */
 export function summaryFromAnalytics(overview: AnalyticsOverview, pipeline: AnalyticsPipeline): AiSummary {
   const snap = financialFromAnalytics(overview, pipeline);
+  const projects = plural(snap.activeProjects, "projet actif", "projets actifs");
+  const late = plural(snap.overdueTasks, "tâche en retard", "tâches en retard");
   const bullets = [
-    `${snap.activeProjects} projets actifs, ${snap.overdueTasks} tâches en retard.`,
+    `${projects}, ${late}.`,
     `Pipeline ouvert : ${xof(snap.openPipelineXof)}.`,
     `Opportunités gagnées : ${xof(snap.wonXof)}.`,
   ];
   if (overview.workload.length > 0) {
     const busiest = [...overview.workload].sort((a, b) => b.open_tasks - a.open_tasks)[0];
-    bullets.push(`Charge la plus haute : ${busiest.name} (${busiest.open_tasks} tâches ouvertes).`);
+    bullets.push(`Charge la plus haute : ${busiest.name} (${plural(busiest.open_tasks, "tâche ouverte", "tâches ouvertes")}).`);
   }
   return {
     scope: "pipeline",
     scope_id: "weekly",
-    summary: `${snap.activeProjects} projets actifs et ${snap.overdueTasks} tâches en retard. Le pipeline ouvert représente ${xof(snap.openPipelineXof)}.`,
+    summary: `${projects} et ${late}. Le pipeline ouvert représente ${xof(snap.openPipelineXof)}.`,
     bullets,
     generated_at: new Date().toISOString(),
   };

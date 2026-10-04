@@ -102,7 +102,7 @@ export default async function ProjectPage({ params }: Props) {
           )}
         </div>
         <div className="space-y-8">
-          <ProjectFundingStatus wineStatus={project.status} />
+          <ProjectFundingStatus hasInvoice={Boolean(project.contravo_invoice_id)} />
           {contravoProjectId && <DeliverablesPanel contravoProjectId={contravoProjectId} />}
           <ProgressPanel progress={progress} counts={countByStatus(tasks)} />
           <TeamPanel

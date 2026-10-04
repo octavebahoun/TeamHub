@@ -29,9 +29,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <a href="#contenu" className="sr-only z-50 rounded-md bg-primary px-4 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:top-3 focus:left-3">
         Aller au contenu
       </a>
-      <div className="app-mesh flex min-h-dvh">
+      <div className="app-mesh flex h-dvh overflow-hidden">
         <AppSidebar org={org} hidden={hidden} />
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <Topbar
             user={{ name: me.user.name, email: me.user.email, canSeeMembers: can(role, "members.view") }}
             org={org}
@@ -45,16 +45,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 : null
             }
           />
-          <main
-            id="contenu"
-            tabIndex={-1}
-            className="flex-1 overflow-x-clip px-3 py-5 outline-none pb-[calc(5.25rem+env(safe-area-inset-bottom))] sm:px-5 sm:py-7 lg:px-7 lg:pb-10"
-          >
+          <main id="contenu" tabIndex={-1} className="flex min-h-0 flex-1 flex-col overflow-x-clip overflow-y-auto px-3 py-5 outline-none sm:px-5 sm:py-7 lg:px-7">
             <PageEnter>{children}</PageEnter>
           </main>
+          <BottomNav org={org} hidden={hidden} />
         </div>
       </div>
-      <BottomNav org={org} hidden={hidden} />
       <CommandPalette />
     </RealtimeProvider>
   );

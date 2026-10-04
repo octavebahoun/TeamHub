@@ -93,3 +93,13 @@ export function initials(name: string | null | undefined): string {
 export const firstName = (name: string | null | undefined) => (name ?? "").trim().split(/\s+/)[0] ?? "";
 
 export const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
+
+/** Fiche projet : « 0 tâche terminée sur 1 ». */
+export function doneTasksLabel(done: number, total: number): string {
+  return `${plural(done, "tâche terminée", "tâches terminées")} sur ${total}`;
+}
+
+/** Accueil : « 0 tâche sur 1 terminée ». */
+export function doneTasksShortLabel(done: number, total: number): string {
+  return `${plural(done, "tâche", "tâches")} sur ${total} ${done > 1 ? "terminées" : "terminée"}`;
+}

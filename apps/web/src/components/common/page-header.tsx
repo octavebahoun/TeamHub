@@ -6,20 +6,22 @@ export type Crumb = { label: string; href?: string };
 export function Breadcrumbs({ items }: { items: Crumb[] }) {
   return (
     <nav aria-label="Fil d'Ariane" className="mb-4 text-sm">
-      <ol className="flex flex-wrap items-center gap-2">
+      <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">
         {items.map((c, i) => (
-          <li key={i} className="flex items-center gap-2">
+          <li key={i} className="flex max-w-full items-center whitespace-nowrap">
             {i > 0 && (
-              <span aria-hidden className="text-muted-foreground">
+              <span aria-hidden="true" className="shrink-0 px-2 text-muted-foreground">
                 /
               </span>
             )}
             {c.href ? (
-              <Link href={c.href} className="text-primary underline underline-offset-4 hover:text-primary-hover">
+              <Link href={c.href} className="truncate text-primary underline underline-offset-4 hover:text-primary-hover">
                 {c.label}
               </Link>
             ) : (
-              <span aria-current="page">{c.label}</span>
+              <span aria-current="page" className="truncate">
+                {c.label}
+              </span>
             )}
           </li>
         ))}

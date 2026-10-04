@@ -81,7 +81,17 @@ describe("analytics", () => {
   it("rédige le bilan depuis overview et pipeline", () => {
     const summary = summaryFromAnalytics(overview, pipeline);
     expect(summary.summary).toContain("3 projets actifs");
-    expect(summary.bullets.some((b) => b.includes("Koffi Mensah"))).toBe(true);
+    expect(summary.summary).toContain("2 tâches en retard");
+    expect(summary.bullets.some((b) => b.includes("Koffi Mensah") && b.includes("6 tâches ouvertes"))).toBe(true);
     expect(summary.scope).toBe("pipeline");
+  });
+
+  it("accorde le bilan au singulier", () => {
+    const summary = summaryFromAnalytics(
+      { active_projects: 1, overdue_tasks: 0, workload: [{ user_id: 8, name: "Mourchid FOLARIN", open_tasks: 1 }] },
+      { by_stage: [] },
+    );
+    expect(summary.summary).toContain("1 projet actif et 0 tâche en retard");
+    expect(summary.bullets.some((b) => b.includes("1 tâche ouverte"))).toBe(true);
   });
 });

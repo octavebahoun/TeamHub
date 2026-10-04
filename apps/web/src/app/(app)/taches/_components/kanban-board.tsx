@@ -4,6 +4,7 @@ import { useOptimistic, useState, useTransition } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import type { Task, TaskStatus } from "@/lib/api/types";
+import { plural } from "@/lib/format";
 import { TASK_STATUS } from "@/lib/labels";
 import { updateTask } from "@/lib/actions/tasks";
 import { cn } from "@/lib/utils";
@@ -63,10 +64,10 @@ export function KanbanBoard({ tasks, columns, projectId, movable, createOptions 
               <h2 id={`col-${status}`} className="flex items-center gap-2.5 font-sans text-[17px] font-semibold">
                 <span aria-hidden className={cn("size-2.5 rounded-full", TASK_STATUS[status].dot)} />
                 {TASK_STATUS[status].label}
-                <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full border bg-background px-2 text-sm font-medium">
+                <span aria-hidden className="inline-flex h-7 min-w-7 items-center justify-center rounded-full border bg-background px-2 text-sm font-medium">
                   {items.length}
-                  <span className="sr-only"> tâches</span>
                 </span>
+                <span className="sr-only"> {plural(items.length, "tâche", "tâches")}</span>
               </h2>
             </div>
             <ul className={cn("grid gap-3", columns.length === 1 && "sm:grid-cols-2 xl:grid-cols-3")}>

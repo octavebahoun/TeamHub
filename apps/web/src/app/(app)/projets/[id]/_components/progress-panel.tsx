@@ -1,5 +1,6 @@
 import type { TaskStatus } from "@/lib/api/types";
 import type { Progress } from "@/lib/domain";
+import { doneTasksLabel } from "@/lib/format";
 import { TASK_STATUS, TASK_STATUS_ORDER } from "@/lib/labels";
 import { Panel, PanelTitle } from "@/components/common/panel";
 import { ProgressBar } from "@/components/common/progress-bar";
@@ -11,7 +12,7 @@ export function ProgressPanel({ progress, counts }: { progress: Progress; counts
       <p className="mt-4 mb-4 flex items-baseline gap-3">
         <span className="font-heading text-[56px] leading-none">{Math.round(progress.ratio * 100)}%</span>
         <span className="text-muted-foreground">
-          {progress.done} tâches sur {progress.total}
+          {doneTasksLabel(progress.done, progress.total)}
         </span>
       </p>
       <ProgressBar value={progress.ratio} label="Avancement du projet" />

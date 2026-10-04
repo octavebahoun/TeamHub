@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compactMoney, dueLabel, initials, isDueSoon, isOverdue, longToday, money, plural } from "@/lib/format";
+import { compactMoney, doneTasksLabel, doneTasksShortLabel, dueLabel, initials, isDueSoon, isOverdue, longToday, money, plural } from "@/lib/format";
 
 const NOW = new Date("2026-10-01T09:00:00");
 
@@ -26,7 +26,12 @@ describe("format", () => {
   it("calcule initiales et pluriels", () => {
     expect(initials("Octave Bahoun")).toBe("OB");
     expect(initials("Aïcha")).toBe("AÏ");
+    expect(plural(0, "tâche", "tâches")).toBe("0 tâche");
     expect(plural(1, "tâche", "tâches")).toBe("1 tâche");
     expect(plural(3, "tâche", "tâches")).toBe("3 tâches");
+    expect(doneTasksLabel(0, 1)).toBe("0 tâche terminée sur 1");
+    expect(doneTasksLabel(2, 3)).toBe("2 tâches terminées sur 3");
+    expect(doneTasksShortLabel(0, 1)).toBe("0 tâche sur 1 terminée");
+    expect(doneTasksShortLabel(2, 3)).toBe("2 tâches sur 3 terminées");
   });
 });

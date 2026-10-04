@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Project } from "@/lib/api/types";
 import { projectProgress } from "@/lib/domain";
+import { doneTasksShortLabel } from "@/lib/format";
 import { PROJECT_STATUS } from "@/lib/labels";
 import { Panel } from "@/components/common/panel";
 import { ProgressBar } from "@/components/common/progress-bar";
@@ -33,7 +34,7 @@ export function MyProjects({ projects }: { projects: Project[] }) {
                 </div>
                 <ProgressBar value={pr.ratio} label={`Avancement de ${p.name}`} />
                 <p className="mt-3 text-sm text-muted-foreground">
-                  {pr.done} tâches sur {pr.total} terminées
+                  {doneTasksShortLabel(pr.done, pr.total)}
                 </p>
               </Panel>
             </li>

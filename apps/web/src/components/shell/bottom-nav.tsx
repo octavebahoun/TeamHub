@@ -18,7 +18,7 @@ export function BottomNav({ org, hidden }: { org: ShellOrg; hidden: string[] }) 
   return (
     <nav
       aria-label="Navigation rapide"
-      className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.55rem,env(safe-area-inset-bottom))] lg:hidden"
+      className="shrink-0 px-3 pb-[max(0.55rem,env(safe-area-inset-bottom))] lg:hidden"
     >
       <ul className="glass mx-auto flex max-w-lg items-stretch justify-around gap-0.5 rounded-2xl border border-border/60 bg-background/80 p-1 shadow-lg backdrop-blur-xl">
         {items.map((item) => (
