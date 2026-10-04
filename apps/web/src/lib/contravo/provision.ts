@@ -1,3 +1,4 @@
+import { userFacingError } from "@/lib/errors/user-facing";
 import type { CreateContravoClient, CreateContravoProject, CreateContract } from "./types";
 
 export type WineClientInput = {
@@ -85,5 +86,5 @@ export function billingError(error: unknown): string {
   if (message.includes("clients:")) return "La clé de facturation n'autorise pas la création de clients.";
   if (message.includes("projects:")) return "La clé de facturation n'autorise pas la création de projets.";
   if (message.includes("quotes:")) return "La clé de facturation n'autorise pas les devis.";
-  return message;
+  return userFacingError(message);
 }

@@ -80,12 +80,28 @@ export function useChat(initialChannel?: string, initialProjectId?: number) {
   }, []);
 
   const send = useCallback(
-    (body: string) =>
+    (body: string, attachments: ChatMessage["attachments"] = []) =>
       new Promise<boolean>((resolve) => {
         if (!socket || !activeId) return resolve(false);
-        socket.timeout(5000).emit("message:send", { channel_id: activeId, body }, (err: Error | null, res?: Ack<{ id: string }>) => resolve(!err && !!res?.ok));
+        if (!body.trim() && attachments.length === 0) return resolve(false);
+        socket
+          .timeout(8000)
+          .emit("message:send", { channel_id: activeId, body, attachments }, (err: Error | null, res?: Ack<{ id: string }>) => resolve(!err && !!res?.ok));
       }),
     [socket, activeId]
+  );
+
+  const sendAttachment = useCallback(
+    async (file: File) => {
+      const { uploadWineFile } = await import("@/lib/actions/attachments");
+      const form = new FormData();
+      form.set("file", file);
+      const result = await uploadWineFile(form);
+      if (result.error || !result.file) throw new Error(result.error ?? "Pièce jointe non envoyée.");
+      const href = result.file.download_url ?? `/api/wine/attachments/${result.file.id}/download`;
+      return send(file.name, [{ path: href, name: file.name, mime: file.type || "application/octet-stream", size: file.size }]);
+    },
+    [send]
   );
 
   const notifyTyping = useCallback(() => activeId && socket?.emit("typing", { channel_id: activeId }), [socket, activeId]);
@@ -111,6 +127,7 @@ export function useChat(initialChannel?: string, initialProjectId?: number) {
     messages,
     typingUserIds: Object.keys(typing).map(Number),
     send,
+    sendAttachment,
     notifyTyping,
     openDirect,
     error,

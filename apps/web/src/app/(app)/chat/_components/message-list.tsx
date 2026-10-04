@@ -17,7 +17,7 @@ export function MessageList({ messages, meId, nameOf, typingNames }: { messages:
   }, [messages.length]);
 
   return (
-    <div role="log" aria-live="polite" aria-label="Messages" tabIndex={0} className="flex-1 space-y-6 overflow-y-auto px-6 py-6 sm:px-8">
+    <div role="log" aria-live="polite" aria-label="Messages" tabIndex={0} className="min-w-0 flex-1 space-y-6 overflow-y-auto px-4 py-6 sm:px-8">
       {messages.map((m, i) => {
         const d = toDate(m.created_at);
         const prev = messages[i - 1];
@@ -35,35 +35,58 @@ export function MessageList({ messages, meId, nameOf, typingNames }: { messages:
               </p>
             )}
             {mine ? (
-              <div className="ml-auto max-w-[75%] text-right">
+              <div className="ml-auto max-w-[min(75%,20rem)] min-w-0 text-right">
                 <p className="mb-1.5 text-xs text-muted-foreground">
                   {time(m.created_at)}
                   {read && " · Lu"}
                 </p>
-                <p className="inline-block rounded-2xl rounded-br-md bg-primary px-5 py-3 text-left text-primary-foreground shadow-[0_10px_28px_-14px_var(--primary)]">{m.body}</p>
+                {m.body && !attachments.some((a) => a.name === m.body) && (
+                  <p className="inline-block rounded-2xl rounded-br-md bg-primary px-5 py-3 text-left text-primary-foreground shadow-[0_10px_28px_-14px_var(--primary)]">{m.body}</p>
+                )}
+                {attachments.map((a) => (
+                  <a
+                    key={a.path}
+                    href={a.path}
+                    download={a.name}
+                    className="mt-2 flex w-full max-w-72 min-w-0 items-center gap-3 rounded-xl border bg-primary/10 px-4 py-3 text-left"
+                  >
+                    <span aria-hidden className="shrink-0 rounded-md bg-brand-soft px-2 py-2 text-xs font-bold text-brand-soft-foreground">
+                      {a.name.split(".").pop()?.toUpperCase()}
+                    </span>
+                    <span className="min-w-0 leading-tight">
+                      <span className="block truncate font-semibold">{a.name}</span>
+                      <span className="text-xs text-muted-foreground">{size(a.size)}</span>
+                    </span>
+                  </a>
+                ))}
               </div>
             ) : (
-              <div className="flex max-w-[80%] gap-3.5">
+              <div className="flex max-w-[min(80%,24rem)] min-w-0 gap-3.5">
                 <UserAvatar name={nameOf(senderId)} decorative />
-                <div>
+                <div className="min-w-0">
                   <p className="mb-1.5 text-sm">
                     <span className="font-semibold">{nameOf(senderId)}</span> <span className="text-muted-foreground">{time(m.created_at)}</span>
                   </p>
-                  {m.body && (
+                  {m.body && !attachments.some((a) => a.name === m.body) && (
                     <p className="inline-block rounded-2xl rounded-tl-md border border-border/50 bg-card/80 px-5 py-3 shadow-sm backdrop-blur-sm">
                       {m.body}
                     </p>
                   )}
                   {attachments.map((a) => (
-                    <p key={a.path} className="mt-2 flex w-72 items-center gap-3 rounded-xl border px-4 py-3">
-                      <span aria-hidden className="rounded-md bg-brand-soft px-2 py-2 text-xs font-bold text-brand-soft-foreground">
+                    <a
+                      key={a.path}
+                      href={a.path}
+                      download={a.name}
+                      className="mt-2 flex w-full max-w-72 min-w-0 items-center gap-3 rounded-xl border px-4 py-3"
+                    >
+                      <span aria-hidden className="shrink-0 rounded-md bg-brand-soft px-2 py-2 text-xs font-bold text-brand-soft-foreground">
                         {a.name.split(".").pop()?.toUpperCase()}
                       </span>
-                      <span className="leading-tight">
-                        <span className="block font-semibold">{a.name}</span>
+                      <span className="min-w-0 leading-tight">
+                        <span className="block truncate font-semibold">{a.name}</span>
                         <span className="text-xs text-muted-foreground">{size(a.size)}</span>
                       </span>
-                    </p>
+                    </a>
                   ))}
                 </div>
               </div>

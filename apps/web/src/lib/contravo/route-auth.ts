@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { userFacingError } from "@/lib/errors/user-facing";
 import { TOKEN_COOKIE } from "@/lib/session";
 
 /** Refuse les appels API Contravo sans session WINE (clé Contravo reste côté serveur). */
@@ -15,7 +16,7 @@ export function contravoRouteError(e: unknown): NextResponse {
   const message = e instanceof Error ? e.message : "Erreur Contravo.";
   const match = message.match(/^Contravo (\d+): (.+)$/);
   if (match) {
-    return NextResponse.json({ message: match[2] }, { status: Number(match[1]) });
+    return NextResponse.json({ message: userFacingError(match[2]) }, { status: Number(match[1]) });
   }
-  return NextResponse.json({ message }, { status: 500 });
+  return NextResponse.json({ message: userFacingError(message) }, { status: 500 });
 }

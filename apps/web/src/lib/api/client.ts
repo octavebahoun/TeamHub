@@ -42,8 +42,9 @@ export async function api<T>(path: string, { method = "GET", body, query, anonym
     if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, String(v));
   }
 
+  const isForm = typeof FormData !== "undefined" && body instanceof FormData;
   const headers: Record<string, string> = { Accept: "application/json" };
-  if (body !== undefined) headers["Content-Type"] = "application/json";
+  if (body !== undefined && !isForm) headers["Content-Type"] = "application/json";
   if (!anonymous && token) headers.Authorization = `Bearer ${token}`;
   if (!anonymous && org) headers["X-Organization-Id"] = org;
 
@@ -52,7 +53,7 @@ export async function api<T>(path: string, { method = "GET", body, query, anonym
     res = await fetch(url, {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
       cache: "no-store",
     });
   } catch {

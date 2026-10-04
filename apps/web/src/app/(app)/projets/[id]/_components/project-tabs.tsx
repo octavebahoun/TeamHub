@@ -6,8 +6,8 @@ export type Tab = { label: string; href: string; current?: boolean };
 /** Onglets de navigation du projet (liens : chaque onglet a sa propre URL). */
 export function ProjectTabs({ tabs }: { tabs: Tab[] }) {
   return (
-    <nav aria-label="Sections du projet" className="mb-8 border-b">
-      <ul className="relative -mb-px flex gap-2 overflow-x-auto">
+    <nav aria-label="Sections du projet" className="mb-8 w-full min-w-0 max-w-full border-b">
+      <ul className="relative -mb-px flex w-full min-w-0 gap-2 overflow-x-auto overscroll-x-contain">
         {tabs.map((t) => (
           <li key={t.href}>
             <Link

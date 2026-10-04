@@ -75,3 +75,19 @@ export function contactRows(clients: Client[], opps: Opportunity[]): ContactRow[
 
 /** Somme des montants d'une liste d'opportunités. */
 export const totalAmount = (opps: Opportunity[]) => opps.reduce((s, o) => s + Number(o.amount ?? 0), 0);
+
+type FeedPost = { id: number; pinned?: boolean; pinned_at?: string | null; created_at: string };
+
+/** Fil social : épinglées d'abord, puis les plus récentes en haut. */
+export function sortSocialFeed<T extends FeedPost>(posts: T[]): T[] {
+  return [...posts].sort((a, b) => {
+    if (Boolean(a.pinned) !== Boolean(b.pinned)) return a.pinned ? -1 : 1;
+    if (a.pinned && b.pinned) {
+      const pinnedDelta = Date.parse(b.pinned_at ?? "") - Date.parse(a.pinned_at ?? "");
+      if (pinnedDelta) return pinnedDelta;
+    }
+    const createdDelta = Date.parse(b.created_at) - Date.parse(a.created_at);
+    if (createdDelta) return createdDelta;
+    return b.id - a.id;
+  });
+}

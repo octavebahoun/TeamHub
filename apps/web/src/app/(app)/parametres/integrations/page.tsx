@@ -42,6 +42,14 @@ export default async function IntegrationsPage() {
         subtitle="Devis, factures et contrats sont gérés dans Contravo."
       />
       <Panel className="mb-8 p-7">
+        <PanelTitle className="mb-3">Clé API</PanelTitle>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          Les droits d&apos;une clé existante ne changent pas. Dans Contravo → Développeurs, créez une nouvelle clé avec
+          clients:read, clients:write, projects:read, projects:write, quotes:write, contracts:read et contracts:write.
+          Remplacez CONTRAVO_API_KEY côté serveur, puis révoquez l&apos;ancienne clé.
+        </p>
+      </Panel>
+      <Panel className="mb-8 p-7">
         <PanelTitle className="mb-3">Ouvrir la facturation</PanelTitle>
         <p className="text-sm leading-relaxed text-muted-foreground">
           Créez et suivez les devis, factures et contrats dans Contravo. WINE reçoit ensuite les nouvelles : devis accepté, facture payée, contrat signé.

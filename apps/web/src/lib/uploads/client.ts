@@ -31,8 +31,26 @@ const KIND_MIME: Partial<Record<UploadKind, string[]>> = {
   invoice_pdf: ["application/pdf"],
   expense_receipt: ["application/pdf", "image/jpeg", "image/png", "image/webp"],
   deliverable: ["application/pdf", "image/jpeg", "image/png", "image/webp", "application/zip"],
-  attachment: ["application/pdf", "image/jpeg", "image/png", "image/webp", "audio/webm", "audio/mp4", "video/webm"],
+  attachment: [
+    "application/pdf",
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+    "application/zip",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "audio/webm",
+    "audio/mp4",
+    "audio/mpeg",
+    "video/webm",
+    "video/mp4",
+  ],
 };
+
+const ATTACHMENT_EXT = ["pdf", "jpg", "jpeg", "png", "webp", "gif", "zip", "doc", "docx", "xls", "xlsx", "webm", "mp4", "mp3", "m4a", "ogg"];
 
 export function uploadDownloadAllowed(status: UploadStatus | string | undefined): boolean {
   return status === "clean" || status === "ready";
@@ -46,9 +64,14 @@ export function resolveDownloadHref(record: { status: UploadStatus | string; dow
 
 export function validateUploadFile(file: File, kind: UploadKind): string | null {
   if (file.size > MAX_BYTES) return "Le fichier dépasse la taille maximale de 25 Mo.";
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  if (kind === "attachment" && ATTACHMENT_EXT.includes(ext)) return null;
   const allowed = KIND_MIME[kind];
-  if (allowed && !allowed.includes(file.type)) {
+  if (allowed && file.type && !allowed.includes(file.type)) {
     return "Type de fichier non autorisé pour cette catégorie.";
+  }
+  if (kind === "attachment" && !ATTACHMENT_EXT.includes(ext)) {
+    return "Type de fichier non autorisé.";
   }
   return null;
 }
@@ -79,7 +102,7 @@ export async function presignUpload(input: {
     body: JSON.stringify(input),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message ?? "Impossible de préparer l'envoi du fichier.");
+  if (!res.ok) throw new Error((data as { message?: string }).message ?? "Impossible de préparer l'envoi du fichier.");
   return data as PresignResponse;
 }
 

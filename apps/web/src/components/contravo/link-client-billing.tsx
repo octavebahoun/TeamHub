@@ -28,7 +28,11 @@ export function LinkClientBilling({ clientId, hasEmail }: { clientId: number; ha
 
   return (
     <Panel className="mb-8 p-7">
-      <p className="mb-4">Ce contact n&apos;est pas encore relié à la facturation. L&apos;email est nécessaire pour créer sa fiche.</p>
+      <p className="mb-4">
+        {hasEmail
+          ? "Ce contact n'est pas encore relié à la facturation. Créez sa fiche pour préparer un devis ou un contrat."
+          : "Ce contact n'est pas encore relié à la facturation. Ajoutez un email pour créer sa fiche."}
+      </p>
       {!hasEmail && (
         <div className="mb-4 max-w-sm space-y-1.5">
           <Label htmlFor="billing-email">Email</Label>

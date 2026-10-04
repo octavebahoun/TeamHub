@@ -71,7 +71,23 @@ export default async function TaskPage({ params }: Props) {
         </div>
         <div className="space-y-8">
           <TaskProperties task={task} projectName={project.name} people={(project.members ?? []).map((m) => ({ id: m.id, name: m.name }))} canEdit={canEdit} />
-          {task.attachments && task.attachments.length > 0 && <FilesPanel files={task.attachments} title="Pièces jointes" />}
+          <FilesPanel
+            files={(task.attachments ?? []).map((f) => {
+              const status = f.status ?? f.scan_status ?? "ready";
+              const ready = status === "clean" || status === "ready";
+              return {
+                id: f.id,
+                kind: f.kind,
+                name: f.name,
+                size: f.size,
+                status,
+                downloadUrl: ready ? (f.download_url ?? `/api/wine/attachments/${f.id}/download`) : null,
+              };
+            })}
+            allowUpload
+            uploadContext={{ task_id: task.id }}
+            title="Pièces jointes"
+          />
         </div>
       </div>
     </div>

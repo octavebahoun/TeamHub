@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Opportunity, Project, Task } from "@/lib/api/types";
-import { clientKind, contactRows, countByStatus, groupMyTasks, nextFollowUp, projectProgress } from "@/lib/domain";
+import { clientKind, contactRows, countByStatus, groupMyTasks, nextFollowUp, projectProgress, sortSocialFeed } from "@/lib/domain";
 
 const NOW = new Date("2026-10-01T09:00:00");
 const task = (o: Partial<Task>): Task =>
@@ -64,5 +64,16 @@ describe("CRM", () => {
       ["client", ["Site vitrine"], null],
       ["prospect", [], "2026-10-03"],
     ]);
+  });
+});
+
+describe("sortSocialFeed", () => {
+  it("place les plus récentes en haut et les épinglées au-dessus", () => {
+    const feed = sortSocialFeed([
+      { id: 1, pinned: false, pinned_at: null, created_at: "2026-01-01T10:00:00Z" },
+      { id: 2, pinned: false, pinned_at: null, created_at: "2026-10-04T18:00:00Z" },
+      { id: 3, pinned: true, pinned_at: "2026-09-01T08:00:00Z", created_at: "2026-08-01T08:00:00Z" },
+    ]);
+    expect(feed.map((p) => p.id)).toEqual([3, 2, 1]);
   });
 });

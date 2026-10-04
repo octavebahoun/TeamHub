@@ -7,9 +7,10 @@ import { Panel, PanelTitle } from "@/components/common/panel";
 import { ProgressBar } from "@/components/common/progress-bar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { uploadWineFile } from "@/lib/actions/attachments";
+import { userFacingError } from "@/lib/errors/user-facing";
 import {
   resolveDownloadHref,
-  uploadFileFlow,
   UPLOAD_KINDS,
   type UploadKind,
   type UploadRecord,
@@ -73,7 +74,7 @@ function FileRow({ item }: { item: FilePanelItem }) {
   const scanning = status === "scanning" || status === "pending" || status === "uploading";
 
   return (
-    <li className="flex items-start gap-4 rounded-lg border border-transparent p-1">
+    <li className="flex min-w-0 items-start gap-4 rounded-lg border border-transparent p-1">
       <span aria-hidden className="inline-flex h-11 w-12 shrink-0 items-center justify-center rounded-md bg-brand-soft text-[10px] font-bold uppercase text-brand-soft-foreground">
         {(KIND_LABEL[item.kind as UploadKind] ?? item.kind).slice(0, 4)}
       </span>
@@ -145,26 +146,34 @@ export function FilesPanel({
       ]);
 
       try {
-        const record = await uploadFileFlow({
+        const form = new FormData();
+        form.set("file", file);
+        if (uploadContext?.project_id) form.set("project_id", String(uploadContext.project_id));
+        if (uploadContext?.task_id) form.set("task_id", String(uploadContext.task_id));
+        const result = await uploadWineFile(form);
+        if (result.error || !result.file) {
+          const message = userFacingError(result.error);
+          setLocal((list) => list.map((u) => (u.key === key ? { ...u, status: "failed", error: message } : u)));
+          toast.error(message);
+          return;
+        }
+        const record: UploadRecord = {
+          id: String(result.file.id),
           kind,
-          file,
-          context: uploadContext,
-          signal: controller.signal,
-          onProgress: (p) => {
-            setLocal((list) =>
-              list.map((u) => (u.key === key ? { ...u, progress: p.progress, status: p.record?.status ?? u.status, record: p.record ?? u.record } : u))
-            );
-          },
-        });
+          name: result.file.name,
+          size: file.size,
+          mime: file.type || "application/octet-stream",
+          status: (result.file.status as UploadStatus) ?? "ready",
+          download_url: result.file.download_url ?? `/api/wine/attachments/${result.file.id}/download`,
+        };
         setLocal((list) => list.map((u) => (u.key === key ? { ...u, progress: 1, status: record.status, record } : u)));
-        if (record.status === "infected") toast.error("Fichier refusé : menace détectée.");
-        else toast.success("Fichier envoyé.");
+        toast.success("Fichier envoyé.");
       } catch (e) {
         if (e instanceof DOMException && e.name === "AbortError") {
           setLocal((list) => list.filter((u) => u.key !== key));
           return;
         }
-        const message = e instanceof Error ? e.message : "Envoi impossible.";
+        const message = userFacingError(e);
         setLocal((list) => list.map((u) => (u.key === key ? { ...u, status: "failed", error: message } : u)));
         toast.error(message);
       }
@@ -207,15 +216,15 @@ export function FilesPanel({
             onFiles(e.dataTransfer.files);
           }}
         >
-          <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:text-left">
-            <div className="flex size-12 items-center justify-center rounded-full bg-background shadow-sm">
+          <div className="flex min-w-0 flex-col items-center gap-3 text-center">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-background shadow-sm">
               <Upload aria-hidden className="size-5 text-primary" />
             </div>
-            <div className="flex-1">
+            <div className="min-w-0 w-full">
               <p className="font-medium">Glissez un fichier ici</p>
-              <p className="text-sm text-muted-foreground">PDF, images ou archives · 25 Mo max</p>
+              <p className="text-sm text-muted-foreground">PDF, images ou documents · 25 Mo max</p>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex min-w-0 flex-wrap items-center justify-center gap-2">
               <label className="sr-only" htmlFor="files-kind">
                 Type de document
               </label>
@@ -223,7 +232,7 @@ export function FilesPanel({
                 id="files-kind"
                 value={kind}
                 onChange={(e) => setKind(e.target.value as UploadKind)}
-                className="h-9 rounded-md border bg-background px-2 text-sm"
+                className="h-9 max-w-full min-w-0 rounded-md border bg-background px-2 text-sm"
               >
                 {UPLOAD_KINDS.map((k) => (
                   <option key={k} value={k}>
@@ -237,7 +246,13 @@ export function FilesPanel({
               </Button>
             </div>
           </div>
-          <input ref={inputRef} type="file" className="sr-only" onChange={(e) => onFiles(e.target.files)} />
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.zip,.doc,.docx,.xls,.xlsx,.webm,.mp4,.mp3,.m4a,image/*,application/pdf"
+            className="sr-only"
+            onChange={(e) => onFiles(e.target.files)}
+          />
         </div>
       )}
 

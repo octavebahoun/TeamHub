@@ -12,6 +12,8 @@ RUN install-php-extensions \
     bcmath \
     pcntl
 
+RUN printf "upload_max_filesize=25M\npost_max_size=30M\n" > /usr/local/etc/php/conf.d/uploads.ini
+
 WORKDIR /app
 
 # Installer Composer

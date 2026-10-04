@@ -57,7 +57,7 @@ export function PipelineBoard({ opportunities, stages, editable }: { opportuniti
                   <span aria-hidden className={cn("size-2.5 rounded-full", OPPORTUNITY_STAGE[stage].dot)} />
                   {OPPORTUNITY_STAGE[stage].label}
                   <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full border bg-background px-2 text-sm font-medium">
-                    {col.length}<span className="sr-only"> opportunités</span>
+                    {col.length}<span className="sr-only"> {col.length > 1 ? "opportunités" : "opportunité"}</span>
                   </span>
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">{money(total)}</p>

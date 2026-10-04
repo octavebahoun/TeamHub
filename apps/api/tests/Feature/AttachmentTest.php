@@ -209,3 +209,49 @@ it('does not expose an attachment from another organization', function () {
         ->getJson("/api/v1/attachments/{$attachmentId}/download")
         ->assertNotFound();
 });
+
+it('stores a real file on a project and lets the member download it', function () {
+    extract(attachmentOrgWithRoles());
+    \Illuminate\Support\Facades\Storage::fake('local');
+
+    $file = \Illuminate\Http\UploadedFile::fake()->create('photo.jpg', 120, 'image/jpeg');
+
+    $id = $this->actingAs($member, 'sanctum')->withHeader('X-Organization-Id', $org->id)
+        ->post("/api/v1/projects/{$project->id}/attachments", ['file' => $file])
+        ->assertCreated()
+        ->assertJsonPath('name', 'photo.jpg')
+        ->assertJsonPath('scan_status', 'ready')
+        ->json('id');
+
+    $this->actingAs($member, 'sanctum')->withHeader('X-Organization-Id', $org->id)
+        ->get("/api/v1/attachments/{$id}/download")
+        ->assertOk();
+});
+
+it('stores a chat file without a project and forbids a guest', function () {
+    extract(attachmentOrgWithRoles());
+    \Illuminate\Support\Facades\Storage::fake('local');
+
+    $file = \Illuminate\Http\UploadedFile::fake()->create('note.pdf', 80, 'application/pdf');
+
+    $this->actingAs($guest, 'sanctum')->withHeader('X-Organization-Id', $org->id)
+        ->post('/api/v1/attachments', ['file' => $file])
+        ->assertForbidden();
+
+    $this->actingAs($member, 'sanctum')->withHeader('X-Organization-Id', $org->id)
+        ->post('/api/v1/attachments', ['file' => $file])
+        ->assertCreated()
+        ->assertJsonPath('name', 'note.pdf');
+});
+
+it('rejects a forbidden file type', function () {
+    extract(attachmentOrgWithRoles());
+    \Illuminate\Support\Facades\Storage::fake('local');
+
+    $file = \Illuminate\Http\UploadedFile::fake()->create('malware.exe', 40, 'application/octet-stream');
+
+    $this->actingAs($member, 'sanctum')->withHeader('X-Organization-Id', $org->id)
+        ->post("/api/v1/projects/{$project->id}/attachments", ['file' => $file])
+        ->assertStatus(422);
+});
+

@@ -9,9 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
- * Métadonnée d'un fichier dont le stockage réel vit chez Contravo (pont
- * uploads/presign → complete, scan antivirus inclus). WINE ne garde que la
- * référence (`contravo_file_id`) et l'état du scan, jamais les octets.
+ * Pièce jointe d'équipe : octets locaux (`path`) ou référence Contravo
+ * (`contravo_file_id`) pour les documents de facturation.
  */
 class Attachment extends Model
 {
@@ -38,6 +37,7 @@ class Attachment extends Model
         'attachable_type',
         'attachable_id',
         'contravo_file_id',
+        'path',
         'name',
         'mime',
         'size',
@@ -94,6 +94,8 @@ class Attachment extends Model
             'name' => $this->name,
             'size' => $this->humanSize(),
             'scan_status' => $this->scan_status,
+            'status' => $this->scan_status,
+            'download_url' => $this->isDownloadable() ? '/api/wine/attachments/'.$this->id.'/download' : null,
         ];
     }
 }

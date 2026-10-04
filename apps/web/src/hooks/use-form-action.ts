@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { toast } from "sonner";
 import type { FormState } from "@/lib/actions/session";
+import { userFacingError } from "@/lib/errors/user-facing";
 
 /**
  * `useActionState` + réactions au résultat (fermer un dialogue, notifier…)
@@ -20,7 +21,7 @@ export function useFormAction(
       if (successMessage) toast.success(successMessage);
       onSuccess?.(next);
     } else if (next?.error && showErrors) {
-      toast.error(next.error);
+      toast.error(userFacingError(next.error));
     }
     return next;
   }, undefined);

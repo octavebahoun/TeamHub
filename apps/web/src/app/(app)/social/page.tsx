@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { differenceInCalendarDays, isSameMonth } from "date-fns";
 import { getMe, getMembers, getPosts, getProjects } from "@/lib/api/endpoints";
+import { sortSocialFeed } from "@/lib/domain";
 import { ago, toDate } from "@/lib/format";
 import { can, currentRole } from "@/lib/permissions";
 import { EmptyState } from "@/components/common/empty-state";
@@ -39,7 +40,7 @@ export default async function SocialPage() {
           <EmptyState title="Le fil est vide">Partagez la première nouvelle de l&apos;équipe.</EmptyState>
         ) : (
           <ul className="space-y-6">
-            {[...new Map(posts.data.map((p) => [p.id, p])).values()].map((p) => (
+            {sortSocialFeed([...new Map(posts.data.map((p) => [p.id, p])).values()]).map((p) => (
               <li key={p.id}>
                 <PostCard post={p} canPin={can(role, "post.pin")} canComment />
               </li>

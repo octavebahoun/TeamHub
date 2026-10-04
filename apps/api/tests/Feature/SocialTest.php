@@ -94,6 +94,21 @@ it('reacts to a post idempotently', function () {
     expect($post->reactions()->count())->toBe(1);
 });
 
+it('lists the newest posts first', function () {
+    [$user, $org] = memberOf('SocialOrder', Membership::ROLE_OWNER);
+    CurrentOrganization::set($org);
+    $old = Post::create(['organization_id' => $org->id, 'author_id' => $user->id, 'body' => 'ancien']);
+    $old->forceFill(['created_at' => now()->subDays(2)])->saveQuietly();
+    Post::create(['organization_id' => $org->id, 'author_id' => $user->id, 'body' => 'récent']);
+    CurrentOrganization::set(null);
+
+    $bodies = collect($this->actingAs($user, 'sanctum')->withHeader('X-Organization-Id', $org->id)
+        ->getJson('/api/v1/posts')->assertOk()->json('data'))->pluck('body')->all();
+
+    expect($bodies[0])->toBe('récent')
+        ->and($bodies)->toContain('ancien');
+});
+
 it('does not expose posts from another organization', function () {
     [$alice, $orgA] = memberOf('AlphaSoc', Membership::ROLE_OWNER);
     [$bob, $orgB] = memberOf('BravoSoc', Membership::ROLE_OWNER);

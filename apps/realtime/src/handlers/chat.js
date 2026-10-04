@@ -200,16 +200,28 @@ export function registerChatHandlers(io, socket) {
 
   socket.on('message:send', async ({ channel_id, body, attachments = [] } = {}, ack) => {
     try {
-      if (!channel_id || !body?.trim()) return ack?.({ ok: false, error: 'invalid' });
+      if (!channel_id || (!body?.trim() && (!Array.isArray(attachments) || attachments.length === 0))) {
+        return ack?.({ ok: false, error: 'invalid' });
+      }
       const channel = await assertMember(socket, channel_id);
       if (!channel) return ack?.({ ok: false, error: 'not_a_member' });
+
+      const safeAttachments = (Array.isArray(attachments) ? attachments : [])
+        .slice(0, 5)
+        .map((a) => ({
+          path: typeof a?.path === 'string' && a.path.startsWith('/api/wine/attachments/') ? a.path : '',
+          name: String(a?.name ?? 'fichier').slice(0, 255),
+          mime: String(a?.mime ?? 'application/octet-stream').slice(0, 100),
+          size: Number(a?.size) || 0,
+        }))
+        .filter((a) => a.path);
 
       const message = await Message.create({
         organization_id: socket.data.currentOrganizationId,
         channel_id,
         sender_id: socket.data.user.id,
-        body: body.trim(),
-        attachments,
+        body: (body ?? '').trim(),
+        attachments: safeAttachments,
         // L'expéditeur a lu son propre message (n'entre pas dans son unread_count).
         read_by: [{ user_id: socket.data.user.id, at: new Date() }],
       });

@@ -29,16 +29,19 @@ export function ChatApp({ meId, people, projects, initialChannel, initialProject
 
   const mocks = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
 
-  if (!chat.available && !mocks) {
+  if (!mocks && !process.env.NEXT_PUBLIC_WS_URL) {
     return (
       <EmptyState title="Chat indisponible" className="m-8">
-        Le serveur temps réel n&apos;est pas configuré (NEXT_PUBLIC_WS_URL).
+        Le chat n&apos;est pas disponible pour le moment.
       </EmptyState>
     );
   }
+  if (!chat.available) {
+    return <p className="m-8 text-muted-foreground">Connexion au chat…</p>;
+  }
 
   return (
-    <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] md:grid-cols-[272px_minmax(0,1fr)] md:grid-rows-1">
+    <div className="grid h-full min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] md:grid-cols-[minmax(0,272px)_minmax(0,1fr)] md:grid-rows-1">
       <ChannelList
         channels={chat.channels ?? []}
         activeId={active?.id}
@@ -51,9 +54,9 @@ export function ChatApp({ meId, people, projects, initialChannel, initialProject
       <section aria-label={active ? `Conversation ${active.name}` : "Conversation"} className="flex min-h-0 flex-col">
         {active ? (
           <>
-            <header className="flex items-center justify-between gap-4 border-b px-6 py-4 sm:px-8">
-              <div>
-                <h2 className="flex items-center gap-1 font-sans text-[20px] font-semibold">
+            <header className="flex flex-wrap items-center justify-between gap-4 border-b px-4 py-4 sm:px-8">
+              <div className="min-w-0">
+                <h2 className="flex min-w-0 items-center gap-1 font-sans text-[20px] font-semibold">
                   {active.type === "project" && <Hash aria-hidden className="size-5 text-primary" />}
                   {active.name}
                 </h2>
@@ -81,13 +84,11 @@ export function ChatApp({ meId, people, projects, initialChannel, initialProject
               channelName={active.name}
               onSend={chat.send}
               onTyping={chat.notifyTyping}
-              onSendAttachment={async (file) => {
-                await new Promise((r) => setTimeout(r, 400));
-                return file.size > 0;
-              }}
-              onSendVoice={async () => {
-                await new Promise((r) => setTimeout(r, 300));
-                return true;
+              onSendAttachment={chat.sendAttachment}
+              onSendVoice={async (blob, mime) => {
+                const ext = mime.includes("mp4") ? "mp4" : "webm";
+                const file = new File([blob], `vocal.${ext}`, { type: mime || "audio/webm" });
+                return chat.sendAttachment(file);
               }}
             />
           </>

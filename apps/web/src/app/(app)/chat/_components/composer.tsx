@@ -5,6 +5,8 @@ import { useRef, useState } from "react";
 import { ArrowUp, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { userFacingError } from "@/lib/errors/user-facing";
+import { validateUploadFile } from "@/lib/uploads/client";
 
 const VoiceRecorder = dynamic(() => import("@/components/media/voice-recorder").then((m) => ({ default: m.VoiceRecorder })), {
   ssr: false,
@@ -43,10 +45,20 @@ export function Composer({
   const attach = async (list: FileList | null) => {
     const file = list?.[0];
     if (!file || !onSendAttachment) return;
+    const invalid = validateUploadFile(file, "attachment");
+    if (invalid) {
+      toast.error(invalid);
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
     setSending(true);
-    const ok = await onSendAttachment(file);
+    try {
+      const ok = await onSendAttachment(file);
+      if (!ok) toast.error(userFacingError("Pièce jointe non envoyée."));
+    } catch (e) {
+      toast.error(userFacingError(e));
+    }
     setSending(false);
-    if (!ok) toast.error("Pièce jointe non envoyée.");
     if (fileRef.current) fileRef.current.value = "";
   };
 
@@ -60,9 +72,15 @@ export function Composer({
   };
 
   return (
-    <form onSubmit={submit} className="space-y-3 border-t px-6 py-5 sm:px-8">
-      <div className="flex items-center gap-3 rounded-2xl border bg-background py-2 pr-2 pl-4 focus-within:ring-2 focus-within:ring-ring">
-        <input ref={fileRef} type="file" className="sr-only" onChange={(e) => void attach(e.target.files)} />
+    <form onSubmit={submit} className="min-w-0 space-y-3 border-t px-4 py-5 sm:px-8">
+      <div className="flex min-w-0 items-center gap-2 rounded-2xl border bg-background py-2 pr-2 pl-3 focus-within:ring-2 focus-within:ring-ring sm:gap-3 sm:pl-4">
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.zip,.doc,.docx,.xls,.xlsx,image/*,application/pdf"
+          className="sr-only"
+          onChange={(e) => void attach(e.target.files)}
+        />
         <Button
           type="button"
           variant="ghost"
@@ -89,7 +107,7 @@ export function Composer({
             }
           }}
           placeholder={`Écrire dans #${channelName}…`}
-          className="h-10 flex-1 bg-transparent text-[15px] outline-none placeholder:text-subtle-foreground"
+          className="h-10 min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-subtle-foreground"
         />
         <Button type="submit" size="icon" aria-label="Envoyer" disabled={sending || !body.trim()}>
           <ArrowUp aria-hidden />

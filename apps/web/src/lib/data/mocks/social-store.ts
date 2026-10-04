@@ -1,4 +1,5 @@
 import type { Post, PostComment } from "@/lib/api/types";
+import { sortSocialFeed } from "@/lib/domain";
 import { MOCK_ORG_ID } from "./clients";
 import { mockPosts as seedPosts } from "./social";
 import { mockUser } from "./session";
@@ -8,15 +9,8 @@ let posts: Post[] = structuredClone(seedPosts);
 let nextPostId = Math.max(...posts.map((p) => p.id), 500) + 1;
 let nextCommentId = 9000;
 
-function sortFeed(list: Post[]): Post[] {
-  return [...list].sort((a, b) => {
-    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
-    return (b.created_at ?? "").localeCompare(a.created_at ?? "");
-  });
-}
-
 export function listMockPosts(): Post[] {
-  return sortFeed(posts).map((p) => structuredClone(p));
+  return sortSocialFeed(posts).map((p) => structuredClone(p));
 }
 
 export function getMockPost(id: number): Post | undefined {

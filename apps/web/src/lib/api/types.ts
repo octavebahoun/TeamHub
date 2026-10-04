@@ -100,7 +100,7 @@ export type Project = {
   client?: { id: number; name: string; company: string | null; contravo_client_id?: string | null } | null;
   /** Extensions (cf. docs/api-gaps.md). */
   milestones?: { code: string; title: string; done: boolean; current: boolean }[];
-  attachments?: { id: number; kind: string; name: string; size: string }[];
+  attachments?: { id: number; kind: string; name: string; size: string; status?: string; scan_status?: string; download_url?: string | null }[];
   contravo_invoice_id?: string | null;
   contravo_contract_id?: string | null;
   contravo_project_id?: string | null;
@@ -131,7 +131,7 @@ export type Task = {
   done_subtasks_count?: number;
   comments_count?: number;
   /** Extension (cf. docs/api-gaps.md). */
-  attachments?: { id: number; kind: string; name: string; size: string }[];
+  attachments?: { id: number; kind: string; name: string; size: string; status?: string; scan_status?: string; download_url?: string | null }[];
 };
 
 export type TaskComment = {

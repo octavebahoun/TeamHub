@@ -88,7 +88,7 @@ Route::prefix('v1')->group(function () {
             Route::post('tasks/{task}/attachments', [AttachmentController::class, 'storeForTask']);
             Route::get('me/tasks', [MyTaskController::class, 'index']);
 
-            // Métadonnée seulement : le fichier vit chez Contravo (scan antivirus inclus).
+            Route::post('attachments', [AttachmentController::class, 'storeStandalone']);
             Route::patch('attachments/{attachment}', [AttachmentController::class, 'update']);
             Route::get('attachments/{attachment}/download', [AttachmentController::class, 'download']);
             Route::delete('attachments/{attachment}', [AttachmentController::class, 'destroy']);

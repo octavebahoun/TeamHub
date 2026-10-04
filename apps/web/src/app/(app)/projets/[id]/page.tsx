@@ -60,7 +60,7 @@ export default async function ProjectPage({ params }: Props) {
   const contravoClientId = resolveContravoClientId(project.client?.contravo_client_id ?? crm?.contravo_client_id);
 
   return (
-    <div className="mx-auto max-w-7xl">
+    <div className="mx-auto w-full min-w-0 max-w-7xl">
       <PageHeader
         crumbs={[{ label: "Projets", href: "/projets" }, { label: project.name }]}
         title={project.name}
@@ -90,7 +90,7 @@ export default async function ProjectPage({ params }: Props) {
           { label: "Facturation", href: `#facturation` },
         ]}
       />
-      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_400px]">
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,400px)]">
         <div className="min-w-0 space-y-8">
           <Panel className="p-7">
             <PanelTitle className="mb-4">Description</PanelTitle>
@@ -110,7 +110,7 @@ export default async function ProjectPage({ params }: Props) {
             />
           </section>
         </div>
-        <div className="space-y-8">
+        <div className="min-w-0 space-y-8">
           <ProjectFundingStatus hasInvoice={Boolean(project.contravo_invoice_id)} />
           {contravoProjectId && <DeliverablesPanel contravoProjectId={contravoProjectId} />}
           <ProgressPanel progress={progress} counts={countByStatus(tasks)} />
@@ -121,7 +121,23 @@ export default async function ProjectPage({ params }: Props) {
             canManage={canManage}
             candidates={members.filter((m) => !team.some((t) => t.id === m.user_id)).map((m) => ({ id: m.user_id, name: m.name }))}
           />
-          <FilesPanel files={files} allowUpload uploadContext={{ project_id: id }} title="Fichiers" />
+          <FilesPanel
+            files={files.map((f) => {
+              const status = f.status ?? f.scan_status ?? "ready";
+              const ready = status === "clean" || status === "ready";
+              return {
+                id: f.id,
+                kind: f.kind,
+                name: f.name,
+                size: f.size,
+                status,
+                downloadUrl: ready ? (f.download_url ?? `/api/wine/attachments/${f.id}/download`) : null,
+              };
+            })}
+            allowUpload
+            uploadContext={{ project_id: id }}
+            title="Fichiers"
+          />
         </div>
       </div>
     </div>

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 export function PageEnter({ children, className }: { children: React.ReactNode; className?: string }) {
   const pathname = usePathname();
   return (
-    <div key={pathname} className={cn("page-enter flex min-h-full w-full flex-col", className)}>
+    <div key={pathname} className={cn("page-enter flex min-h-full w-full min-w-0 flex-col", className)}>
       {children}
     </div>
   );

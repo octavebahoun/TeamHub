@@ -9,7 +9,7 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
     <div role="alert" className="mx-auto max-w-xl py-16 text-center">
       <h1 className="font-heading text-[36px]">Un souci est survenu</h1>
       <p className="mt-3 text-muted-foreground">
-        Le serveur n&apos;a pas répondu comme prévu. Réessayez dans un instant.
+        Une erreur s&apos;est produite, veuillez réessayer.
         {error.digest && <span className="mt-2 block text-sm">Référence : {error.digest}</span>}
       </p>
       {isDev && error.message && (

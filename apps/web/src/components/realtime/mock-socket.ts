@@ -144,9 +144,10 @@ export class MockRealtimeSocket {
     }
 
     if (event === "message:send") {
-      const body = (data as { channel_id: string; body: string } | undefined)?.body ?? "";
-      const channelId = (data as { channel_id: string } | undefined)?.channel_id ?? "mock-projet-201";
-      const msg = mockMessage(channelId, 1, body, 0);
+      const payload = data as { channel_id?: string; body?: string; attachments?: { path: string; name: string; mime: string; size: number }[] } | undefined;
+      const body = payload?.body ?? "";
+      const channelId = payload?.channel_id ?? "mock-projet-201";
+      const msg = { ...mockMessage(channelId, 1, body, 0), attachments: payload?.attachments ?? [] };
       callback?.(null, { ok: true, id: msg._id });
       this.emitToHandlers("message:new", msg);
       const reply = mockColleagueReply(body);

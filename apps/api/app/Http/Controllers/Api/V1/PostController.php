@@ -28,6 +28,7 @@ class PostController extends Controller
             ->orderByDesc('pinned')
             ->orderByDesc('pinned_at')
             ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->paginate(20);
 
         return response()->json($posts);
