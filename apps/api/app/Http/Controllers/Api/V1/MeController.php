@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -87,5 +90,50 @@ class MeController extends Controller
         ]);
 
         return response()->json($user->notificationSettings());
+    }
+
+    /**
+     * Le compte ne peut plus se connecter. Les tâches, messages et projets
+     * des organisations partagées restent, attribués à « Compte supprimé ».
+     * Une organisation dont la personne est seule propriétaire est retirée.
+     * S'il reste d'autres membres, la propriété doit être transférée avant.
+     */
+    public function destroy(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $shared = Organization::query()
+            ->where('owner_id', $user->id)
+            ->whereHas('memberships', fn ($q) => $q->where('user_id', '!=', $user->id))
+            ->pluck('name');
+
+        if ($shared->isNotEmpty()) {
+            return response()->json([
+                'message' => 'Transférez la propriété de '.$shared->join(', ').' avant de supprimer votre compte.',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($user) {
+            $user->tokens()->delete();
+            DB::table('password_reset_tokens')->where('email', $user->email)->delete();
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+
+            Organization::query()->where('owner_id', $user->id)->get()->each->delete();
+
+            $user->memberships()->delete();
+            $user->forceFill([
+                'name' => 'Compte supprimé',
+                'email' => 'deleted-'.$user->id.'@compte.supprime',
+                'password' => Str::password(40),
+                'avatar' => null,
+                'title' => null,
+                'phone' => null,
+                'notification_preferences' => null,
+                'current_organization_id' => null,
+                'remember_token' => null,
+            ])->save();
+        });
+
+        return response()->json(null, 204);
     }
 }

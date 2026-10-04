@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Activity;
 use App\Models\Task;
 use App\Models\TaskComment;
 use App\Services\InboxNotifier;
@@ -26,6 +27,7 @@ class TaskCommentController extends Controller
             'user_id' => $request->user()->id,
             'body' => $data['body'],
         ]);
+        Activity::log($task->project, 'task.commented', $request->user()->id, ['title' => $task->title, 'task_id' => $task->id]);
 
         if ($task->assignee_id && $task->assignee_id !== $request->user()->id) {
             $this->inbox->toUser($task->assignee_id, 'task.commented', 'Nouveau commentaire sur une de vos tâches', $request->user()->name, '/taches/'.$task->id, [

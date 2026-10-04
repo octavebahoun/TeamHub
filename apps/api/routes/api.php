@@ -56,6 +56,7 @@ Route::prefix('v1')->group(function () {
         Route::put('me/password', [MeController::class, 'updatePassword'])->middleware('throttle:10,1');
         Route::get('me/notifications', [MeController::class, 'notifications']);
         Route::put('me/notifications', [MeController::class, 'updateNotifications']);
+        Route::delete('me', [MeController::class, 'destroy']);
         Route::post('organizations/{organization}/switch', [OrganizationController::class, 'switch']);
         Route::post('invitations/{token}/accept', [InvitationController::class, 'accept']);
 
@@ -74,6 +75,7 @@ Route::prefix('v1')->group(function () {
             Route::delete('members/{user}', [MemberController::class, 'destroy']);
 
             Route::apiResource('projects', ProjectController::class);
+            Route::get('projects/{project}/activity', [ProjectController::class, 'activity']);
             Route::post('projects/{project}/members', [ProjectMemberController::class, 'store']);
             Route::delete('projects/{project}/members/{user}', [ProjectMemberController::class, 'destroy']);
             Route::get('projects/{project}/tasks', [TaskController::class, 'index']);

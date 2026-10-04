@@ -50,8 +50,7 @@ export const getProjectTasks = cache((id: number, status?: TaskStatus) =>
 );
 export const getTask = cache((id: number) => api<Task>(`tasks/${id}`));
 export const getMyTasks = cache(() => api<Task[]>("me/tasks"));
-/** Extension : activité d'un projet. */
-export const getProjectActivity = cache((id: number) => apiOptional<Activity[]>(`projects/${id}/activity`, []));
+export const getProjectActivity = cache((id: number) => api<Activity[]>(`projects/${id}/activity`));
 
 // --- CRM ---------------------------------------------------------------------
 export const getClients = cache((q?: string) => apiAll<Client>("clients", { q }));

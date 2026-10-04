@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Activity;
 use App\Models\Membership;
 use App\Models\Project;
 use App\Models\Task;
@@ -60,6 +61,7 @@ class ProjectController extends Controller
 
         $project = Project::create($data);
         $project->members()->syncWithoutDetaching([$request->user()->id]);
+        Activity::log($project, 'project.created', $request->user()->id, ['name' => $project->name]);
 
         $this->realtime->projectEvent('project.created', $project->organization_id, $project->id, [
             'name' => $project->name,
@@ -91,17 +93,60 @@ class ProjectController extends Controller
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
         ]);
 
+        $previousStatus = $project->status;
         $project->update($data);
+
+        if (array_key_exists('status', $data) && $project->status !== $previousStatus) {
+            Activity::log($project, 'project.status_changed', $request->user()->id, [
+                'name' => $project->name,
+                'from' => $previousStatus,
+                'to' => $project->status,
+            ]);
+        }
 
         return response()->json($project);
     }
 
-    public function destroy(Project $project): JsonResponse
+    public function destroy(Request $request, Project $project): JsonResponse
     {
         $this->authorize('delete', $project);
         $project->update(['archived_at' => now()]);
+        Activity::log($project, 'project.archived', $request->user()->id, ['name' => $project->name]);
 
         return response()->json(['message' => 'Projet archivé.']);
+    }
+
+    public function activity(Project $project): JsonResponse
+    {
+        $this->authorize('view', $project);
+
+        $taskIds = $project->tasks()->pluck('id');
+
+        $activities = Activity::query()
+            ->where(fn ($q) => $q
+                ->where(fn ($w) => $w
+                    ->where('subject_type', $project->getMorphClass())
+                    ->where('subject_id', $project->id))
+                ->orWhere(fn ($w) => $w
+                    ->where('subject_type', (new Task)->getMorphClass())
+                    ->whereIn('subject_id', $taskIds)))
+            ->with('user:id,name')
+            ->latest()
+            ->orderByDesc('id')
+            ->limit(100)
+            ->get()
+            ->map(fn (Activity $activity) => [
+                'id' => $activity->id,
+                'action' => $activity->action,
+                'kind' => $activity->kind,
+                'body' => $activity->sentence(),
+                'meta' => $activity->meta,
+                'user' => $activity->user ? ['id' => $activity->user->id, 'name' => $activity->user->name] : null,
+                'created_at' => $activity->created_at,
+            ])
+            ->values();
+
+        return response()->json($activities);
     }
 
     // Avancement : tâches racines uniquement (les sous-tâches ne comptent pas).

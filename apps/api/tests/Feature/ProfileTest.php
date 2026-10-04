@@ -1,6 +1,11 @@
 <?php
 
+use App\Models\Membership;
+use App\Models\Organization;
+use App\Models\Project;
+use App\Models\Task;
 use App\Models\User;
+use App\Support\CurrentOrganization;
 use Illuminate\Support\Facades\Hash;
 
 it('updates the profile and keeps emails unique', function () {
@@ -80,4 +85,73 @@ it('returns default notification preferences and persists changes', function () 
     $this->actingAs($user, 'sanctum')
         ->putJson('/api/v1/me/notifications', ['weekly_digest' => 'pas-un-booleen'])
         ->assertStatus(422);
+});
+
+it('anonymizes the account and keeps work done in a shared organization', function () {
+    $owner = User::factory()->create();
+    $org = Organization::create(['name' => 'SharedCo', 'slug' => 'shared-'.uniqid(), 'owner_id' => $owner->id]);
+    Membership::create(['user_id' => $owner->id, 'organization_id' => $org->id, 'role' => Membership::ROLE_OWNER]);
+
+    $member = User::factory()->create(['email' => 'membre@test.com', 'password' => 'mot-de-passe']);
+    Membership::create(['user_id' => $member->id, 'organization_id' => $org->id, 'role' => Membership::ROLE_MEMBER]);
+    $member->update(['current_organization_id' => $org->id]);
+    $member->createToken('phone');
+
+    CurrentOrganization::set($org);
+    $project = Project::create(['organization_id' => $org->id, 'owner_id' => $owner->id, 'name' => 'Site']);
+    $project->members()->attach([$owner->id, $member->id]);
+    $task = Task::create([
+        'organization_id' => $org->id,
+        'project_id' => $project->id,
+        'created_by' => $member->id,
+        'title' => 'Ma tâche',
+    ]);
+    CurrentOrganization::set(null);
+
+    $this->actingAs($member, 'sanctum')
+        ->deleteJson('/api/v1/me')
+        ->assertNoContent();
+
+    $fresh = $member->fresh();
+    expect($fresh->name)->toBe('Compte supprimé')
+        ->and($fresh->email)->toBe('deleted-'.$member->id.'@compte.supprime')
+        ->and($fresh->tokens)->toHaveCount(0)
+        ->and($fresh->memberships)->toHaveCount(0)
+        ->and($task->fresh()->title)->toBe('Ma tâche')
+        ->and($task->fresh()->created_by)->toBe($member->id)
+        ->and(Organization::find($org->id))->not->toBeNull();
+
+    $this->postJson('/api/v1/auth/login', ['email' => 'membre@test.com', 'password' => 'mot-de-passe'])
+        ->assertStatus(422);
+});
+
+it('refuses to delete the owner of an organization that still has members', function () {
+    $owner = User::factory()->create(['email' => 'patron@test.com']);
+    $org = Organization::create(['name' => 'Famille', 'slug' => 'famille-'.uniqid(), 'owner_id' => $owner->id]);
+    Membership::create(['user_id' => $owner->id, 'organization_id' => $org->id, 'role' => Membership::ROLE_OWNER]);
+    $member = User::factory()->create();
+    Membership::create(['user_id' => $member->id, 'organization_id' => $org->id, 'role' => Membership::ROLE_MEMBER]);
+
+    $this->actingAs($owner, 'sanctum')
+        ->deleteJson('/api/v1/me')
+        ->assertStatus(422)
+        ->assertJsonPath('message', 'Transférez la propriété de Famille avant de supprimer votre compte.');
+
+    expect($owner->fresh()->email)->toBe('patron@test.com')
+        ->and(Organization::find($org->id))->not->toBeNull();
+});
+
+it('removes an organization when its only member deletes their account', function () {
+    $owner = User::factory()->create();
+    $org = Organization::create(['name' => 'Solo', 'slug' => 'solo-'.uniqid(), 'owner_id' => $owner->id]);
+    Membership::create(['user_id' => $owner->id, 'organization_id' => $org->id, 'role' => Membership::ROLE_OWNER]);
+    $owner->update(['current_organization_id' => $org->id]);
+
+    $this->actingAs($owner, 'sanctum')
+        ->deleteJson('/api/v1/me')
+        ->assertNoContent();
+
+    expect(Organization::find($org->id))->toBeNull()
+        ->and($owner->fresh()->name)->toBe('Compte supprimé')
+        ->and($owner->fresh()->current_organization_id)->toBeNull();
 });

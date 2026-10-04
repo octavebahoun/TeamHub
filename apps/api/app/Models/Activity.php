@@ -53,4 +53,53 @@ class Activity extends Model
             'meta' => $meta,
         ]);
     }
+
+    /** Phrase affichée après le prénom (« Amina a créé la tâche … »). */
+    public function sentence(): string
+    {
+        if (filled($this->body)) {
+            return $this->body;
+        }
+
+        $title = $this->meta['title'] ?? $this->meta['name'] ?? null;
+        $quoted = is_string($title) && $title !== '' ? ' « '.$title.' »' : '';
+
+        return match ($this->action) {
+            'project.created' => 'a créé le projet'.$quoted,
+            'project.updated' => 'a mis à jour le projet'.$quoted,
+            'project.status_changed' => 'a passé le projet'.$quoted.' en '.$this->statusLabel($this->meta['to'] ?? null, self::PROJECT_STATUS),
+            'project.archived' => 'a archivé le projet'.$quoted,
+            'project.created_from_opportunity' => 'a créé le projet depuis une opportunité',
+            'project.unlocked_by_payment' => 'a débloqué le projet après un paiement',
+            'project.review_submitted' => 'a enregistré un avis client',
+            'task.created' => 'a créé la tâche'.$quoted,
+            'task.status_changed' => 'a passé la tâche'.$quoted.' en '.$this->statusLabel($this->meta['to'] ?? null, self::TASK_STATUS),
+            'task.deleted' => 'a supprimé la tâche'.$quoted,
+            'task.commented' => 'a commenté la tâche'.$quoted,
+            'task.deliverable_approved' => 'a validé un livrable'.$quoted,
+            default => 'a enregistré une activité',
+        };
+    }
+
+    /** @param  array<string, string>  $labels */
+    protected function statusLabel(mixed $status, array $labels): string
+    {
+        $key = is_string($status) ? $status : '';
+
+        return $labels[$key] ?? ($key !== '' ? $key : 'un autre état');
+    }
+
+    private const PROJECT_STATUS = [
+        'upcoming' => '« à venir »',
+        'in_progress' => '« en cours »',
+        'on_hold' => '« en pause »',
+        'done' => '« terminé »',
+    ];
+
+    private const TASK_STATUS = [
+        'todo' => '« à faire »',
+        'in_progress' => '« en cours »',
+        'review' => '« en revue »',
+        'done' => '« terminée »',
+    ];
 }

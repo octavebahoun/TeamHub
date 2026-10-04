@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Activity;
 use App\Models\Project;
 use App\Models\Task;
 use App\Services\InboxNotifier;
@@ -54,6 +55,7 @@ class TaskController extends Controller
         $data['priority'] ??= 'normal';
 
         $task = Task::create($data);
+        Activity::log($project, 'task.created', $request->user()->id, ['title' => $task->title, 'task_id' => $task->id]);
 
         if ($task->assignee_id && $task->assignee_id !== $request->user()->id) {
             $this->inbox->toUser($task->assignee_id, 'task.assigned', 'Nouvelle tâche assignée', $task->title, '/taches/'.$task->id, [
@@ -102,7 +104,17 @@ class TaskController extends Controller
         }
 
         $previousAssignee = $task->assignee_id;
+        $previousStatus = $task->status;
         $task->update($data);
+
+        if (array_key_exists('status', $data) && $task->status !== $previousStatus) {
+            Activity::log($task->project, 'task.status_changed', $request->user()->id, [
+                'title' => $task->title,
+                'task_id' => $task->id,
+                'from' => $previousStatus,
+                'to' => $task->status,
+            ]);
+        }
 
         if (array_key_exists('assignee_id', $data)
             && $task->assignee_id
@@ -121,6 +133,7 @@ class TaskController extends Controller
     public function destroy(Task $task): JsonResponse
     {
         $this->authorize('delete', $task);
+        Activity::log($task->project, 'task.deleted', $request->user()->id, ['title' => $task->title, 'task_id' => $task->id]);
         $task->delete();
 
         return response()->json(['message' => 'Tâche supprimée.']);

@@ -194,6 +194,21 @@ export function resolveMock<T>(path: string, options: Options = {}): T {
     }
   }
 
+  {
+    const m = /^projects\/(\d+)\/activity$/.exec(p);
+    if (m && method === "GET") {
+      return [
+        {
+          id: 1,
+          action: "project.created",
+          body: "a créé le projet",
+          user: { id: 1, name: "Amina Traoré" },
+          created_at: "2026-09-01T10:00:00Z",
+        },
+      ] as T;
+    }
+  }
+
   // --- Analytics ---
   if (p === "analytics/overview" && method === "GET") return structuredClone(mockAnalyticsOverview) as T;
   if (p === "analytics/pipeline" && method === "GET") return structuredClone(mockAnalyticsPipeline) as T;

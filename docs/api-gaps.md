@@ -19,9 +19,8 @@ renvoi, aperçu public, inscription par lien, refus de `role=owner`), compteurs 
 et `clients.address`, `reacted` sur les posts, analytics (`completed_tasks`,
 `completed_per_week`, `late_projects`).
 
-Reste à faire : jalons, fichiers/pièces jointes, activité de projet, `projects.client_id`,
-publications typées (`posts.kind`), mot de passe oublié, suppression de compte, envoi réel des
-e-mails d'invitation.
+Reste à faire : jalons, `projects.client_id`, publications typées (`posts.kind`), envoi réel des
+e-mails d'invitation. Activité de projet et suppression de compte sont en place.
 
 ## REST (`/api/v1`)
 
@@ -33,7 +32,7 @@ e-mails d'invitation.
 | 🟢 Client du projet | `client {id,name,company}` sur `GET /projects` et `GET /projects/{id}` (nécessite `projects.client_id`) | « Produit interne » affiché |
 | 🟢 Jalons | `GET /projects/{id}` : `milestones[] {code,title,done,current}` (table à créer) | Section « Jalons » masquée |
 | 🟢 Fichiers | `GET /projects/{id}` : `attachments[] {id,kind,name,size}` (table `attachments` existante, sans endpoint) | Section « Fichiers » masquée |
-| 🟢 Activité récente | `GET /projects/{id}/activity` → `[{id, action, body, user{id,name}, created_at}]` | Section masquée |
+| 🟢 Activité récente | `GET /projects/{id}/activity` → `[{id, action, body, user{id,name}, created_at}]` | En place |
 
 ### Tâches
 
@@ -60,7 +59,7 @@ e-mails d'invitation.
 | 🟠 Modifier ses infos | `PATCH /me` `{name, email, title, phone}` → `{user}` (ajouter `users.title`, `users.phone`) | Message « pas encore disponible » |
 | 🟠 Changer de mot de passe | `PUT /me/password` `{current_password, password}` ; 422 sur `current_password` si faux | Idem |
 | 🟢 Préférences de notification | `GET /me/notifications`, `PUT /me/notifications` `{task_assigned, due_reminder, chat_messages, weekly_digest}` | Valeurs par défaut, non persistées |
-| 🟢 Suppression du compte | `DELETE /me` | Message « pas encore disponible » |
+| 🟢 Suppression du compte | `DELETE /me` | En place (compte anonymisé, contenu partagé conservé) |
 | 🟢 Mot de passe oublié | `POST /auth/forgot-password`, `POST /auth/reset-password` | Page d'explication |
 
 ### CRM
