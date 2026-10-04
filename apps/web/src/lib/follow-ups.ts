@@ -110,6 +110,7 @@ export function buildCrmItems(opps: Opportunity[], clients: Client[], now = new 
   const byId = new Map(clients.map((c) => [c.id, c]));
   return opps.filter((o) => crmNeedsFollowUp(o, now)).map((o) => {
     const wine = o.client ?? byId.get(o.client_id);
+    const linked = byId.get(o.client_id)?.contravo_client_id;
     const client = clientLabel(wine);
     return {
       id: `crm:${o.id}`,
@@ -123,7 +124,7 @@ export function buildCrmItems(opps: Opportunity[], clients: Client[], now = new 
       sendLabel: "Relance faite",
       opportunityId: o.id,
       wineClientId: o.client_id,
-      contravoClientId: wine && "contravo_client_id" in wine ? wine.contravo_client_id ?? undefined : undefined,
+      contravoClientId: typeof linked === "string" ? linked : undefined,
     };
   });
 }
