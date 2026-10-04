@@ -19,6 +19,9 @@ renvoi, aperçu public, inscription par lien, refus de `role=owner`), compteurs 
 et `clients.address`, `reacted` sur les posts, analytics (`completed_tasks`,
 `completed_per_week`, `late_projects`).
 
+Livré côté data : `profitability` sur l’overview, `GET /analytics/summary` (bilan
+hebdomadaire) et `GET /analytics/relances` — contrat dans `docs/data-ia.md`.
+
 Reste à faire : jalons, `projects.client_id`, publications typées (`posts.kind`), envoi réel des
 e-mails d'invitation. Activité de projet et suppression de compte sont en place.
 

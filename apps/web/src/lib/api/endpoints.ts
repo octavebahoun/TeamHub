@@ -5,6 +5,9 @@ import type {
   Activity,
   AnalyticsOverview,
   AnalyticsPipeline,
+  AnalyticsProfitability,
+  Relances,
+  WeeklySummary,
   Client,
   Invitation,
   InvitationPreview,
@@ -68,5 +71,12 @@ export const getPost = cache((id: number) => api<Post>(`posts/${id}`));
 // --- Analytics -----------------------------------------------------------------
 export const getAnalyticsOverview = cache(() => api<AnalyticsOverview>("analytics/overview"));
 export const getAnalyticsPipeline = cache(() => api<AnalyticsPipeline>("analytics/pipeline"));
+export const getAnalyticsProfitability = cache(() =>
+  apiOptional<AnalyticsProfitability | null>("analytics/profitability", null)
+);
+export const getWeeklySummary = cache(() => apiOptional<WeeklySummary | null>("analytics/summary", null));
+export const getRelances = cache((limit?: number) =>
+  apiOptional<Relances | null>("analytics/relances", null, { query: { limit } })
+);
 
 export type { OpportunityStage };

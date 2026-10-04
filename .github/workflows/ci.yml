@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  data:
+    name: data (FastAPI / pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/data
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.11"
+      - run: uv sync --frozen --group dev
+      - run: uv run pytest
+
+  realtime:
+    name: realtime (Node tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/realtime
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/realtime/package-lock.json
+      - run: npm ci
+      - run: npm test
+
+  web:
+    name: web (Vitest + lint)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run lint
+
+  api:
+    name: api (Pest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: pdo_sqlite, mbstring, tokenizer
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist
+      - run: php artisan test --colors=never

@@ -37,6 +37,15 @@ Les migrations Laravel tournent au démarrage du service `api` (idempotent).
 
 ## Sauvegardes
 
+Script quotidien (dumps locaux + upload R2 si les variables sont posées) :
+
+```bash
+./infra/backup.sh
+# cron : 0 2 * * * /chemin/teamhub/infra/backup.sh
+```
+
+Équivalent manuel :
+
 ```bash
 docker compose exec postgres pg_dump -U teamhub teamhub > backup-$(date +%F).sql
 docker compose exec mongo mongodump --archive=/tmp/mongo.gz --gzip

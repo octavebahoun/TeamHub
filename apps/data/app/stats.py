@@ -29,17 +29,21 @@ def overview(session: Session, organization_id: int, owner_id: int | None = None
         {**params, "today": date.today().isoformat()},
     ).scalar_one()
 
+    workload_task_scope = (
+        "AND t.project_id IN (SELECT id FROM projects WHERE owner_id = :owner)" if owner_id else ""
+    )
     workload = session.execute(
         text(
-            "SELECT u.id AS user_id, u.name, COUNT(t.id) AS open_tasks "
-            "FROM users u "
-            "JOIN memberships m ON m.user_id = u.id AND m.organization_id = :org "
-            "LEFT JOIN tasks t ON t.assignee_id = u.id "
-            "  AND t.organization_id = :org AND t.status != 'done' "
-            "GROUP BY u.id, u.name "
-            "ORDER BY open_tasks DESC"
+            f"SELECT u.id AS user_id, u.name, COUNT(t.id) AS open_tasks "
+            f"FROM users u "
+            f"JOIN memberships m ON m.user_id = u.id AND m.organization_id = :org "
+            f"LEFT JOIN tasks t ON t.assignee_id = u.id "
+            f"  AND t.organization_id = :org AND t.status != 'done' "
+            f"  {workload_task_scope} "
+            f"GROUP BY u.id, u.name "
+            f"ORDER BY open_tasks DESC"
         ),
-        {"org": organization_id},
+        params,
     ).mappings().all()
 
     today = date.today()
@@ -74,6 +78,7 @@ def overview(session: Session, organization_id: int, owner_id: int | None = None
         "completed_tasks": completed_tasks,
         "completed_per_week": completed_per_week(session, params, task_scope, today),
         "late_projects": [dict(row) for row in late_projects],
+        "profitability": profitability(session, organization_id, owner_id),
     }
 
 
@@ -139,6 +144,61 @@ def pipeline(session: Session, organization_id: int, owner_id: int | None = None
             {"stage": r["stage"], "count": r["count"], "amount": float(r["amount"])}
             for r in rows
         ],
+    }
+
+
+def profitability(session: Session, organization_id: int, owner_id: int | None = None) -> dict:
+    """Montants gagnés / perdus / ouverts et taux de conversion du pipeline CRM."""
+    scope = "AND owner_id = :owner" if owner_id else ""
+    params: dict = {"org": organization_id}
+    if owner_id:
+        params["owner"] = owner_id
+
+    rows = session.execute(
+        text(
+            f"SELECT stage, COUNT(*) AS count, COALESCE(SUM(amount), 0) AS amount "
+            f"FROM opportunities WHERE organization_id = :org {scope} "
+            f"GROUP BY stage"
+        ),
+        params,
+    ).mappings().all()
+
+    by_stage = {row["stage"]: row for row in rows}
+
+    def bucket(stage: str) -> tuple[int, float]:
+        row = by_stage.get(stage)
+        if not row:
+            return 0, 0.0
+        return int(row["count"]), float(row["amount"])
+
+    won_count, won_amount = bucket("won")
+    lost_count, lost_amount = bucket("lost")
+    open_count = 0
+    open_amount = 0.0
+    for stage in ("prospect", "contacted", "proposal"):
+        count, amount = bucket(stage)
+        open_count += count
+        open_amount += amount
+
+    closed = won_count + lost_count
+    won_amount_30d = session.execute(
+        text(
+            f"SELECT COALESCE(SUM(amount), 0) FROM opportunities "
+            f"WHERE organization_id = :org AND stage = 'won' "
+            f"AND closed_at IS NOT NULL AND closed_at >= :since {scope}"
+        ),
+        {**params, "since": (date.today() - timedelta(days=30)).isoformat()},
+    ).scalar_one()
+
+    return {
+        "won_amount": won_amount,
+        "lost_amount": lost_amount,
+        "open_amount": open_amount,
+        "won_count": won_count,
+        "lost_count": lost_count,
+        "open_count": open_count,
+        "win_rate": round(won_count / closed, 4) if closed else 0.0,
+        "won_amount_30d": float(won_amount_30d or 0),
     }
 
 

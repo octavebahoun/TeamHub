@@ -40,6 +40,42 @@ class AnalyticsController extends Controller
         ]);
     }
 
+    public function profitability(Request $request): JsonResponse
+    {
+        $this->guard($request);
+        $query = ['org' => CurrentOrganization::id()];
+        if ($userScope = $this->userScope($request)) {
+            $query['owner_id'] = $userScope;
+        }
+
+        return $this->fetch('/stats/profitability', $query);
+    }
+
+    public function summary(Request $request): JsonResponse
+    {
+        $this->guard($request);
+        $query = ['org' => CurrentOrganization::id()];
+        if ($userScope = $this->userScope($request)) {
+            $query['owner_id'] = $userScope;
+        }
+
+        return $this->fetch('/summary', $query, timeout: 20);
+    }
+
+    public function relances(Request $request): JsonResponse
+    {
+        $this->guard($request);
+        $query = [
+            'org' => CurrentOrganization::id(),
+            'limit' => max(1, min((int) $request->integer('limit', 8), 20)),
+        ];
+        if ($userScope = $this->userScope($request)) {
+            $query['owner_id'] = $userScope;
+        }
+
+        return $this->fetch('/relances', $query, timeout: 20);
+    }
+
     protected function guard(Request $request): void
     {
         abort_unless(OrganizationRole::isManager($request->user()), 403,
@@ -53,13 +89,13 @@ class AnalyticsController extends Controller
             : null;
     }
 
-    protected function fetch(string $path, array $query): JsonResponse
+    protected function fetch(string $path, array $query, int $timeout = 5): JsonResponse
     {
         $response = Http::withHeaders([
             'X-Internal-Secret' => config('services.data.internal_secret', env('INTERNAL_SECRET', '')),
             'Accept' => 'application/json',
         ])
-            ->timeout(5)
+            ->timeout($timeout)
             ->baseUrl(config('services.data.base_url', env('DATA_SERVICE_URL', 'http://127.0.0.1:8001')))
             ->get($path, $query);
 
