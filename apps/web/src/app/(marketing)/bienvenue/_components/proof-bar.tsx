@@ -18,6 +18,15 @@ export function ProofBar() {
             <strong className="font-semibold">Excellence Team</strong>
           </span>
         </li>
+        <li className="flex items-start gap-3 text-muted-foreground sm:items-center sm:basis-full sm:justify-center lg:basis-auto">
+          <span>
+            Devis &amp; factures <strong className="font-semibold text-foreground">Contravo</strong>
+            <span className="mx-2 text-border">·</span>
+            Paiements <strong className="font-semibold text-foreground">MoMo / Moov</strong>
+            <span className="mx-2 text-border">·</span>
+            App <strong className="font-semibold text-foreground">PWA</strong>
+          </span>
+        </li>
       </ul>
     </section>
   );

@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils";
 
 const COLUMNS = [
-  { label: "À faire", dot: "bg-subtle-foreground", cards: [["Rappels avant échéance", "10 oct.", "KA"], ["Filtres par date", "12 oct.", "AD"]] },
-  { label: "En cours", dot: "bg-primary", cards: [["Maquette du Kanban", "Aujourd'hui", "OB"], ["POST /projects", "Aujourd'hui", "AD"]] },
-  { label: "Terminé", dot: "bg-success", cards: [["Authentification", "28 sept.", "OB"]] },
+  { label: "À faire", dot: "bg-subtle-foreground", cards: [["Relancer facture MoMo", "Demain", "KA"], ["Devis express client", "12 oct.", "AD"]] },
+  { label: "En cours", dot: "bg-primary", cards: [["Note vocale client", "Aujourd'hui", "OB"], ["Inbox WhatsApp CRM", "Aujourd'hui", "AD"]] },
+  { label: "Terminé", dot: "bg-success", cards: [["Contrat signé Contravo", "28 sept.", "OB"]] },
 ];
 
 /** Aperçu produit : scroll horizontal sur mobile, grille 3 colonnes dès sm. */
@@ -61,7 +61,7 @@ export function HeroPreview() {
         <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold">KA</span>
         <span className="min-w-0 leading-tight">
           <span className="block text-sm font-semibold"># wine-v1</span>
-          <span className="block truncate text-xs text-muted-foreground">« Le filtre par étape est en ligne »</span>
+          <span className="block truncate text-xs text-muted-foreground">« Acompte MoMo reçu — projet débloqué »</span>
         </span>
       </div>
     </div>

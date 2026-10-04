@@ -10,8 +10,9 @@ import { SiteHeader } from "./_components/site-header";
 import { Steps } from "./_components/steps";
 
 export const metadata: Metadata = {
-  title: { absolute: "WINE · Toute votre équipe, au même endroit" },
-  description: "Projets, tâches, chat et clients dans une seule plateforme, pour les équipes francophones.",
+  title: { absolute: "WINE · Équipe, CRM et facturation au même endroit" },
+  description:
+    "Projets, tâches, chat, CRM Contravo, devis et Mobile Money, PWA et analytics IA — pour les équipes francophones et ouest-africaines.",
 };
 
 /** Landing page publique, servie sur « / » aux visiteurs non connectés (réécriture dans proxy.ts). */

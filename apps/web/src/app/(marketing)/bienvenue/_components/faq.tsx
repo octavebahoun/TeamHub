@@ -6,7 +6,7 @@ import { Eyebrow, SectionTitle } from "./eyebrow";
 export function Faq() {
   return (
     <section id="faq" aria-labelledby="faq-title" className="scroll-mt-20 border-t">
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 px-5 py-24 sm:px-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-4 py-16 sm:gap-12 sm:px-8 sm:py-24 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <div>
           <Eyebrow>Questions fréquentes</Eyebrow>
           <SectionTitle id="faq-title">
