@@ -13,7 +13,7 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="ghost" size="icon-lg" aria-label="Changer le thème" disabled>
+      <Button variant="ghost" size="icon" className="size-10" aria-label="Changer le thème" disabled>
         <Sun className="opacity-0" aria-hidden />
       </Button>
     );
@@ -24,7 +24,8 @@ export function ThemeToggle() {
   return (
     <Button
       variant="ghost"
-      size="icon-lg"
+      size="icon"
+      className="size-10"
       aria-label={isDark ? "Activer le mode clair" : "Activer le mode sombre"}
       onClick={() => setTheme(isDark ? "light" : "dark")}
     >

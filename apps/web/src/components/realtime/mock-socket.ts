@@ -44,6 +44,26 @@ function mockMessage(channelId: string, senderId: number, body: string, minutesA
   };
 }
 
+/** Réponses démo variées (mode mock uniquement) — pas un vrai bot métier. */
+function mockColleagueReply(userBody: string): string {
+  const t = userBody.trim().toLowerCase();
+  if (!t) return "Tu voulais dire quelque chose ?";
+  if (/^(bonjour|bonsoir|salut|hello|hey)\b/.test(t)) return "Salut ! Comment avance le dossier côté client ?";
+  if (/pourquoi/.test(t) && /bien reçu/.test(t)) return "Pardon — c'était une réponse automatique de démo. Je suis plus présent maintenant 🙂";
+  if (/merci|thanks/.test(t)) return "Avec plaisir. On se synchronise demain matin ?";
+  if (/devis|facture|contravo|momo|paiement/.test(t)) return "OK, je regarde ça sur Contravo et je te dis pour le paiement MoMo.";
+  if (/rendez[- ]?vous|réunion|call|visio/.test(t)) return "Je suis dispo jeudi 10h (heure de Cotonou). Ça te va ?";
+  if (/\?/.test(t)) return "Bonne question — je vérifie avec Fatou et je te reviens dans l'heure.";
+  if (t.length < 12) return "Noté. Tu peux préciser un peu ?";
+  const pool = [
+    "D'accord, je m'en occupe.",
+    "Parfait, on aligne ça avec le sprint en cours.",
+    "OK reçu — je mets à jour le Kanban.",
+    "Ça marche. Je te ping dès que c'est fait.",
+  ];
+  return pool[Math.floor(Math.random() * pool.length)]!;
+}
+
 /** Socket.io minimal pour le mode démo (NEXT_PUBLIC_USE_MOCKS). */
 export class MockRealtimeSocket {
   private handlers = new Map<string, Set<Handler>>();
@@ -129,10 +149,11 @@ export class MockRealtimeSocket {
       const msg = mockMessage(channelId, 1, body, 0);
       callback?.(null, { ok: true, id: msg._id });
       this.emitToHandlers("message:new", msg);
+      const reply = mockColleagueReply(body);
       this.timers.push(
         window.setTimeout(() => {
-          this.emitToHandlers("message:new", mockMessage(channelId, 2, "Bien reçu 👍", 0));
-        }, 900)
+          this.emitToHandlers("message:new", mockMessage(channelId, 2, reply, 0));
+        }, 700 + Math.floor(Math.random() * 800))
       );
       return this;
     }

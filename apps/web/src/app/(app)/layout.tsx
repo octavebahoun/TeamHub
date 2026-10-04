@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/shell/app-sidebar";
+import { BottomNav } from "@/components/shell/bottom-nav";
 import { CommandPalette } from "@/components/shell/command-palette";
 import { NAV_ITEMS } from "@/components/shell/nav-items";
 import { Topbar } from "@/components/shell/topbar";
@@ -43,11 +44,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 : null
             }
           />
-          <main id="contenu" tabIndex={-1} className="flex-1 px-4 py-8 outline-none sm:px-8 sm:py-10">
+          <main
+            id="contenu"
+            tabIndex={-1}
+            className="flex-1 overflow-x-clip px-3 py-6 outline-none pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:py-8 lg:px-8 lg:pb-10"
+          >
             {children}
           </main>
         </div>
       </div>
+      <BottomNav org={org} hidden={hidden} />
       <CommandPalette />
     </RealtimeProvider>
   );

@@ -6,30 +6,43 @@ const COLUMNS = [
   { label: "Terminé", dot: "bg-success", cards: [["Authentification", "28 sept.", "OB"]] },
 ];
 
-/** Aperçu décoratif du produit (Kanban + message) ; décrit par un seul libellé pour les lecteurs d'écran. */
+/** Aperçu produit : scroll horizontal sur mobile, grille 3 colonnes dès sm. */
 export function HeroPreview() {
   return (
-    <div role="img" aria-label="Aperçu de WINE : le Kanban du projet WINE V1 et un message dans le canal du projet" className="relative">
-      <div aria-hidden className="rounded-[28px] bg-primary p-5 sm:p-7">
-        <div className="rounded-2xl bg-background p-4 shadow-sm sm:p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <p className="font-heading text-[20px]">Tâches · WINE V1</p>
-            <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold text-brand-soft-foreground">M1 en cours</span>
+    <div
+      role="img"
+      aria-label="Aperçu de WINE : le Kanban du projet WINE V1 et un message dans le canal du projet"
+      className="relative mx-auto w-full max-w-lg min-w-0 lg:max-w-none"
+    >
+      <div aria-hidden className="glow-active rounded-3xl bg-gradient-to-br from-primary via-primary to-primary-hover p-3 shadow-lg sm:rounded-[28px] sm:p-5">
+        <div className="glass rounded-2xl border bg-background/95 p-3 sm:p-5">
+          <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4">
+            <p className="truncate font-heading text-[17px] sm:text-[20px]">Tâches · WINE V1</p>
+            <span className="shrink-0 rounded-full bg-brand-soft px-2.5 py-1 text-[11px] font-semibold text-brand-soft-foreground sm:px-3 sm:text-xs">
+              M1 en cours
+            </span>
           </div>
-          <div className="grid grid-cols-3 gap-2.5">
+
+          {/* Mobile : carrousel horizontal snap — desktop : 3 colonnes */}
+          <div className="scrollbar-none -mx-1 flex snap-x snap-mandatory gap-2.5 overflow-x-auto px-1 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-2.5 sm:overflow-visible sm:px-0 sm:pb-0">
             {COLUMNS.map((c) => (
-              <div key={c.label} className="rounded-xl bg-muted p-2.5">
+              <div
+                key={c.label}
+                className="w-[min(72vw,16rem)] shrink-0 snap-center rounded-xl bg-muted/90 p-2.5 sm:w-auto sm:shrink"
+              >
                 <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold">
                   <span className={cn("size-2 rounded-full", c.dot)} />
                   {c.label}
                 </p>
                 <div className="space-y-2">
                   {c.cards.map(([title, date, who]) => (
-                    <div key={title} className="rounded-lg border bg-card p-2.5">
+                    <div key={title} className="rounded-lg border bg-card p-2.5 shadow-xs">
                       <p className="text-xs leading-snug font-semibold">{title}</p>
                       <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
                         {date}
-                        <span className="inline-flex size-5 items-center justify-center rounded-full bg-inverse text-[9px] font-semibold text-inverse-foreground">{who}</span>
+                        <span className="inline-flex size-5 items-center justify-center rounded-full bg-inverse text-[9px] font-semibold text-inverse-foreground">
+                          {who}
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -39,11 +52,16 @@ export function HeroPreview() {
           </div>
         </div>
       </div>
-      <div aria-hidden className="absolute -bottom-8 -left-3 flex items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-md sm:-left-6">
-        <span className="inline-flex size-9 items-center justify-center rounded-full bg-secondary text-xs font-semibold">KA</span>
-        <span className="leading-tight">
+
+      {/* Bulle chat : dans le flux sur mobile, flottante dès sm */}
+      <div
+        aria-hidden
+        className="mt-4 flex items-center gap-3 rounded-2xl border bg-card/95 px-4 py-3 shadow-md backdrop-blur sm:absolute sm:-bottom-5 sm:left-4 sm:mt-0 sm:max-w-[85%]"
+      >
+        <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold">KA</span>
+        <span className="min-w-0 leading-tight">
           <span className="block text-sm font-semibold"># wine-v1</span>
-          <span className="text-xs text-muted-foreground">« Le filtre par étape est en ligne »</span>
+          <span className="block truncate text-xs text-muted-foreground">« Le filtre par étape est en ligne »</span>
         </span>
       </div>
     </div>
