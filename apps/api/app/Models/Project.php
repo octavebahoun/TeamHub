@@ -29,11 +29,13 @@ class Project extends Model
     protected $fillable = [
         'organization_id',
         'owner_id',
+        'client_id',
         'name',
         'description',
         'status',
         'contravo_invoice_id',
         'contravo_contract_id',
+        'contravo_project_id',
         'start_date',
         'end_date',
         'archived_at',
@@ -51,6 +53,11 @@ class Project extends Model
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
     }
 
     public function members(): BelongsToMany

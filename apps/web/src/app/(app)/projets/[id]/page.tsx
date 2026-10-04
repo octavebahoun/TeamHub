@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ApiError } from "@/lib/api/client";
-import { getMe, getMembers, getProject, getProjectActivity, getProjectTasks } from "@/lib/api/endpoints";
+import { getClient, getClients, getMe, getMembers, getProject, getProjectActivity, getProjectTasks } from "@/lib/api/endpoints";
 import { countByStatus, projectProgress } from "@/lib/domain";
 import { shortDate } from "@/lib/format";
 import { PROJECT_STATUS, ROLE } from "@/lib/labels";
@@ -53,8 +53,11 @@ export default async function ProjectPage({ params }: Props) {
     detail: m.id === project.owner_id ? "Responsable" : ROLE[members.find((x) => x.user_id === m.id)?.role ?? "member"].label,
   }));
   const files = project.attachments ?? [];
-  const contravoProjectId = resolveContravoProjectId(null);
-  const contravoClientId = resolveContravoClientId(null);
+  const clients = can(role, "crm.view") ? await getClients().catch(() => []) : [];
+  const crm = project.client_id ? await getClient(project.client_id).catch(() => null) : null;
+  const quoteOpp = crm?.opportunities?.find((o) => o.stage !== "won" && o.stage !== "lost");
+  const contravoProjectId = resolveContravoProjectId(project.contravo_project_id);
+  const contravoClientId = resolveContravoClientId(project.client?.contravo_client_id ?? crm?.contravo_client_id);
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -71,7 +74,7 @@ export default async function ProjectPage({ params }: Props) {
           .join(" · ")}
         actions={
           <>
-            {canManage && <EditProjectDialog project={project} />}
+            {canManage && <EditProjectDialog project={project} clients={clients.map((c) => ({ id: c.id, label: c.company || c.name }))} />}
             <Link href={`/taches?projet=${project.id}`} className={buttonVariants({ size: "lg" })}>
               Ouvrir le Kanban
             </Link>
@@ -95,11 +98,17 @@ export default async function ProjectPage({ params }: Props) {
           </Panel>
           {project.milestones && project.milestones.length > 0 && <Milestones items={project.milestones} />}
           {activity.length > 0 && <RecentActivity items={activity} />}
-          {contravoProjectId && (
-            <section id="facturation" className="scroll-mt-24 space-y-8">
-              <BillingTab contravoProjectId={contravoProjectId} contravoClientId={contravoClientId ?? undefined} />
-            </section>
-          )}
+          <section id="facturation" className="scroll-mt-24 space-y-8">
+            <BillingTab
+              wineProjectId={id}
+              wineClientId={project.client_id ?? project.client?.id ?? null}
+              clientEmail={crm?.email ?? null}
+              contravoProjectId={contravoProjectId ?? undefined}
+              contravoClientId={contravoClientId ?? undefined}
+              projectName={project.name}
+              opportunityId={quoteOpp?.id}
+            />
+          </section>
         </div>
         <div className="space-y-8">
           <ProjectFundingStatus hasInvoice={Boolean(project.contravo_invoice_id)} />

@@ -1,6 +1,33 @@
 import { contravoFetch, contravoFetchRedirectUrl, useContravoMocks } from "./client";
 import { mocks } from "./mocks";
-import { ContravoError, type Contract, type ListQuery } from "./types";
+import { ContravoError, type Contract, type CreateContract, type ListQuery } from "./types";
+
+export async function createContract(input: CreateContract): Promise<Contract> {
+  if (useContravoMocks()) {
+    return {
+      id: `c-mock-${Date.now()}`,
+      organizationId: "org",
+      projectId: input.projectId,
+      clientId: input.clientId,
+      quoteId: input.quoteId ?? null,
+      number: "CTR-MOCK",
+      title: input.title,
+      status: "draft",
+      bodyMarkdown: input.bodyMarkdown ?? null,
+      pdfFileId: null,
+      signedPdfFileId: null,
+      sentAt: null,
+      signedAt: null,
+      signedByName: null,
+      signedByEmail: null,
+      signatureHash: null,
+      expiresAt: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+  return contravoFetch<Contract>("/contracts", { method: "POST", body: input });
+}
 
 export async function listContracts(query: ListQuery = {}): Promise<Contract[]> {
   if (useContravoMocks()) return mocks.listContracts(query);

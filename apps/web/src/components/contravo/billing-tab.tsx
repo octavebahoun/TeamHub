@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Bell, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -8,16 +9,41 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Panel, PanelTitle } from "@/components/common/panel";
 import { ToneBadge } from "@/components/common/tone-badge";
+import { prepareProjectBilling } from "@/lib/actions/billing";
 import { contravoBrowser } from "@/lib/contravo/browser";
 import { CONTRACT_STATUS, INVOICE_STATUS, PAYMENT_METHOD_LABEL, QUOTE_STATUS } from "@/lib/contravo/labels";
+import { billingError } from "@/lib/contravo/provision";
 import type { Contract, Invoice, Quote } from "@/lib/contravo/types";
 import { money, shortDate } from "@/lib/format";
+import { CreateContractDialog } from "./create-contract-dialog";
+import { GenerateQuoteDialog } from "./generate-quote-dialog";
 
-export function BillingTab({ contravoClientId, contravoProjectId }: { contravoClientId?: string; contravoProjectId?: string }) {
+export function BillingTab({
+  wineProjectId,
+  wineClientId,
+  clientEmail,
+  contravoClientId,
+  contravoProjectId,
+  projectName,
+  opportunityId,
+}: {
+  wineProjectId: number;
+  wineClientId?: number | null;
+  clientEmail?: string | null;
+  contravoClientId?: string;
+  contravoProjectId?: string;
+  projectName: string;
+  opportunityId?: number;
+}) {
+  const router = useRouter();
+  const ready = Boolean(contravoClientId && contravoProjectId);
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [contractNote, setContractNote] = useState<string | null>(null);
+  const [loading, setLoading] = useState(ready);
+  const [email, setEmail] = useState("");
+  const [preparing, setPreparing] = useState(false);
   const [payInvoiceId, setPayInvoiceId] = useState<string | null>(null);
   const [payAmount, setPayAmount] = useState("");
   const [payRef, setPayRef] = useState("");
@@ -27,21 +53,32 @@ export function BillingTab({ contravoClientId, contravoProjectId }: { contravoCl
   if (contravoProjectId) params.projectId = contravoProjectId;
 
   const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [q, c, i] = await Promise.all([
-        contravoBrowser.listQuotes(params),
-        contravoBrowser.listContracts(params),
-        contravoBrowser.listInvoices(params),
-      ]);
-      setQuotes(q);
-      setContracts(c);
-      setInvoices(i);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Facturation indisponible.");
-    } finally {
+    if (!contravoClientId || !contravoProjectId) {
       setLoading(false);
+      return;
     }
+    setLoading(true);
+    const [q, c, i] = await Promise.all([
+      contravoBrowser.listQuotes(params).catch((e) => {
+        toast.error(billingError(e));
+        return [] as Quote[];
+      }),
+      contravoBrowser.listContracts(params).then((rows) => {
+        setContractNote(null);
+        return rows;
+      }).catch((e) => {
+        setContractNote(billingError(e));
+        return [] as Contract[];
+      }),
+      contravoBrowser.listInvoices(params).catch((e) => {
+        toast.error(billingError(e));
+        return [] as Invoice[];
+      }),
+    ]);
+    setQuotes(q);
+    setContracts(c);
+    setInvoices(i);
+    setLoading(false);
   }, [contravoClientId, contravoProjectId]);
 
   useEffect(() => {
@@ -75,10 +112,65 @@ export function BillingTab({ contravoClientId, contravoProjectId }: { contravoCl
     }
   }
 
+  async function prepare() {
+    setPreparing(true);
+    const res = await prepareProjectBilling(wineProjectId, email);
+    setPreparing(false);
+    if (res.error) {
+      toast.error(res.error);
+      return;
+    }
+    toast.success("La facturation est prête.");
+    router.refresh();
+  }
+
+  if (!ready) {
+    return (
+      <Panel className="p-7">
+        <PanelTitle className="mb-4">Facturation</PanelTitle>
+        {wineClientId ? (
+          <div className="space-y-4">
+            <p>
+              {contravoClientId
+                ? "Le projet n'est pas encore relié à la facturation. Préparez-le pour créer un devis ou un contrat."
+                : "Ce client n'est pas encore relié à la facturation. Une fois le lien créé, vous pourrez faire un devis et un contrat."}
+            </p>
+            {!clientEmail && (
+              <div className="max-w-sm space-y-1.5">
+                <Label htmlFor="project-billing-email">Email du client</Label>
+                <Input id="project-billing-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+              </div>
+            )}
+            <Button type="button" disabled={preparing} onClick={() => void prepare()}>
+              {preparing ? "Préparation…" : "Préparer la facturation"}
+            </Button>
+          </div>
+        ) : (
+          <p>Ce projet n&apos;a pas encore de client. Ouvrez Modifier et choisissez-le pour préparer un devis ou un contrat.</p>
+        )}
+      </Panel>
+    );
+  }
+
   if (loading) return <p className="text-muted-foreground">Chargement de la facturation…</p>;
 
   return (
     <div className="space-y-8">
+      <div className="flex flex-wrap gap-3">
+        <GenerateQuoteDialog
+          contravoClientId={contravoClientId!}
+          contravoProjectId={contravoProjectId!}
+          opportunityId={opportunityId}
+          defaultTitle={projectName}
+        />
+        <CreateContractDialog
+          wineProjectId={wineProjectId}
+          contravoClientId={contravoClientId!}
+          contravoProjectId={contravoProjectId!}
+          projectName={projectName}
+          quotes={quotes}
+        />
+      </div>
       <Panel className="p-7">
         <PanelTitle className="mb-4">Devis</PanelTitle>
         {quotes.length === 0 ? (
@@ -102,7 +194,9 @@ export function BillingTab({ contravoClientId, contravoProjectId }: { contravoCl
       </Panel>
       <Panel className="p-7">
         <PanelTitle className="mb-4">Contrats</PanelTitle>
-        {contracts.length === 0 ? (
+        {contractNote ? (
+          <p className="text-muted-foreground">{contractNote}</p>
+        ) : contracts.length === 0 ? (
           <p className="text-muted-foreground">Aucun contrat.</p>
         ) : (
           <ul className="divide-y border-t">

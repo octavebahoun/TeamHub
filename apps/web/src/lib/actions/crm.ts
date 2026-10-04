@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { api, ApiError } from "@/lib/api/client";
 import type { ActivityKind, Client, Opportunity, OpportunityStage } from "@/lib/api/types";
+import { prepareProjectBilling, provisionClient } from "./billing";
 import type { FormState } from "./session";
 
 const str = (v: FormDataEntryValue | null) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null);
@@ -34,6 +35,7 @@ export async function createClient(_: FormState, form: FormData): Promise<FormSt
     throw e;
   }
   refresh();
+  if (typeof client.id === "number") await provisionClient(client.id);
   redirect(`/crm/${client.id}`);
 }
 
@@ -69,7 +71,10 @@ export async function updateOpportunity(
   try {
     const opp = await api<Opportunity>(`opportunities/${id}`, { method: "PATCH", body: patch });
     refresh(clientId);
-    if (patch.stage === "won") revalidatePath("/projets");
+    if (patch.stage === "won") {
+      revalidatePath("/projets");
+      if (opp.project?.id) await prepareProjectBilling(opp.project.id).catch(() => undefined);
+    }
     return { project: opp.project ?? null };
   } catch (e) {
     if (e instanceof ApiError) return { error: e.status === 403 ? "Seul le responsable de l'opportunité peut la modifier." : e.message };

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Activity;
+use App\Models\Client;
 use App\Models\Membership;
 use App\Models\Project;
 use App\Models\Task;
@@ -11,6 +12,7 @@ use App\Services\RealtimePublisher;
 use App\Support\OrganizationRole;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class ProjectController extends Controller
 {
@@ -37,7 +39,7 @@ class ProjectController extends Controller
                     ->where('owner_id', $user->id)
                     ->orWhereHas('members', fn ($m) => $m->whereKey($user->id)))
             )
-            ->with('owner', 'members:id,name,avatar')
+            ->with('owner', 'members:id,name,avatar', 'client:id,name,company,contravo_client_id')
             ->withCount($this->rootTaskCounts())
             ->latest()
             ->paginate(20);
@@ -48,13 +50,14 @@ class ProjectController extends Controller
     public function store(Request $request): JsonResponse
     {
         $this->authorize('create', Project::class);
-        $data = $request->validate([
+        $data = $this->validateClient($request->validate([
             'name' => ['required', 'string', 'max:200'],
             'description' => ['nullable', 'string'],
             'status' => ['nullable', 'in:'.implode(',', Project::STATUSES)],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
-        ]);
+            'client_id' => ['nullable', 'integer'],
+        ]));
 
         $data['owner_id'] = $request->user()->id;
         $data['status'] ??= Project::STATUS_UPCOMING;
@@ -68,13 +71,13 @@ class ProjectController extends Controller
             'member_ids' => [$request->user()->id],
         ]);
 
-        return response()->json($project, 201);
+        return response()->json($project->load('client:id,name,company,contravo_client_id'), 201);
     }
 
     public function show(Project $project): JsonResponse
     {
         $this->authorize('view', $project);
-        $project->load('owner', 'members', 'attachments')->loadCount($this->rootTaskCounts());
+        $project->load('owner', 'members', 'attachments', 'client:id,name,company,contravo_client_id')->loadCount($this->rootTaskCounts());
 
         $payload = $project->toArray();
         $payload['attachments'] = $project->attachments->map(fn ($a) => $a->toSummary())->values();
@@ -85,13 +88,14 @@ class ProjectController extends Controller
     public function update(Request $request, Project $project): JsonResponse
     {
         $this->authorize('update', $project);
-        $data = $request->validate([
+        $data = $this->validateClient($request->validate([
             'name' => ['sometimes', 'string', 'max:200'],
             'description' => ['nullable', 'string'],
             'status' => ['sometimes', 'in:'.implode(',', Project::STATUSES)],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
-        ]);
+            'client_id' => ['sometimes', 'nullable', 'integer'],
+        ]));
 
         $previousStatus = $project->status;
         $project->update($data);
@@ -104,7 +108,22 @@ class ProjectController extends Controller
             ]);
         }
 
-        return response()->json($project);
+        return response()->json($project->load('client:id,name,company,contravo_client_id'));
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function validateClient(array $data): array
+    {
+        if (! empty($data['client_id']) && ! Client::query()->whereKey($data['client_id'])->exists()) {
+            throw ValidationException::withMessages([
+                'client_id' => "Ce client n'appartient pas à l'équipe.",
+            ]);
+        }
+
+        return $data;
     }
 
     public function destroy(Request $request, Project $project): JsonResponse

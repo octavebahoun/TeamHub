@@ -3,7 +3,7 @@
 import { api } from "@/lib/api/client";
 
 export async function linkContravoEntity(input: {
-  type: "quote" | "invoice" | "contract" | "deliverable" | "client";
+  type: "quote" | "invoice" | "contract" | "deliverable" | "client" | "project";
   id: number;
   contravo_id: string;
 }) {

@@ -5,7 +5,7 @@ import { differenceInCalendarDays } from "date-fns";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { ApiError } from "@/lib/api/client";
-import { getClient, getClientActivity, getClients, getMe, getProject } from "@/lib/api/endpoints";
+import { getClient, getClientActivity, getClients, getMe, getProject, getProjects } from "@/lib/api/endpoints";
 import { clientKind, projectProgress } from "@/lib/domain";
 import { money, toDate } from "@/lib/format";
 import { OPPORTUNITY_STAGE } from "@/lib/labels";
@@ -19,7 +19,9 @@ import { NewOpportunityDialog } from "../_components/new-opportunity-dialog";
 import { CrmEnrichment } from "@/components/contravo/crm-enrichment";
 import { GenerateQuoteDialog } from "@/components/contravo/generate-quote-dialog";
 import { InboxPanel } from "@/components/contravo/inbox-panel";
+import { useContravoMocks } from "@/lib/contravo/client";
 import { resolveContravoClientId, resolveContravoProjectId } from "@/lib/contravo/resolve";
+import { LinkClientBilling } from "@/components/contravo/link-client-billing";
 import { FollowUpBanner } from "./_components/follow-up-banner";
 import { History } from "./_components/history";
 
@@ -57,8 +59,13 @@ export default async function ClientPage({ params }: Props) {
   const won = opps.filter((o) => o.closed_at && o.stage === "won").map((o) => toDate(o.closed_at)!).sort((a, b) => +a - +b)[0];
   const since = won ?? toDate(client.created_at);
   const canEdit = can(role, "crm.edit");
+  const catalog = await getProjects().catch(() => []);
+  const quoteProject =
+    catalog.find((p) => (p.client_id === id || p.client?.id === id) && p.contravo_project_id) ??
+    linked.find((p) => p?.contravo_project_id) ??
+    null;
   const contravoClientId = resolveContravoClientId(client.contravo_client_id);
-  const contravoProjectId = resolveContravoProjectId(null);
+  const contravoProjectId = resolveContravoProjectId(quoteProject?.contravo_project_id ?? null);
   const quoteOpp = opps.find((o) => !["won", "lost"].includes(o.stage)) ?? opps[0];
 
   return (
@@ -90,6 +97,7 @@ export default async function ClientPage({ params }: Props) {
         }
       />
       {due && canEdit && <FollowUpBanner opportunity={{ ...due, client_id: id }} contact={client.name} />}
+      {!useContravoMocks() && !client.contravo_client_id && canEdit && <LinkClientBilling clientId={id} hasEmail={Boolean(client.email)} />}
       <div className="grid grid-cols-1 gap-8 xl:grid-cols-[420px_minmax(0,1fr)]">
         <div className="space-y-8">
           <Panel className="p-7">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { addDays, format } from "date-fns";
 import { FileDown, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -42,6 +43,7 @@ export function GenerateQuoteDialog({
   defaultTitle?: string;
   triggerLabel?: string;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [lines, setLines] = useState<Line[]>([
     { id: "1", description: defaultTitle ?? "Prestation", quantity: "1", unitPrice: "1500000" },
@@ -83,6 +85,7 @@ export function GenerateQuoteDialog({
       }
       setCreatedId(final.id);
       toast.success(send ? "Devis créé et envoyé." : "Devis brouillon enregistré.");
+      router.refresh();
       if (send) window.open(contravoBrowser.quotePdfHref(final.id), "_blank", "noopener,noreferrer");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Échec de la création du devis.");

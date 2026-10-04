@@ -85,6 +85,7 @@ export type Project = {
   id: number;
   organization_id: number;
   owner_id: number;
+  client_id?: number | null;
   name: string;
   description: string | null;
   status: ProjectStatus;
@@ -96,12 +97,13 @@ export type Project = {
   members?: (UserRef & { email?: string })[];
   tasks_count?: number;
   done_tasks_count?: number;
-  client?: { id: number; name: string; company: string | null } | null;
+  client?: { id: number; name: string; company: string | null; contravo_client_id?: string | null } | null;
   /** Extensions (cf. docs/api-gaps.md). */
   milestones?: { code: string; title: string; done: boolean; current: boolean }[];
   attachments?: { id: number; kind: string; name: string; size: string }[];
   contravo_invoice_id?: string | null;
   contravo_contract_id?: string | null;
+  contravo_project_id?: string | null;
 };
 
 export type Task = {

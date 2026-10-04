@@ -33,6 +33,7 @@ class ContravoLinkController extends Controller
         'contract' => [Project::class, 'contravo_contract_id'],
         'deliverable' => [Task::class, 'contravo_deliverable_id'],
         'client' => [Client::class, 'contravo_client_id'],
+        'project' => [Project::class, 'contravo_project_id'],
     ];
 
     public function store(Request $request): JsonResponse

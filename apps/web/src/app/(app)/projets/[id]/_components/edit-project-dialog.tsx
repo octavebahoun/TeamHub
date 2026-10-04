@@ -9,7 +9,7 @@ import { archiveProject, updateProject } from "@/lib/actions/projects";
 import { useFormAction } from "@/hooks/use-form-action";
 import type { Project } from "@/lib/api/types";
 
-export function EditProjectDialog({ project }: { project: Project }) {
+export function EditProjectDialog({ project, clients = [] }: { project: Project; clients?: { id: number; label: string }[] }) {
   const [open, setOpen] = useState(false);
   const [state, action, pending] = useFormAction(updateProject.bind(null, project.id), { successMessage: "Projet mis à jour", onSuccess: () => setOpen(false), showErrors: false });
   return (
@@ -30,7 +30,7 @@ export function EditProjectDialog({ project }: { project: Project }) {
               {state.error}
             </p>
           )}
-          <ProjectFormFields project={project} errors={state?.fields} />
+          <ProjectFormFields project={project} clients={clients} errors={state?.fields} />
           <DialogFooter className="sm:justify-between">
             <ConfirmButton
               label="Archiver"

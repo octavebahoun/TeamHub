@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getMe, getProjects } from "@/lib/api/endpoints";
+import { getClients, getMe, getProjects } from "@/lib/api/endpoints";
 import type { ProjectStatus } from "@/lib/api/types";
 import { plural } from "@/lib/format";
 import { PROJECT_STATUS } from "@/lib/labels";
@@ -16,7 +16,9 @@ const ORDER: ProjectStatus[] = ["in_progress", "on_hold", "done", "upcoming"];
 
 export default async function ProjectsPage({ searchParams }: { searchParams: Promise<{ statut?: string }> }) {
   const { statut } = await searchParams;
-  const [me, all] = await Promise.all([getMe(), getProjects()]);
+  const me = await getMe();
+  const role = currentRole(me);
+  const [all, clients] = await Promise.all([getProjects(), can(role, "crm.view") ? getClients() : Promise.resolve([])]);
   const filter = ORDER.includes(statut as ProjectStatus) ? (statut as ProjectStatus) : undefined;
   const shown = filter ? all.filter((p) => p.status === filter) : all;
   const count = (s: ProjectStatus) => all.filter((p) => p.status === s).length;
@@ -26,7 +28,7 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
       <PageHeader
         title="Projets"
         subtitle={`${plural(all.length, "projet", "projets")} · ${count("in_progress")} en cours`}
-        actions={can(currentRole(me), "project.create") && <NewProjectDialog />}
+        actions={can(role, "project.create") && <NewProjectDialog clients={clients.map((c) => ({ id: c.id, label: c.company || c.name }))} />}
       />
       <FilterChips
         label="Filtrer par statut"

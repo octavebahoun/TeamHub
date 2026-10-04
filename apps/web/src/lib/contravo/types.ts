@@ -141,6 +141,15 @@ export type Contract = {
   updatedAt: string;
 };
 
+export type CreateContravoClient = {
+  type: "individual" | "company";
+  displayName: string;
+  companyName?: string;
+  email: string;
+  phone?: string;
+  notes?: string;
+};
+
 export type ContravoClient = {
   id: string;
   organizationId: string;
@@ -261,6 +270,24 @@ export type SignatureVerification = {
   signerName: string | null;
   documentNumber: string | null;
   signatureHash: string | null;
+};
+
+export type CreateContravoProject = {
+  clientId: string;
+  name: string;
+  description?: string;
+  status?: "draft" | "active" | "on_hold" | "delivered" | "cancelled" | "archived";
+  startDate?: string;
+  dueDate?: string;
+  currency?: string;
+};
+
+export type CreateContract = {
+  projectId: string;
+  clientId: string;
+  quoteId?: string;
+  title: string;
+  bodyMarkdown?: string;
 };
 
 export type ContravoProject = {

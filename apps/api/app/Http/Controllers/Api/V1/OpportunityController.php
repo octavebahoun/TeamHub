@@ -94,6 +94,7 @@ class OpportunityController extends Controller
                 if ($newStage === Opportunity::STAGE_WON && ! $opportunity->project_id) {
                     $project = Project::create([
                         'owner_id' => $request->user()->id,
+                        'client_id' => $opportunity->client_id,
                         'name' => $opportunity->title,
                         'description' => "Créé depuis l'opportunité gagnée #{$opportunity->id}.",
                         'status' => Project::STATUS_UPCOMING,

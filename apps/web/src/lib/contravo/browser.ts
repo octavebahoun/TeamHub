@@ -3,6 +3,7 @@
 import type {
   Contract,
   ConversationSummary,
+  CreateContract,
   ConversationThread,
   CreateQuote,
   Invoice,
@@ -67,6 +68,13 @@ export const contravoBrowser = {
   listContracts(params?: Record<string, string>) {
     const q = params ? `?${new URLSearchParams(params)}` : "";
     return api<Contract[]>(`/api/contravo/contracts${q}`);
+  },
+  createContract(body: CreateContract) {
+    return api<Contract>("/api/contravo/contracts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
   },
   getClientEnrichment(clientId: string) {
     return api<{ quotes: Quote[]; invoices: Invoice[]; projects: { id: string; name: string; status: string; budgetCents: string | null }[] }>(

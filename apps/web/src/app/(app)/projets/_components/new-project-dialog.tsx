@@ -8,7 +8,7 @@ import { ProjectFormFields } from "@/components/projects/project-form-fields";
 import { createProject } from "@/lib/actions/projects";
 import type { FormState } from "@/lib/actions/session";
 
-export function NewProjectDialog() {
+export function NewProjectDialog({ clients = [] }: { clients?: { id: number; label: string }[] }) {
   const [state, action, pending] = useActionState<FormState, FormData>(createProject, undefined);
   return (
     <Dialog>
@@ -28,7 +28,7 @@ export function NewProjectDialog() {
               {state.error}
             </p>
           )}
-          <ProjectFormFields errors={state?.fields} />
+          <ProjectFormFields clients={clients} errors={state?.fields} />
           <DialogFooter>
             <Button type="submit" disabled={pending}>
               {pending ? "Création…" : "Créer le projet"}

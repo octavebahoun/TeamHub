@@ -63,6 +63,17 @@ it('links a project to a Contravo invoice id and a contract id independently', f
         ->and($project->contravo_contract_id)->toBe('c_1');
 });
 
+it('links a project to a Contravo project id', function () {
+    ['owner' => $owner, 'org' => $org, 'project' => $project] = contravoLinkOrg('LinkContravoProject');
+
+    $this->actingAs($owner, 'sanctum')->withHeader('X-Organization-Id', $org->id)
+        ->postJson('/api/v1/contravo/links', ['type' => 'project', 'id' => $project->id, 'contravo_id' => 'prj_1'])
+        ->assertOk()
+        ->assertJsonPath('contravo_id', 'prj_1');
+
+    expect($project->refresh()->contravo_project_id)->toBe('prj_1');
+});
+
 it('links a task to a deliverable id and a client to a Contravo client id', function () {
     ['owner' => $owner, 'org' => $org, 'task' => $task, 'client' => $client] = contravoLinkOrg('LinkTaskClient');
 

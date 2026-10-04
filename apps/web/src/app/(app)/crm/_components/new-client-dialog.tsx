@@ -30,7 +30,7 @@ export function NewClientDialog() {
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="font-heading text-2xl font-normal">Nouveau contact</DialogTitle>
-          <DialogDescription>Un prospect ou un client de l&apos;organisation.</DialogDescription>
+          <DialogDescription>Un prospect ou un client de l&apos;équipe. L&apos;email sert à créer sa fiche de facturation.</DialogDescription>
         </DialogHeader>
         <form action={action} className="space-y-4" noValidate>
           {state?.error && <p role="alert" className="rounded-md bg-brand-soft px-3 py-2 text-sm text-brand-soft-foreground">{state.error}</p>}
