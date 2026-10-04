@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#d63a00" />
+    <title>Hors ligne · WINE</title>
+    <style>
+      :root {
+        --bg: #faf9f5;
+        --ink: #141413;
+        --muted: #5e5d59;
+        --brand: #d63a00;
+        --border: #e3e1da;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+      }
+      main {
+        max-width: 28rem;
+        text-align: center;
+      }
+      .mark {
+        width: 3.5rem;
+        height: 3.5rem;
+        margin: 0 auto 1.25rem;
+        border-radius: 1rem;
+        background: #fbe3d6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: var(--brand);
+        letter-spacing: 0.02em;
+      }
+      h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0 0 0.75rem;
+      }
+      p {
+        margin: 0 0 1.5rem;
+        line-height: 1.55;
+        color: var(--muted);
+      }
+      button {
+        appearance: none;
+        border: 1px solid var(--border);
+        background: white;
+        color: var(--ink);
+        font: inherit;
+        font-weight: 600;
+        padding: 0.65rem 1.25rem;
+        border-radius: 0.75rem;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #f0eee6;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="mark" aria-hidden="true">W</div>
+      <h1>Vous êtes hors ligne</h1>
+      <p>WINE ne peut pas joindre le réseau pour le moment. Vérifiez votre connexion, puis réessayez.</p>
+      <button type="button" onclick="location.reload()">Réessayer</button>
+    </main>
+  </body>
+</html>

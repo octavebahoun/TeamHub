@@ -5,6 +5,7 @@ import { NewTaskDialog, type Option } from "@/components/tasks/new-task-dialog";
 import { MobileNav } from "./mobile-nav";
 import { NotificationsButton } from "./notifications-button";
 import { SearchForm } from "./search-form";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { UserMenu } from "./user-menu";
 import type { ShellOrg } from "./app-sidebar";
 
@@ -20,7 +21,7 @@ export function Topbar({
   taskOptions: { projects: Option[]; members: Option[] } | null;
 }) {
   return (
-    <header className="sticky top-0 z-30 flex h-19 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur sm:px-8">
+    <header className="sticky top-0 z-30 flex h-19 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur sm:px-8 dark:glass dark:border-border/80 dark:bg-background/55">
       <MobileNav org={org} hidden={hidden} />
       <Suspense>
         <SearchForm />
@@ -37,6 +38,7 @@ export function Topbar({
             }
           />
         )}
+        <ThemeToggle />
         <NotificationsButton />
         <UserMenu {...user} />
       </div>

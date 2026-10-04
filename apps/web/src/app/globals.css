@@ -73,6 +73,60 @@
   --sidebar-accent-foreground: var(--wine-orange-800);
   --sidebar-border: var(--wine-sand-200);
   --sidebar-ring: var(--wine-orange-600);
+
+  /* Surfaces premium (mode sombre) */
+  --wine-surface-950: #07080c;
+  --wine-surface-900: #0b0d12;
+  --wine-surface-850: #10131a;
+  --wine-surface-800: #161922;
+  --wine-glass-border: rgb(255 255 255 / 0.08);
+  --wine-glass-fill: rgb(255 255 255 / 0.04);
+}
+
+.dark {
+  --background: var(--wine-surface-900);
+  --foreground: #ebeae6;
+  --card: var(--wine-surface-850);
+  --card-foreground: #ebeae6;
+  --popover: var(--wine-surface-800);
+  --popover-foreground: #ebeae6;
+  --primary: var(--wine-orange-600);
+  --primary-hover: var(--wine-orange-700);
+  --primary-foreground: var(--wine-white);
+  --secondary: #1a1e28;
+  --secondary-foreground: #ebeae6;
+  --muted: #12151c;
+  --muted-foreground: #a8a7a2;
+  --subtle-foreground: #8a8984;
+  --accent: #1c212c;
+  --accent-foreground: #ebeae6;
+  --brand-soft: rgb(214 58 0 / 0.14);
+  --brand-soft-foreground: var(--wine-orange-300);
+  --brand-light: var(--wine-orange-300);
+  --inverse: #f0eee6;
+  --inverse-foreground: var(--wine-ink-900);
+  --success: #5ecf8a;
+  --success-soft: rgb(31 94 58 / 0.28);
+  --info: #6ba3e8;
+  --info-soft: rgb(31 78 140 / 0.28);
+  --danger: var(--wine-orange-300);
+  --destructive: #f87171;
+  --border: var(--wine-glass-border);
+  --input: rgb(255 255 255 / 0.12);
+  --ring: var(--wine-orange-600);
+  --chart-1: var(--wine-orange-600);
+  --chart-2: var(--wine-orange-300);
+  --chart-3: var(--wine-orange-800);
+  --chart-4: #a8a7a2;
+  --chart-5: rgb(255 255 255 / 0.15);
+  --sidebar: var(--wine-surface-950);
+  --sidebar-foreground: #ebeae6;
+  --sidebar-primary: var(--wine-orange-600);
+  --sidebar-primary-foreground: var(--wine-white);
+  --sidebar-accent: rgb(214 58 0 / 0.16);
+  --sidebar-accent-foreground: var(--wine-orange-300);
+  --sidebar-border: var(--wine-glass-border);
+  --sidebar-ring: var(--wine-orange-600);
 }
 
 @custom-variant dark (&:is(.dark *));
@@ -166,6 +220,50 @@
     *::after {
       animation-duration: 0.01ms !important;
       transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  .glass {
+    border-color: color-mix(in oklch, var(--border), transparent 20%);
+    background: color-mix(in oklch, var(--card), transparent 30%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .dark .glass {
+    border-color: var(--wine-glass-border);
+    background: var(--wine-glass-fill);
+  }
+
+  .glow-active {
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--primary), transparent 72%),
+      0 0 28px -6px color-mix(in oklch, var(--primary), transparent 62%);
+  }
+
+  .aurora-bg {
+    background-color: var(--background);
+    background-image:
+      radial-gradient(ellipse 110% 70% at 50% -25%, color-mix(in oklch, var(--primary), transparent 91%), transparent 55%),
+      radial-gradient(ellipse 75% 55% at 100% 0%, color-mix(in oklch, var(--info), transparent 93%), transparent 50%),
+      radial-gradient(ellipse 55% 45% at 0% 100%, color-mix(in oklch, var(--primary), transparent 95%), transparent 45%);
+    background-repeat: no-repeat;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .aurora-bg {
+      animation: aurora-breathe 32s ease-in-out infinite alternate;
+    }
+  }
+
+  @keyframes aurora-breathe {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0.92;
     }
   }
 }

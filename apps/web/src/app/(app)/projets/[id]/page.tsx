@@ -18,6 +18,10 @@ import { ProgressPanel } from "./_components/progress-panel";
 import { ProjectTabs } from "./_components/project-tabs";
 import { RecentActivity } from "./_components/recent-activity";
 import { TeamPanel } from "./_components/team-panel";
+import { BillingTab } from "@/components/contravo/billing-tab";
+import { DeliverablesPanel } from "@/components/contravo/deliverables-panel";
+import { ProjectFundingStatus } from "@/components/contravo/project-funding-status";
+import { resolveContravoClientId, resolveContravoProjectId } from "@/lib/contravo/resolve";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -49,6 +53,8 @@ export default async function ProjectPage({ params }: Props) {
     detail: m.id === project.owner_id ? "Responsable" : ROLE[members.find((x) => x.user_id === m.id)?.role ?? "member"].label,
   }));
   const files = project.attachments ?? [];
+  const contravoProjectId = resolveContravoProjectId(null);
+  const contravoClientId = resolveContravoClientId(null);
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -78,6 +84,7 @@ export default async function ProjectPage({ params }: Props) {
           { label: `Tâches · ${progress.total}`, href: `/taches?projet=${id}` },
           { label: `Fichiers · ${files.length}`, href: `/projets/${id}#fichiers` },
           { label: "Canal du projet", href: `/chat?projet=${id}` },
+          { label: "Facturation", href: `#facturation` },
         ]}
       />
       <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_400px]">
@@ -88,8 +95,15 @@ export default async function ProjectPage({ params }: Props) {
           </Panel>
           {project.milestones && project.milestones.length > 0 && <Milestones items={project.milestones} />}
           {activity.length > 0 && <RecentActivity items={activity} />}
+          {contravoProjectId && (
+            <section id="facturation" className="scroll-mt-24 space-y-8">
+              <BillingTab contravoProjectId={contravoProjectId} contravoClientId={contravoClientId ?? undefined} />
+            </section>
+          )}
         </div>
         <div className="space-y-8">
+          <ProjectFundingStatus wineStatus={project.status} />
+          {contravoProjectId && <DeliverablesPanel contravoProjectId={contravoProjectId} />}
           <ProgressPanel progress={progress} counts={countByStatus(tasks)} />
           <TeamPanel
             projectId={id}
@@ -98,7 +112,7 @@ export default async function ProjectPage({ params }: Props) {
             canManage={canManage}
             candidates={members.filter((m) => !team.some((t) => t.id === m.user_id)).map((m) => ({ id: m.user_id, name: m.name }))}
           />
-          {files.length > 0 && <FilesPanel files={files} />}
+          <FilesPanel files={files} allowUpload uploadContext={{ project_id: id }} title="Fichiers" />
         </div>
       </div>
     </div>

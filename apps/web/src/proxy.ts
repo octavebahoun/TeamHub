@@ -5,7 +5,7 @@ import { TOKEN_COOKIE } from "@/lib/session";
  * « / » : landing page pour les visiteurs, Accueil pour les connectés (même URL).
  * Toute autre page privée sans jeton redirige vers /connexion, et inversement.
  */
-const PUBLIC = ["/bienvenue", "/connexion", "/inscription", "/invitation", "/mot-de-passe-oublie", "/conditions", "/deconnexion"];
+const PUBLIC = ["/bienvenue", "/connexion", "/inscription", "/invitation", "/mot-de-passe-oublie", "/conditions", "/deconnexion", "/verifier-signature"];
 
 export function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;

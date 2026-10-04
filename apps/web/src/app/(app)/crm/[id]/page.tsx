@@ -16,6 +16,10 @@ import { ProgressBar } from "@/components/common/progress-bar";
 import { ToneBadge } from "@/components/common/tone-badge";
 import { CompanyMark } from "../_components/company-mark";
 import { NewOpportunityDialog } from "../_components/new-opportunity-dialog";
+import { CrmEnrichment } from "@/components/contravo/crm-enrichment";
+import { GenerateQuoteDialog } from "@/components/contravo/generate-quote-dialog";
+import { InboxPanel } from "@/components/contravo/inbox-panel";
+import { resolveContravoClientId, resolveContravoProjectId } from "@/lib/contravo/resolve";
 import { FollowUpBanner } from "./_components/follow-up-banner";
 import { History } from "./_components/history";
 
@@ -53,6 +57,9 @@ export default async function ClientPage({ params }: Props) {
   const won = opps.filter((o) => o.closed_at && o.stage === "won").map((o) => toDate(o.closed_at)!).sort((a, b) => +a - +b)[0];
   const since = won ?? toDate(client.created_at);
   const canEdit = can(role, "crm.edit");
+  const contravoClientId = resolveContravoClientId(client.contravo_client_id);
+  const contravoProjectId = resolveContravoProjectId(null);
+  const quoteOpp = opps.find((o) => !["won", "lost"].includes(o.stage)) ?? opps[0];
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -66,7 +73,21 @@ export default async function ClientPage({ params }: Props) {
         }
         badge={<ToneBadge tone={kind === "client" ? "success" : "brand"}>{kind === "client" ? "Client" : "Prospect"}</ToneBadge>}
         subtitle={[since && `${kind === "client" ? "Client" : "Contact"} depuis ${format(since, "MMMM yyyy", { locale: fr })}`, client.owner && `Responsable ${client.owner.name}`].filter(Boolean).join(" · ")}
-        actions={canEdit && <NewOpportunityDialog clients={clients.map((c) => ({ id: c.id, name: c.company ?? c.name }))} clientId={id} variant="outline" />}
+        actions={
+          canEdit && (
+            <span className="flex flex-wrap gap-3">
+              {contravoClientId && contravoProjectId && (
+                <GenerateQuoteDialog
+                  contravoClientId={contravoClientId}
+                  contravoProjectId={contravoProjectId}
+                  opportunityId={quoteOpp?.id}
+                  defaultTitle={quoteOpp?.title}
+                />
+              )}
+              <NewOpportunityDialog clients={clients.map((c) => ({ id: c.id, name: c.company ?? c.name }))} clientId={id} variant="outline" />
+            </span>
+          )
+        }
       />
       {due && canEdit && <FollowUpBanner opportunity={{ ...due, client_id: id }} contact={client.name} />}
       <div className="grid grid-cols-1 gap-8 xl:grid-cols-[420px_minmax(0,1fr)]">
@@ -116,6 +137,7 @@ export default async function ClientPage({ params }: Props) {
               <p className="text-muted-foreground">Aucune opportunité.</p>
             )}
           </Panel>
+          {contravoClientId && <CrmEnrichment contravoClientId={contravoClientId} />}
           {linked.some(Boolean) && (
             <Panel className="p-7">
               <PanelTitle className="mb-4">Projets liés</PanelTitle>
@@ -136,7 +158,10 @@ export default async function ClientPage({ params }: Props) {
             </Panel>
           )}
         </div>
-        <History clientId={id} items={activity} canEdit={canEdit} />
+        <div className="space-y-8">
+          {contravoClientId && <InboxPanel contravoClientId={contravoClientId} />}
+          <History clientId={id} items={activity} canEdit={canEdit} />
+        </div>
       </div>
     </div>
   );

@@ -36,6 +36,14 @@ export const isOverdue = (value: string | null | undefined, now = new Date()) =>
   return !!d && differenceInCalendarDays(d, now) < 0;
 };
 
+/** Échéance dans les 24 h (aujourd'hui ou demain) — pour badges Kanban / table. */
+export const isDueSoon = (value: string | null | undefined, now = new Date()) => {
+  const d = toDate(value);
+  if (!d) return false;
+  const diff = differenceInCalendarDays(d, now);
+  return diff >= 0 && diff <= 1;
+};
+
 /** « Jeudi 1er octobre ». */
 export function longToday(now = new Date()): string {
   const day = now.getDate() === 1 ? "1er" : String(now.getDate());

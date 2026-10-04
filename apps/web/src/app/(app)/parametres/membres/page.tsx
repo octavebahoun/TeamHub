@@ -41,7 +41,14 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
       <PageHeader
         title="Membres"
         subtitle={`${me.current_organization?.name ?? ""} · ${plural(members.length, "membre", "membres")}${invitations.length ? `, ${plural(invitations.length, "invitation", "invitations")} en attente` : ""}`}
-        actions={canManage && <InviteDialog viewerRole={role} />}
+        actions={
+          <span className="flex flex-wrap gap-3">
+            <Link href="/parametres/integrations" className={buttonVariants({ variant: "outline", size: "lg" })}>
+              Intégrations
+            </Link>
+            {canManage && <InviteDialog viewerRole={role} />}
+          </span>
+        }
       />
       <form role="search" className="mb-6 flex flex-wrap gap-3">
         <div className="relative w-full max-w-md">
