@@ -29,6 +29,13 @@ teamhub.excellenceteam.site {
 		respond "Not Found" 404
 	}
 
+	# Devis, factures et contrats : routes Next, pas Laravel.
+	# Doit rester avant /api/*, sinon le navigateur reçoit un 404 Laravel.
+	@contravo path_regexp ^/api/contravo(/|$)
+	handle @contravo {
+		reverse_proxy teamhub-web-1:3000
+	}
+
 	# API Laravel (nom du conteneur sur teamhub_default)
 	handle /api/* {
 		reverse_proxy teamhub-api-1:80

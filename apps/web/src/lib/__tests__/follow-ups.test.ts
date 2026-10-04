@@ -8,6 +8,7 @@ import {
   crmNeedsFollowUp,
   draftInvoiceMessage,
   invoiceNeedsFollowUp,
+  onlyLinkedDocuments,
   quoteNeedsFollowUp,
   xofFromCents,
 } from "@/lib/follow-ups";
@@ -130,5 +131,30 @@ describe("relances réelles", () => {
     expect(quotes[0].client).toBe("Atelier Test");
     expect(crm[0].client).toBe("Atelier Test");
     expect([...invoices, ...quotes, ...crm].map((i) => i.client).join(" ")).not.toMatch(/Porto-Novo|Maison Akwa|Celtiis/);
+  });
+
+  it("ignore un devis ou une facture dont le client n'est pas dans l'équipe", () => {
+    const linked: Client[] = [
+      {
+        id: 9,
+        organization_id: 1,
+        owner_id: 1,
+        name: "Amina QA",
+        company: "Atelier QA WINE",
+        email: null,
+        phone: null,
+        notes: null,
+        created_at: "",
+        contravo_client_id: "c-atelier",
+      },
+    ];
+    const keptQuote = quote({ id: "q-atelier", clientId: "c-atelier", number: "DEV-2026-0002" });
+    const foreignQuote = quote({ id: "q-acme", clientId: "c-acme", number: "DEV-2026-0001" });
+    const keptInvoice = invoice({ id: "inv-atelier", clientId: "c-atelier" });
+    const foreignInvoice = invoice({ id: "inv-acme", clientId: "c-acme", number: "FAC-2026-009" });
+
+    expect(onlyLinkedDocuments([keptQuote, foreignQuote], linked).map((q) => q.number)).toEqual(["DEV-2026-0002"]);
+    expect(onlyLinkedDocuments([keptInvoice, foreignInvoice], linked).map((i) => i.number)).toEqual(["FAC-2026-001"]);
+    expect(onlyLinkedDocuments([foreignQuote], []).map((q) => q.id)).toEqual([]);
   });
 });

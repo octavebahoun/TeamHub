@@ -56,6 +56,21 @@ export function quoteNeedsFollowUp(quote: Quote): boolean {
   return quote.status === "sent" || quote.status === "viewed";
 }
 
+/** Identifiants Contravo déjà rattachés à un client de l'équipe. */
+export function linkedContravoClientIds(clients: Client[]): Set<string> {
+  return new Set(
+    clients
+      .map((c) => c.contravo_client_id)
+      .filter((id): id is string => typeof id === "string" && id.length > 0)
+  );
+}
+
+/** Un devis ou une facture n'existe pour l'équipe que si son client Contravo est déjà lié. */
+export function onlyLinkedDocuments<T extends { clientId: string }>(docs: T[], clients: Client[]): T[] {
+  const linked = linkedContravoClientIds(clients);
+  return docs.filter((doc) => linked.has(doc.clientId));
+}
+
 export function crmNeedsFollowUp(opp: Opportunity, now = new Date()): boolean {
   if (opp.stage === "won" || opp.stage === "lost" || !opp.next_follow_up) return false;
   const d = toDate(opp.next_follow_up);

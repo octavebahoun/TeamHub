@@ -10,6 +10,7 @@ import {
   buildCrmItems,
   buildInvoiceItems,
   buildQuoteItems,
+  onlyLinkedDocuments,
   sortFollowUps,
   type FollowUpItem,
 } from "@/lib/follow-ups";
@@ -67,8 +68,8 @@ export async function loadFollowUps(): Promise<FollowUpItem[]> {
       docs.names[c.contravo_client_id] = c.company?.trim() || c.name;
     }
   }
-  const invoices = buildInvoiceItems(docs.invoices, docs.names);
-  const quotes = buildQuoteItems(docs.quotes, docs.names).map((q) => ({
+  const invoices = buildInvoiceItems(onlyLinkedDocuments(docs.invoices, clients), docs.names);
+  const quotes = buildQuoteItems(onlyLinkedDocuments(docs.quotes, clients), docs.names).map((q) => ({
     ...q,
     canSend: Boolean(q.contravoClientId && docs.channels[q.contravoClientId]),
   }));

@@ -10,6 +10,13 @@
         respond "Not Found" 404
     }
 
+    # Devis, factures et contrats : routes Next, pas Laravel.
+    # Doit rester avant /api/*, sinon le navigateur reçoit un 404 Laravel.
+    @contravo path_regexp ^/api/contravo(/|$)
+    handle @contravo {
+        reverse_proxy web:3000
+    }
+
     # API Laravel — préfixe /api
     handle_path /api/* {
         reverse_proxy api:80
