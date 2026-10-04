@@ -3,8 +3,6 @@ import { ArrowRight } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { WineLogo } from "@/components/common/wine-logo";
 import { HERO, TRIAL_OFFER } from "../content";
-import { Eyebrow } from "./eyebrow";
-import { HeroPreview } from "./hero-preview";
 
 export function Hero() {
   return (
@@ -24,12 +22,11 @@ export function Hero() {
         />
       </div>
 
-      <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-4 pt-10 pb-16 sm:gap-16 sm:px-8 sm:pt-16 sm:pb-28 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+      <div className="relative mx-auto max-w-3xl px-4 pt-10 pb-16 sm:px-8 sm:pt-16 sm:pb-28">
         <div className="min-w-0">
           <div data-reveal className="reveal mb-5">
             <WineLogo withMark className="[&_span]:text-[clamp(2rem,6vw,2.75rem)] [&_svg]:size-8 sm:[&_svg]:size-9" />
           </div>
-          <Eyebrow>{HERO.eyebrow}</Eyebrow>
           <h1
             id="hero-title"
             data-reveal
@@ -56,15 +53,14 @@ export function Hero() {
               })}
             >
               {HERO.ctaPrimary}
-              <ArrowRight aria-hidden className="size-4 transition-transform group-hover/button:translate-x-0.5" />
+              <ArrowRight aria-hidden className="size-4" />
             </Link>
             <a
               href="#fonctionnalites"
               className={buttonVariants({
                 size: "lg",
                 variant: "outline",
-                className:
-                  "h-13 w-full justify-center rounded-2xl border-border/80 bg-background/50 px-8 text-[16px] backdrop-blur-md sm:w-auto sm:text-[17px]",
+                className: "h-13 w-full justify-center rounded-2xl border-border/80 bg-background/50 px-8 text-[16px] sm:w-auto sm:text-[17px]",
               })}
             >
               {HERO.ctaSecondary}
@@ -73,9 +69,6 @@ export function Hero() {
           <p data-reveal data-reveal-delay="4" className="reveal mt-5 text-sm text-muted-foreground">
             {[TRIAL_OFFER, "Sans installation", "PWA · MoMo · Devis XOF"].filter(Boolean).join(" · ")}
           </p>
-        </div>
-        <div data-reveal data-reveal-variant="scale" data-reveal-delay="2" className="reveal">
-          <HeroPreview />
         </div>
       </div>
     </section>

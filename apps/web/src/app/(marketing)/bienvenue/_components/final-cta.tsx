@@ -18,10 +18,10 @@ export function FinalCta() {
           </div>
           <Link
             href="/inscription"
-            className="group inline-flex h-13 w-full shrink-0 items-center justify-center gap-2 rounded-2xl bg-background px-8 text-[16px] font-semibold text-brand-soft-foreground shadow-lg transition-transform hover:bg-background/95 active:translate-y-px sm:w-auto sm:text-[17px]"
+            className="inline-flex h-13 w-full shrink-0 items-center justify-center gap-2 rounded-2xl bg-background px-8 text-[16px] font-semibold text-brand-soft-foreground shadow-lg sm:w-auto sm:text-[17px]"
           >
             Créer mon espace
-            <ArrowRight aria-hidden className="size-4 transition-transform group-hover:translate-x-0.5" />
+            <ArrowRight aria-hidden className="size-4" />
           </Link>
         </div>
       </div>
