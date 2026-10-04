@@ -625,4 +625,14 @@
       background-position: 0% 50%;
     }
   }
+
+  @keyframes auth-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
+    }
+  }
 }

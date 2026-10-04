@@ -10,7 +10,7 @@ import { register, type FormState } from "@/lib/actions/session";
 import { AuthHeading } from "../../_components/auth-shell";
 import { FormField } from "../../_components/form-field";
 
-const legend = "mb-4 text-[13px] font-semibold tracking-[0.12em] text-muted-foreground uppercase";
+const legend = "mb-2.5 text-[12px] font-semibold tracking-[0.12em] text-muted-foreground uppercase";
 
 export function RegisterForm() {
   const [state, action, pending] = useActionState<FormState, FormData>(register, undefined);
@@ -18,19 +18,19 @@ export function RegisterForm() {
   return (
     <>
       <AuthHeading title="Créer votre espace" subtitle="Votre compte et votre organisation, en une seule étape." />
-      <form action={action} className="space-y-7" noValidate>
+      <form action={action} className="space-y-4 sm:space-y-5" noValidate>
         {state?.error && (
           <p role="alert" className="rounded-md bg-brand-soft px-4 py-3 text-sm text-brand-soft-foreground">
             {state.error}
           </p>
         )}
-        <fieldset className="space-y-5">
+        <fieldset className="space-y-3.5">
           <legend className={legend}>Vous</legend>
           <FormField id="name" name="name" label="Nom complet" autoComplete="name" required error={f.name} defaultValue={state?.values?.name} />
           <FormField id="email" name="email" type="email" label="Email" autoComplete="email" required placeholder="vous@entreprise.com" error={f.email} defaultValue={state?.values?.email} />
           <FormField id="password" name="password" type="password" label="Mot de passe" autoComplete="new-password" required minLength={8} hint="8 caractères minimum" error={f.password} />
         </fieldset>
-        <fieldset className="space-y-5">
+        <fieldset className="space-y-3.5">
           <legend className={legend}>Votre organisation</legend>
           <FormField
             id="organization_name"
