@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { WineLogo } from "@/components/common/wine-logo";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 /** Écrans publics : panneau de marque à gauche, formulaire à droite. */
 export function AuthShell({ aside, children }: { aside: React.ReactNode; children: React.ReactNode }) {
@@ -26,7 +27,10 @@ export function AuthShell({ aside, children }: { aside: React.ReactNode; childre
           <p className="hidden text-[15px] text-primary-foreground/80 lg:block">Un produit Excellence Team</p>
         </div>
       </aside>
-      <main id="contenu" className="app-mesh flex items-center justify-center px-6 py-12 sm:px-12">
+      <main id="contenu" className="app-mesh relative flex items-center justify-center px-6 py-12 sm:px-12">
+        <div className="absolute top-4 right-4 z-10 sm:top-6 sm:right-6">
+          <ThemeToggle />
+        </div>
         <div data-reveal className="reveal panel-premium w-full max-w-110 rounded-2xl p-6 sm:p-8">
           {children}
         </div>

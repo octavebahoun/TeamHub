@@ -28,22 +28,32 @@
   --wine-red-700: #b42318;
   --wine-white: #ffffff;
 
-  /* Rôles sémantiques (consommés par shadcn et par nos composants) */
-  --background: var(--wine-white);
+  /* Surfaces premium */
+  --wine-surface-950: #07080c;
+  --wine-surface-900: #0b0d12;
+  --wine-surface-850: #10131a;
+  --wine-surface-800: #161922;
+  --wine-paper: #f6f5f1;
+  --wine-paper-elevated: #ffffff;
+  --wine-glass-border: rgb(20 20 19 / 0.08);
+  --wine-glass-fill: rgb(255 255 255 / 0.72);
+
+  /* Rôles sémantiques — mode clair (premium, paper) */
+  --background: var(--wine-paper);
   --foreground: var(--wine-ink-900);
-  --card: var(--wine-white);
+  --card: var(--wine-paper-elevated);
   --card-foreground: var(--wine-ink-900);
-  --popover: var(--wine-white);
+  --popover: var(--wine-paper-elevated);
   --popover-foreground: var(--wine-ink-900);
   --primary: var(--wine-orange-600);
   --primary-hover: var(--wine-orange-700);
   --primary-foreground: var(--wine-white);
-  --secondary: var(--wine-sand-100);
+  --secondary: #efece4;
   --secondary-foreground: var(--wine-ink-900);
-  --muted: var(--wine-sand-50);
+  --muted: #f0eee8;
   --muted-foreground: var(--wine-ink-600);
   --subtle-foreground: var(--wine-ink-500);
-  --accent: var(--wine-sand-100);
+  --accent: #efece4;
   --accent-foreground: var(--wine-ink-900);
   --brand-soft: var(--wine-orange-100);
   --brand-soft-foreground: var(--wine-orange-800);
@@ -56,8 +66,8 @@
   --info-soft: var(--wine-blue-100);
   --danger: var(--wine-orange-800);
   --destructive: var(--wine-red-700);
-  --border: var(--wine-sand-200);
-  --input: var(--wine-sand-200);
+  --border: rgb(20 20 19 / 0.1);
+  --input: rgb(20 20 19 / 0.12);
   --ring: var(--wine-orange-600);
   --chart-1: var(--wine-orange-600);
   --chart-2: var(--wine-orange-300);
@@ -65,25 +75,19 @@
   --chart-4: var(--wine-ink-600);
   --chart-5: var(--wine-sand-200);
   --radius: 1rem;
-  --sidebar: var(--wine-white);
+  --sidebar: #fbfaf7;
   --sidebar-foreground: var(--wine-ink-900);
   --sidebar-primary: var(--wine-orange-600);
   --sidebar-primary-foreground: var(--wine-white);
   --sidebar-accent: var(--wine-orange-100);
   --sidebar-accent-foreground: var(--wine-orange-800);
-  --sidebar-border: var(--wine-sand-200);
+  --sidebar-border: rgb(20 20 19 / 0.08);
   --sidebar-ring: var(--wine-orange-600);
-
-  /* Surfaces premium (mode sombre) */
-  --wine-surface-950: #07080c;
-  --wine-surface-900: #0b0d12;
-  --wine-surface-850: #10131a;
-  --wine-surface-800: #161922;
-  --wine-glass-border: rgb(255 255 255 / 0.08);
-  --wine-glass-fill: rgb(255 255 255 / 0.04);
 }
 
 .dark {
+  --wine-glass-border: rgb(255 255 255 / 0.08);
+  --wine-glass-fill: rgb(255 255 255 / 0.04);
   --background: var(--wine-surface-900);
   --foreground: #ebeae6;
   --card: var(--wine-surface-850);
@@ -201,6 +205,11 @@
     overflow-x: clip;
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
+    color-scheme: light;
+  }
+  .dark body,
+  html.dark body {
+    color-scheme: dark;
   }
   h1,
   h2,
@@ -230,15 +239,15 @@
 
 @layer utilities {
   .glass {
-    border-color: color-mix(in oklch, var(--border), transparent 20%);
-    background: color-mix(in oklch, var(--card), transparent 30%);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    border-color: var(--wine-glass-border);
+    background: var(--wine-glass-fill);
+    backdrop-filter: blur(16px) saturate(1.2);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+    box-shadow: 0 10px 30px -22px rgb(20 20 19 / 0.28);
   }
 
   .dark .glass {
-    border-color: var(--wine-glass-border);
-    background: var(--wine-glass-fill);
+    box-shadow: 0 12px 36px -24px rgb(0 0 0 / 0.55);
   }
 
   .glow-active {
@@ -284,11 +293,13 @@
     position: relative;
     background-color: var(--background);
     background-image:
-      radial-gradient(ellipse 90% 50% at 0% -10%, color-mix(in oklch, var(--primary), transparent 88%), transparent 50%),
-      radial-gradient(ellipse 70% 40% at 100% 0%, color-mix(in oklch, var(--info), transparent 92%), transparent 45%),
-      linear-gradient(color-mix(in oklch, var(--foreground), transparent 96%) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in oklch, var(--foreground), transparent 96%) 1px, transparent 1px);
+      radial-gradient(ellipse 95% 55% at 8% -12%, color-mix(in oklch, var(--primary), transparent 86%), transparent 52%),
+      radial-gradient(ellipse 70% 45% at 100% 0%, color-mix(in oklch, var(--info), transparent 90%), transparent 48%),
+      radial-gradient(ellipse 50% 40% at 70% 100%, color-mix(in oklch, var(--primary), transparent 94%), transparent 50%),
+      linear-gradient(color-mix(in oklch, var(--foreground), transparent 94%) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in oklch, var(--foreground), transparent 94%) 1px, transparent 1px);
     background-size:
+      auto,
       auto,
       auto,
       48px 48px,
@@ -301,7 +312,7 @@
     position: fixed;
     inset: 0;
     z-index: 1;
-    opacity: 0.04;
+    opacity: 0.028;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     background-repeat: repeat;
     background-size: 180px 180px;
@@ -405,12 +416,13 @@
   .panel-premium {
     position: relative;
     isolation: isolate;
-    border: 1px solid color-mix(in oklch, var(--border), transparent 15%);
+    border: 1px solid color-mix(in oklch, var(--border), transparent 5%);
     background:
-      linear-gradient(165deg, color-mix(in oklch, var(--card), white 4%) 0%, var(--card) 45%, var(--card) 100%);
+      linear-gradient(165deg, #ffffff 0%, var(--card) 42%, color-mix(in oklch, var(--card), var(--muted) 18%) 100%);
     box-shadow:
-      0 1px 0 color-mix(in oklch, var(--foreground), transparent 94%) inset,
-      0 18px 40px -28px color-mix(in oklch, var(--foreground), transparent 88%);
+      0 1px 0 rgb(255 255 255 / 0.85) inset,
+      0 1px 0 rgb(20 20 19 / 0.03),
+      0 18px 40px -26px rgb(20 20 19 / 0.18);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
   }
@@ -422,10 +434,10 @@
     padding: 1px;
     background: linear-gradient(
       135deg,
-      color-mix(in oklch, var(--primary), transparent 55%),
+      color-mix(in oklch, var(--primary), transparent 45%),
       transparent 35%,
       transparent 65%,
-      color-mix(in oklch, var(--info), transparent 75%)
+      color-mix(in oklch, var(--info), transparent 70%)
     );
     -webkit-mask:
       linear-gradient(#000 0 0) content-box,
@@ -436,13 +448,16 @@
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
-    opacity: 0.55;
+    opacity: 0.7;
   }
   .dark .panel-premium {
     background: linear-gradient(165deg, rgb(255 255 255 / 0.04) 0%, var(--card) 40%, var(--card) 100%);
     box-shadow:
       0 1px 0 rgb(255 255 255 / 0.04) inset,
       0 22px 48px -30px rgb(0 0 0 / 0.65);
+  }
+  .dark .panel-premium::before {
+    opacity: 0.55;
   }
 
   /* Cartes interactives */
