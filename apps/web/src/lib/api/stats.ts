@@ -1,11 +1,6 @@
 import { USE_MOCKS } from "@/lib/data/mode";
-import {
-  mockAnalyticsOverview,
-  mockAnalyticsPipeline,
-  mockProfitability,
-  mockStatsActivity,
-} from "@/lib/data/mocks/analytics";
-import type { AnalyticsPipeline, ProfitabilityRow, StatsActivityItem, StatsOverview } from "@/lib/data/types";
+import { mockAnalyticsOverview, mockAnalyticsPipeline, mockStatsActivity } from "@/lib/data/mocks/analytics";
+import type { AnalyticsPipeline, StatsActivityItem, StatsOverview } from "@/lib/data/types";
 
 const apiBase = () => (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api").replace(/\/$/, "");
 
@@ -33,7 +28,3 @@ export async function activity(): Promise<StatsActivityItem[]> {
   return v1<StatsActivityItem[]>("analytics/activity");
 }
 
-export async function profitability(): Promise<ProfitabilityRow[]> {
-  if (USE_MOCKS) return structuredClone(mockProfitability);
-  return v1<ProfitabilityRow[]>("analytics/profitability");
-}

@@ -1,3 +1,4 @@
+import { mapWineSearch, type WineSearchPayload } from "@/lib/api/wine-contract";
 import { USE_MOCKS } from "@/lib/data/mode";
 import { mockClients } from "@/lib/data/mocks/clients";
 import { mockProjects } from "@/lib/data/mocks/projects";
@@ -10,7 +11,7 @@ const apiBase = () => (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000
 const includes = (haystack: string | null | undefined, needle: string) =>
   (haystack ?? "").toLowerCase().includes(needle);
 
-function mockSearch(q: string): SearchResults {
+export function mockSearch(q: string): SearchResults {
   const needle = q.trim().toLowerCase();
   if (!needle) {
     return { query: q, projects: [], tasks: [], clients: [], quotes: [] };
@@ -62,5 +63,5 @@ export async function search(q: string): Promise<SearchResults> {
     const data = (await res.json().catch(() => null)) as { message?: string } | null;
     throw new Error(data?.message ?? `Erreur ${res.status}`);
   }
-  return (await res.json()) as SearchResults;
+  return mapWineSearch((await res.json()) as WineSearchPayload);
 }

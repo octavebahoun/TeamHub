@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FileText, FolderKanban, Receipt, Search, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { search as searchApi } from "@/lib/api/search";
+import { searchWine as searchApi } from "@/lib/actions/search";
 import type { SearchResults } from "@/lib/data/types";
 import { cn } from "@/lib/utils";
 

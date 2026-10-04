@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getSummary } from "@/lib/api/ai";
+import { loadPipelineSummary } from "@/lib/actions/analytics-board";
 import type { AiSummary, AiSummaryScope } from "@/lib/data/types";
 
 export function useAiSummary(scope: AiSummaryScope, scopeId: string | number | null, { enabled = true }: { enabled?: boolean } = {}) {
@@ -17,7 +17,7 @@ export function useAiSummary(scope: AiSummaryScope, scopeId: string | number | n
     setLoading(true);
     setError(null);
     try {
-      setSummary(await getSummary({ scope, scopeId }));
+      setSummary(await loadPipelineSummary());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Résumé indisponible.");
       setSummary(null);

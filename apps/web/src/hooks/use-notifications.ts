@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { listNotifications, markAllRead as markAllReadApi, markAsRead as markAsReadApi } from "@/lib/api/notifications";
-import type { Notification } from "@/lib/data/types";
+import { loadInbox, markInboxAllRead, markInboxRead } from "@/lib/actions/inbox";
+import type { BellItem } from "@/lib/api/wine-contract";
 
 export function useNotifications() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<BellItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -13,7 +13,7 @@ export function useNotifications() {
     setLoading(true);
     setError(null);
     try {
-      setNotifications(await listNotifications());
+      setNotifications(await loadInbox());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Impossible de charger les notifications.");
     } finally {
@@ -27,14 +27,14 @@ export function useNotifications() {
 
   const markAsRead = useCallback(
     async (id: string) => {
-      await markAsReadApi(id);
+      await markInboxRead(id);
       await refresh();
     },
     [refresh]
   );
 
   const markAllRead = useCallback(async () => {
-    await markAllReadApi();
+    await markInboxAllRead();
     await refresh();
   }, [refresh]);
 

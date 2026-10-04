@@ -24,10 +24,12 @@ Les composants appellent les mêmes hooks / helpers ; seul le backend des foncti
 
 ## Reste dépendant backend
 
-- Persistence inbox notifications REST (`GET /me/notifications`) si non déployé.
 - Scan antivirus réel R2 (mock simule clean/infected).
 - Push Web Push VAPID (UI de permission prête ; abonnement serveur à brancher).
-- Endpoints FastAPI `/stats/*` et `/ai/summary` (fallback mock actif).
+- Pas de `GET /v1/ai/summary` ni de `GET /v1/analytics/profitability` : le bilan et la santé financière lisent `analytics/overview` et `analytics/pipeline`.
+- Pas de `GET /v1/files` : les pièces jointes viennent du projet ou de la tâche, le téléchargement de `GET /v1/attachments/{id}/download`.
+- La cloche lit `GET /v1/notifications` et marque tout lu via `POST /v1/notifications/read`.
+- La recherche lit `GET /v1/search` (projets, tâches, clients).
 
 ## Étapes livrées
 

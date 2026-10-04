@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Bell,
@@ -14,6 +15,8 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { loadInbox, markInboxAllRead } from "@/lib/actions/inbox";
+import type { BellItem } from "@/lib/api/wine-contract";
 import { useRealtime, type AppNotification } from "@/components/realtime/realtime-provider";
 import { ago } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -22,6 +25,11 @@ type NotifVisual = { text: string; href?: string; icon: LucideIcon; iconClass: s
 
 function describe(n: AppNotification): NotifVisual {
   const p = n.payload as Record<string, string | number>;
+  if (typeof p.notice_title === "string" && p.notice_title) {
+    const body = typeof p.body === "string" && p.body ? `${p.notice_title} — ${p.body}` : p.notice_title;
+    const href = typeof p.link === "string" && p.link.startsWith("/") ? p.link : undefined;
+    return { text: body, href, icon: Bell, iconClass: "text-muted-foreground bg-muted" };
+  }
   switch (n.type) {
     case "task.assigned":
       return {
@@ -86,11 +94,47 @@ function describe(n: AppNotification): NotifVisual {
   }
 }
 
+function persistedAsLive(row: BellItem): AppNotification {
+  return {
+    id: `inbox-${row.id}`,
+    type: row.type,
+    payload: { notice_title: row.title, body: row.body, link: row.href ?? "" },
+    at: row.at,
+    read: row.read,
+  };
+}
+
 export function NotificationsButton() {
-  const { notifications, markAllRead } = useRealtime();
+  const { notifications: live, markAllRead } = useRealtime();
+  const [inbox, setInbox] = useState<BellItem[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadInbox()
+      .then((rows) => {
+        if (!cancelled) setInbox(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setInbox([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const persisted = inbox.map(persistedAsLive);
+  const liveOnly = live.filter((n) => !persisted.some((row) => row.id === n.id));
+  const notifications = [...liveOnly, ...persisted];
   const unread = notifications.filter((n) => !n.read).length;
+
+  const closeAndRead = (open: boolean) => {
+    if (open) return;
+    markAllRead();
+    void markInboxAllRead().then(() => setInbox((rows) => rows.map((row) => ({ ...row, read: true }))));
+  };
+
   return (
-    <Popover onOpenChange={(open) => !open && markAllRead()}>
+    <Popover onOpenChange={closeAndRead}>
       <PopoverTrigger asChild>
         <Button variant="outline" size="icon-lg" className="relative" aria-label={unread ? `Notifications, ${unread} non lues` : "Notifications"}>
           <Bell aria-hidden className="size-5" strokeWidth={1.75} />

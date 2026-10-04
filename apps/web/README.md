@@ -12,16 +12,7 @@ cp .env.example .env.local   # ajuste les valeurs
 npm run dev                  # http://localhost:3000
 ```
 
-### Mode mock (défaut recommandé sans backend)
-
-```env
-NEXT_PUBLIC_USE_MOCKS=true
-NEXT_PUBLIC_WS_URL=http://localhost:4000   # optionnel en mock (socket simulée)
-```
-
-Toute l’UI fonctionne avec des données Afrique de l’Ouest (XOF, MoMo…). Aucune clé Contravo requise.
-
-### Mode réel
+### Mode réel (défaut)
 
 ```env
 NEXT_PUBLIC_USE_MOCKS=false
@@ -33,6 +24,14 @@ CONTRAVO_ORG_ID=uuid-de-l-org
 ```
 
 Lancer l’API Laravel (`apps/api`) et le realtime (`apps/realtime`) avant. La clé Contravo reste **uniquement côté serveur** Next (jamais `NEXT_PUBLIC_`).
+
+### Mode mock (démo sans backend)
+
+```env
+NEXT_PUBLIC_USE_MOCKS=true
+```
+
+Toute l’UI fonctionne avec des données Afrique de l’Ouest (XOF, MoMo…). Aucune clé Contravo requise. La socket est simulée.
 
 ## Organisation du code
 

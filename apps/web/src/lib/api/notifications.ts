@@ -1,3 +1,4 @@
+import { mapInboxList, MARK_ALL_NOTIFICATIONS_PATH, type InboxListResponse } from "@/lib/api/wine-contract";
 import { USE_MOCKS } from "@/lib/data/mode";
 import { mockNotifications } from "@/lib/data/mocks/notifications";
 import type { Notification } from "@/lib/data/types";
@@ -27,7 +28,16 @@ async function v1<T>(path: string, init?: RequestInit): Promise<T> {
 
 export async function listNotifications(): Promise<Notification[]> {
   if (USE_MOCKS) return mockList().map((n) => ({ ...n }));
-  return v1<Notification[]>("notifications");
+  const payload = await v1<InboxListResponse>("notifications");
+  return mapInboxList(payload).map((n) => ({
+    id: n.id,
+    kind: "mention",
+    title: n.title,
+    body: n.body,
+    read: n.read,
+    href: n.href,
+    created_at: n.at,
+  }));
 }
 
 export async function markAsRead(id: string): Promise<void> {
@@ -43,5 +53,5 @@ export async function markAllRead(): Promise<void> {
     mockStore = mockList().map((n) => ({ ...n, read: true }));
     return;
   }
-  await v1("notifications/read-all", { method: "POST" });
+  await v1(MARK_ALL_NOTIFICATIONS_PATH, { method: "POST" });
 }

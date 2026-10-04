@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Panel, PanelTitle } from "@/components/common/panel";
 import { useAiSummary } from "@/hooks/use-ai-summary";
 
-/** Widget « Bilan hebdomadaire IA » — mock ou GET /ai/summary. */
+/** Bilan rédigé depuis analytics/overview et analytics/pipeline. */
 export function AiSummaryCard() {
   const { summary, loading, error, refresh } = useAiSummary("pipeline", "weekly");
 

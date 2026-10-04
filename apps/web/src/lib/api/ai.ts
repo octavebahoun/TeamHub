@@ -3,8 +3,6 @@ import { mockClients } from "@/lib/data/mocks/clients";
 import { mockProjects } from "@/lib/data/mocks/projects";
 import type { AiSummary, AiSummaryScope } from "@/lib/data/types";
 
-const apiBase = () => (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api").replace(/\/$/, "");
-
 function mockSummary(scope: AiSummaryScope, scopeId: string | number): AiSummary {
   const at = new Date().toISOString();
   if (scope === "project") {
@@ -53,13 +51,7 @@ export type GetSummaryParams = { scope: AiSummaryScope; scopeId: string | number
 
 export async function getSummary({ scope, scopeId }: GetSummaryParams): Promise<AiSummary> {
   if (USE_MOCKS) return mockSummary(scope, scopeId);
-  const url = new URL(`${apiBase()}/v1/ai/summary`);
-  url.searchParams.set("scope", scope);
-  url.searchParams.set("scope_id", String(scopeId));
-  const res = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } });
-  if (!res.ok) {
-    const data = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(data?.message ?? `Erreur ${res.status}`);
-  }
-  return (await res.json()) as AiSummary;
+  void scope;
+  void scopeId;
+  throw new Error("Pas de GET /v1/ai/summary. Le bilan se construit depuis analytics/overview et analytics/pipeline.");
 }

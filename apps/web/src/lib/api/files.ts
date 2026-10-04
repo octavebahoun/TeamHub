@@ -1,3 +1,4 @@
+import { attachmentDownloadPath } from "@/lib/api/wine-contract";
 import { USE_MOCKS } from "@/lib/data/mode";
 import { mockAttachments } from "@/lib/data/mocks/files";
 import type { Attachment, AttachmentStatus } from "@/lib/data/types";
@@ -16,7 +17,8 @@ export function downloadUrl(file: Attachment): string | null {
   if (USE_MOCKS) {
     return `/mock/fichiers/${encodeURIComponent(file.id)}/${encodeURIComponent(file.name)}`;
   }
-  return `${apiBase()}/v1/files/${encodeURIComponent(file.id)}/download`;
+  const path = attachmentDownloadPath(file.status, file.id);
+  return path ? `${apiBase()}${path}` : null;
 }
 
 export async function listFiles(params?: { project_id?: number; client_id?: number }): Promise<Attachment[]> {
@@ -27,29 +29,14 @@ export async function listFiles(params?: { project_id?: number; client_id?: numb
       return true;
     });
   }
-  const url = new URL(`${apiBase()}/v1/files`);
-  if (params?.project_id != null) url.searchParams.set("project_id", String(params.project_id));
-  if (params?.client_id != null) url.searchParams.set("client_id", String(params.client_id));
-  const res = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } });
-  if (!res.ok) {
-    const data = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(data?.message ?? `Erreur ${res.status}`);
-  }
-  return (await res.json()) as Attachment[];
+  void params;
+  throw new Error("Les pièces jointes se lisent sur le projet ou la tâche. Il n'y a pas de GET /v1/files.");
 }
 
 export async function getFile(id: string): Promise<Attachment | null> {
   if (USE_MOCKS) return mockAttachments.find((f) => f.id === id) ?? null;
-  const res = await fetch(`${apiBase()}/v1/files/${encodeURIComponent(id)}`, {
-    credentials: "include",
-    headers: { Accept: "application/json" },
-  });
-  if (res.status === 404) return null;
-  if (!res.ok) {
-    const data = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(data?.message ?? `Erreur ${res.status}`);
-  }
-  return (await res.json()) as Attachment;
+  void id;
+  return null;
 }
 
 /** Résout l'URL de téléchargement après lecture du fichier (même règles que `downloadUrl`). */
