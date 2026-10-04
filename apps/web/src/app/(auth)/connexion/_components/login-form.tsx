@@ -14,7 +14,7 @@ export function LoginForm({ next, justReset }: { next?: string; justReset?: bool
   return (
     <>
       <AuthHeading title="Connexion" subtitle="Content de vous revoir." />
-      <form action={action} className="space-y-6" noValidate>
+      <form action={action} className="space-y-4 sm:space-y-5" noValidate>
         <input type="hidden" name="next" value={next ?? "/"} />
         {justReset && !state?.error && (
           <p role="status" className="rounded-md bg-muted px-4 py-3 text-sm">

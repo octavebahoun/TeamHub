@@ -9,12 +9,12 @@ import { HeroPreview } from "./hero-preview";
 export function Hero() {
   return (
     <section aria-labelledby="hero-title" className="relative overflow-x-clip border-b">
-      <div aria-hidden className="pointer-events-none absolute inset-0">
+      <div aria-hidden className="pointer-events-none absolute inset-0 max-sm:hidden">
         <div className="orb orb-a -top-24 left-[12%] size-[28rem] bg-primary/30" />
-        <div className="orb orb-b top-28 -right-16 size-[22rem] bg-info/25" />
+        <div className="orb orb-b top-28 -right-16 size-[22rem] bg-info/20" />
         <div className="orb orb-c bottom-0 left-1/3 size-[18rem] bg-primary/15" />
         <div
-          className="absolute inset-0 opacity-[0.4]"
+          className="absolute inset-0 opacity-[0.35]"
           style={{
             backgroundImage:
               "linear-gradient(color-mix(in oklch, var(--foreground), transparent 94%) 1px, transparent 1px), linear-gradient(90deg, color-mix(in oklch, var(--foreground), transparent 94%) 1px, transparent 1px)",

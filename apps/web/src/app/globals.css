@@ -336,6 +336,33 @@
     opacity: 0.055;
   }
 
+  /* Mobile : fond propre, sans taches circulaires derrière le texte */
+  @media (max-width: 639px) {
+    .app-mesh {
+      background-image:
+        radial-gradient(ellipse 120% 40% at 50% -20%, color-mix(in oklch, var(--primary), transparent 92%), transparent 55%),
+        linear-gradient(color-mix(in oklch, var(--foreground), transparent 96%) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in oklch, var(--foreground), transparent 96%) 1px, transparent 1px);
+      background-size:
+        auto,
+        40px 40px,
+        40px 40px;
+    }
+    .app-mesh::before {
+      opacity: 0.012;
+    }
+    .dark .app-mesh {
+      background-image:
+        radial-gradient(ellipse 120% 45% at 50% -22%, color-mix(in oklch, var(--primary), transparent 78%), transparent 55%),
+        linear-gradient(rgb(255 255 255 / 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(255 255 255 / 0.03) 1px, transparent 1px);
+      background-size:
+        auto,
+        40px 40px,
+        40px 40px;
+    }
+  }
+
   /* Orbes flottants */
   .orb {
     position: absolute;
@@ -596,6 +623,16 @@
     }
     50% {
       background-position: 0% 50%;
+    }
+  }
+
+  @keyframes auth-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
     }
   }
 }

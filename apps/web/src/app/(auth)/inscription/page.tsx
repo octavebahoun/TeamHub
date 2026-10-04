@@ -9,6 +9,7 @@ const STEPS = ["Créez votre compte et votre organisation", "Invitez votre équi
 export default function RegisterPage() {
   return (
     <AuthShell
+      illustration="register"
       aside={
         <>
           <p className={asideTitle}>
@@ -16,10 +17,13 @@ export default function RegisterPage() {
             <br />
             prêt en deux minutes.
           </p>
-          <ol className="mt-8 space-y-5">
+          <ol className="mt-4 space-y-2.5">
             {STEPS.map((s, i) => (
-              <li key={s} className="flex items-center gap-4 text-[18px]">
-                <span aria-hidden className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border-2 border-primary-foreground/80 font-semibold">
+              <li key={s} className="flex items-center gap-3 text-[14px] xl:text-[15px]">
+                <span
+                  aria-hidden
+                  className="inline-flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-primary-foreground/80 bg-white/10 text-sm font-semibold backdrop-blur-sm"
+                >
                   {i + 1}
                 </span>
                 {s}
