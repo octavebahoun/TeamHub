@@ -2,7 +2,15 @@ import "server-only";
 import { mockAnalyticsOverview, mockAnalyticsPipeline } from "@/lib/data/mocks/analytics";
 import { mockClients } from "@/lib/data/mocks/clients";
 import { mockProjects } from "@/lib/data/mocks/projects";
-import { mockPosts } from "@/lib/data/mocks/social";
+import {
+  addMockComment,
+  createMockPost,
+  deleteMockPost,
+  getMockPost,
+  listMockPosts,
+  pinMockPost,
+  setMockBravo,
+} from "@/lib/data/mocks/social-store";
 import { mockTasks } from "@/lib/data/mocks/tasks";
 import { makeMockToken, mockMe, mockMembers, mockOrganization, mockUser } from "@/lib/data/mocks/session";
 import { ApiError } from "./errors";
@@ -177,20 +185,67 @@ export function resolveMock<T>(path: string, options: Options = {}): T {
 
   // --- Social ---
   if (p === "posts" && method === "GET") {
-    return {
-      data: mockPosts,
-      current_page: 1,
-      last_page: 1,
-      per_page: mockPosts.length,
-      total: mockPosts.length,
-    } as T;
+    const data = listMockPosts();
+    return paginate(data, Number(q.page ?? 1)) as T;
+  }
+  if (p === "posts" && method === "POST") {
+    const b = bodyOf<{ body?: string }>(options.body);
+    if (!b.body?.trim()) throw new ApiError(422, "Contenu requis.", { body: ["Écrivez quelque chose."] });
+    return createMockPost(b.body) as T;
   }
   {
     const m = /^posts\/(\d+)$/.exec(p);
     if (m && method === "GET") {
-      const post = mockPosts.find((x) => x.id === Number(m[1]));
+      const post = getMockPost(Number(m[1]));
       if (!post) throw new ApiError(404, "Publication introuvable.");
-      return structuredClone(post) as T;
+      return post as T;
+    }
+    if (m && method === "DELETE") {
+      deleteMockPost(Number(m[1]));
+      return null as T;
+    }
+  }
+  {
+    const m = /^posts\/(\d+)\/pin$/.exec(p);
+    if (m && method === "POST") {
+      const b = bodyOf<{ pinned?: boolean }>(options.body);
+      try {
+        return pinMockPost(Number(m[1]), b.pinned !== false) as T;
+      } catch {
+        throw new ApiError(404, "Publication introuvable.");
+      }
+    }
+  }
+  {
+    const m = /^posts\/(\d+)\/reactions$/.exec(p);
+    if (m && method === "POST") {
+      try {
+        return setMockBravo(Number(m[1]), true) as T;
+      } catch {
+        throw new ApiError(404, "Publication introuvable.");
+      }
+    }
+  }
+  {
+    const m = /^posts\/(\d+)\/reactions\/bravo$/.exec(p);
+    if (m && method === "DELETE") {
+      try {
+        return setMockBravo(Number(m[1]), false) as T;
+      } catch {
+        throw new ApiError(404, "Publication introuvable.");
+      }
+    }
+  }
+  {
+    const m = /^posts\/(\d+)\/comments$/.exec(p);
+    if (m && method === "POST") {
+      const b = bodyOf<{ body?: string }>(options.body);
+      if (!b.body?.trim()) throw new ApiError(422, "Commentaire vide.");
+      try {
+        return addMockComment(Number(m[1]), b.body) as T;
+      } catch {
+        throw new ApiError(404, "Publication introuvable.");
+      }
     }
   }
 

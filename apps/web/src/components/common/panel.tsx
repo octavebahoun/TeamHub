@@ -1,11 +1,31 @@
 import { cn } from "@/lib/utils";
 
-/** Carte blanche bordée, brique de base des écrans. */
-export function Panel({ className, as: Tag = "section", ...props }: React.HTMLAttributes<HTMLElement> & { as?: "section" | "div" | "article" | "aside" | "li" }) {
-  return <Tag className={cn("rounded-xl border bg-card", className)} {...props} />;
+/** Carte premium — bordure dégradée discrète, glass, reveal + lift. */
+export function Panel({
+  className,
+  as: Tag = "section",
+  reveal = true,
+  lift = true,
+  ...props
+}: React.HTMLAttributes<HTMLElement> & {
+  as?: "section" | "div" | "article" | "aside" | "li";
+  reveal?: boolean;
+  lift?: boolean;
+}) {
+  return (
+    <Tag
+      data-reveal={reveal ? "" : undefined}
+      className={cn(
+        "panel-premium rounded-2xl",
+        reveal && "reveal",
+        lift && "surface-lift",
+        className
+      )}
+      {...props}
+    />
+  );
 }
 
-/** Titre de carte en serif (« Description », « Historique »…). */
 export function PanelTitle({ className, as: Tag = "h2", ...props }: React.HTMLAttributes<HTMLHeadingElement> & { as?: "h2" | "h3" }) {
-  return <Tag className={cn("font-heading text-[22px] leading-tight", className)} {...props} />;
+  return <Tag className={cn("font-heading text-[22px] leading-tight tracking-tight", className)} {...props} />;
 }

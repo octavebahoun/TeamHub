@@ -40,7 +40,7 @@ export function MessageList({ messages, meId, nameOf, typingNames }: { messages:
                   {time(m.created_at)}
                   {read && " · Lu"}
                 </p>
-                <p className="inline-block rounded-2xl rounded-br-md bg-primary px-5 py-3 text-left text-primary-foreground">{m.body}</p>
+                <p className="inline-block rounded-2xl rounded-br-md bg-primary px-5 py-3 text-left text-primary-foreground shadow-[0_10px_28px_-14px_var(--primary)]">{m.body}</p>
               </div>
             ) : (
               <div className="flex max-w-[80%] gap-3.5">
@@ -49,7 +49,11 @@ export function MessageList({ messages, meId, nameOf, typingNames }: { messages:
                   <p className="mb-1.5 text-sm">
                     <span className="font-semibold">{nameOf(senderId)}</span> <span className="text-muted-foreground">{time(m.created_at)}</span>
                   </p>
-                  {m.body && <p className="inline-block rounded-2xl rounded-tl-md bg-secondary px-5 py-3">{m.body}</p>}
+                  {m.body && (
+                    <p className="inline-block rounded-2xl rounded-tl-md border border-border/50 bg-card/80 px-5 py-3 shadow-sm backdrop-blur-sm">
+                      {m.body}
+                    </p>
+                  )}
                   {attachments.map((a) => (
                     <p key={a.path} className="mt-2 flex w-72 items-center gap-3 rounded-xl border px-4 py-3">
                       <span aria-hidden className="rounded-md bg-brand-soft px-2 py-2 text-xs font-bold text-brand-soft-foreground">

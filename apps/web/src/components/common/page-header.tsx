@@ -9,7 +9,11 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
       <ol className="flex flex-wrap items-center gap-2">
         {items.map((c, i) => (
           <li key={i} className="flex items-center gap-2">
-            {i > 0 && <span aria-hidden className="text-muted-foreground">/</span>}
+            {i > 0 && (
+              <span aria-hidden className="text-muted-foreground">
+                /
+              </span>
+            )}
             {c.href ? (
               <Link href={c.href} className="text-primary underline underline-offset-4 hover:text-primary-hover">
                 {c.label}
@@ -41,15 +45,15 @@ export function PageHeader({
   className?: string;
 }) {
   return (
-    <header className={cn("mb-6", className)}>
+    <header data-reveal className={cn("reveal mb-7 sm:mb-8", className)}>
       {crumbs && <Breadcrumbs items={crumbs} />}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="font-heading text-[32px] leading-tight sm:text-[36px]">{title}</h1>
+            <h1 className="title-shine font-heading text-[clamp(1.5rem,5vw,2.35rem)] leading-tight">{title}</h1>
             {badge}
           </div>
-          {subtitle && <p className="mt-1.5 text-muted-foreground">{subtitle}</p>}
+          {subtitle && <p className="mt-1.5 max-w-2xl text-muted-foreground">{subtitle}</p>}
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </div>

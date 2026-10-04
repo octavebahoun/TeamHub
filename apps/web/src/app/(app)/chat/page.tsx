@@ -10,8 +10,8 @@ export default async function ChatPage({ searchParams }: { searchParams: Promise
   const me = await getMe();
   const [members, projects] = await Promise.all([can(currentRole(me), "members.view") ? getMembers() : Promise.resolve([]), getProjects()]);
   return (
-    // Le chat occupe toute la hauteur disponible sous la barre du haut, sans marges de page.
-    <div className="-mx-4 -my-8 h-[calc(100dvh-4.75rem)] sm:-mx-8 sm:-my-10">
+    // Plein écran sous topbar + barre inférieure mobile (lg : sidebar seule).
+    <div className="-mx-3 -mt-3 -mb-5 h-[calc(100dvh-3.75rem-5.25rem)] overflow-hidden rounded-2xl border border-border/50 bg-card/40 shadow-sm backdrop-blur-sm sm:-mx-5 sm:-mt-4 lg:-mx-7 lg:h-[calc(100dvh-5rem)] lg:mb-0">
       <ChatApp
         meId={me.user.id}
         people={members.map((m) => ({ id: m.user_id, name: m.name }))}

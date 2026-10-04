@@ -136,7 +136,7 @@ export function NotificationsButton() {
   return (
     <Popover onOpenChange={closeAndRead}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="icon-lg" className="relative" aria-label={unread ? `Notifications, ${unread} non lues` : "Notifications"}>
+        <Button variant="outline" size="icon" className="relative size-9 rounded-xl" aria-label={unread ? `Notifications, ${unread} non lues` : "Notifications"}>
           <Bell aria-hidden className="size-5" strokeWidth={1.75} />
           {unread > 0 && <span aria-hidden className="absolute top-2 right-2.5 size-2 rounded-full bg-primary ring-2 ring-background" />}
         </Button>

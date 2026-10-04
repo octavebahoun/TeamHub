@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { InstallPromptProvider } from "@/components/pwa/install-prompt";
 import { PushPrompt } from "@/components/pwa/push-prompt";
 import { RegisterSW } from "@/components/pwa/register-sw";
+import { ScrollReveal } from "@/components/motion/scroll-reveal";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
@@ -41,7 +42,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="fr" className={cn(plex.variable, sourceSerif.variable)} suppressHydrationWarning>
       <head>
-        <meta name="theme-color" content="#d63a00" />
+        <meta name="theme-color" content="#0b0d12" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       {/* suppressHydrationWarning : next-themes + extensions navigateur (ex. cz-shortcut-listen) */}
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <ThemeProvider>
           <InstallPromptProvider>
             {children}
+            <ScrollReveal />
             <RegisterSW />
             <PushPrompt />
           </InstallPromptProvider>
