@@ -4,7 +4,9 @@ import { redirect } from "next/navigation";
 import { api, ApiError } from "@/lib/api/client";
 import type { FormState } from "@/lib/actions/session";
 
-const fieldErrors = (e: ApiError) => Object.fromEntries(Object.entries(e.errors).map(([k, v]) => [k, v[0]]));
+import { localizeFieldErrors } from "@/lib/validation/fr";
+
+const fieldErrors = (e: ApiError) => localizeFieldErrors(e.errors);
 
 export async function requestPasswordReset(_: FormState, form: FormData): Promise<FormState> {
   const values = { email: String(form.get("email") ?? "") };

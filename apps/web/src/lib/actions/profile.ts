@@ -8,7 +8,9 @@ import type { NotificationPrefs } from "@/lib/api/types";
 import { ORG_COOKIE, TOKEN_COOKIE } from "@/lib/session";
 import type { FormState } from "./session";
 
-const fields = (e: ApiError) => Object.fromEntries(Object.entries(e.errors).map(([k, v]) => [k, v[0]]));
+import { localizeFieldErrors } from "@/lib/validation/fr";
+
+const fields = (e: ApiError) => localizeFieldErrors(e.errors);
 const unavailable = "Cette fonction n'est pas encore disponible sur le serveur.";
 
 export async function updateProfile(_: FormState, form: FormData): Promise<FormState> {

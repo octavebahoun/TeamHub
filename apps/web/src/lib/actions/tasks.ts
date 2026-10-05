@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { api, ApiError } from "@/lib/api/client";
 import type { Task, TaskPriority, TaskStatus } from "@/lib/api/types";
+import { localizeFieldErrors } from "@/lib/validation/fr";
 
 export type TaskFormState = { ok?: boolean; error?: string; fields?: Record<string, string> } | undefined;
 
@@ -34,8 +35,7 @@ export async function createTask(_: TaskFormState, form: FormData): Promise<Task
     refresh(projectId, task.parent_id ?? undefined);
     return { ok: true };
   } catch (e) {
-    if (e instanceof ApiError && e.status === 422)
-      return { fields: Object.fromEntries(Object.entries(e.errors).map(([k, v]) => [k, v[0]])) };
+    if (e instanceof ApiError && e.status === 422) return { fields: localizeFieldErrors(e.errors) };
     if (e instanceof ApiError) return { error: e.status === 403 ? "Vous n'avez pas le droit de créer une tâche dans ce projet." : e.message };
     throw e;
   }

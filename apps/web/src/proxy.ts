@@ -25,5 +25,6 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/|favicon.ico|.*\\.(?:png|jpg|svg|ico|webp|woff2?)$).*)"],
+  // Fichiers statiques (images, polices, vidéos) hors auth — sinon /videos/*.mp4 → /connexion
+  matcher: ["/((?!_next/|favicon.ico|.*\\.(?:png|jpe?g|svg|ico|webp|gif|avif|mp4|webm|woff2?)$).*)"],
 };

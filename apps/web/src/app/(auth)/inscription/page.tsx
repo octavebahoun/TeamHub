@@ -12,21 +12,24 @@ export default function RegisterPage() {
       illustration="register"
       aside={
         <>
+          <p className="mb-2 text-[11px] font-semibold tracking-[0.16em] text-primary-foreground/75 uppercase">
+            Démarrage rapide
+          </p>
           <p className={asideTitle}>
             Votre espace d&apos;équipe
             <br />
             prêt en deux minutes.
           </p>
-          <ol className="mt-4 space-y-2.5">
+          <ol className="mt-5 space-y-2.5">
             {STEPS.map((s, i) => (
-              <li key={s} className="flex items-center gap-3 text-[14px] xl:text-[15px]">
+              <li key={s} className="flex items-start gap-3 text-[14px]">
                 <span
                   aria-hidden
-                  className="inline-flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-primary-foreground/80 bg-white/10 text-sm font-semibold backdrop-blur-sm"
+                  className="inline-flex size-7 shrink-0 items-center justify-center rounded-full border border-white/40 bg-white/15 text-sm font-semibold"
                 >
                   {i + 1}
                 </span>
-                {s}
+                <span className="pt-0.5 text-primary-foreground/95">{s}</span>
               </li>
             ))}
           </ol>

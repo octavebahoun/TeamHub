@@ -7,7 +7,9 @@ import type { ActivityKind, Client, Opportunity, OpportunityStage } from "@/lib/
 import type { FormState } from "./session";
 
 const str = (v: FormDataEntryValue | null) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null);
-const fields = (e: ApiError) => Object.fromEntries(Object.entries(e.errors).map(([k, v]) => [k, v[0]]));
+import { localizeFieldErrors } from "@/lib/validation/fr";
+
+const fields = (e: ApiError) => localizeFieldErrors(e.errors);
 const refresh = (clientId?: number) => {
   revalidatePath("/crm");
   revalidatePath("/crm/pipeline");

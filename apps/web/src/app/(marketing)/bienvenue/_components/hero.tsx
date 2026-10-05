@@ -74,7 +74,8 @@ export function Hero() {
             {[TRIAL_OFFER, "Sans installation", "PWA · MoMo · Devis XOF"].filter(Boolean).join(" · ")}
           </p>
         </div>
-        <div data-reveal data-reveal-variant="scale" data-reveal-delay="2" className="reveal">
+        {/* Pas de filter/blur reveal sur la vidéo : ça bloque souvent la lecture */}
+        <div className="min-w-0">
           <HeroPreview />
         </div>
       </div>

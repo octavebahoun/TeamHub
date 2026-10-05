@@ -7,6 +7,7 @@ import { api, ApiError } from "@/lib/api/client";
 import type { Invitation, Organization, Role, User } from "@/lib/api/types";
 import { ORG_COOKIE, SESSION_COOKIE_OPTIONS, TOKEN_COOKIE } from "@/lib/session";
 import type { FormState } from "./session";
+import { localizeFieldErrors } from "@/lib/validation/fr";
 
 /** Accepter une invitation quand on est déjà connecté (avec l'adresse invitée). */
 export async function acceptInvitation(token: string): Promise<FormState> {
@@ -37,8 +38,7 @@ export async function registerFromInvitation(token: string, _: FormState, form: 
     jar.set(TOKEN_COOKIE, res.token, SESSION_COOKIE_OPTIONS);
     jar.set(ORG_COOKIE, String(res.organization.id), SESSION_COOKIE_OPTIONS);
   } catch (e) {
-    if (e instanceof ApiError && e.status === 422)
-      return { fields: Object.fromEntries(Object.entries(e.errors).map(([k, v]) => [k, v[0]])), values };
+    if (e instanceof ApiError && e.status === 422) return { fields: localizeFieldErrors(e.errors), values };
     if (e instanceof ApiError) return { error: e.status === 410 ? "Cette invitation a expiré." : e.message, values };
     throw e;
   }
@@ -53,8 +53,7 @@ export async function inviteMember(_: FormState, form: FormData): Promise<FormSt
     revalidatePath("/parametres/membres");
     return { ok: true };
   } catch (e) {
-    if (e instanceof ApiError && e.status === 422)
-      return { fields: Object.fromEntries(Object.entries(e.errors).map(([k, v]) => [k, v[0]])), values };
+    if (e instanceof ApiError && e.status === 422) return { fields: localizeFieldErrors(e.errors), values };
     if (e instanceof ApiError) return { error: e.message, values };
     throw e;
   }
