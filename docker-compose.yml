@@ -65,8 +65,9 @@ services:
       APP_KEY: "${APP_KEY:?APP_KEY manquant — generer avec php artisan key:generate --show}"
       APP_URL: https://${DOMAIN:-teamhub.excellenceteam.site}
       FRONTEND_URL: https://${DOMAIN:-teamhub.excellenceteam.site}
-      # E-mails internes uniquement. Laisser log tant que Brevo/Resend n'est pas branché.
+      # E-mails internes. Défaut log ; SMTP Resend si MAIL_* est renseigné dans .env.
       MAIL_MAILER: ${MAIL_MAILER:-log}
+      MAIL_SCHEME: ${MAIL_SCHEME:-}
       MAIL_HOST: ${MAIL_HOST:-127.0.0.1}
       MAIL_PORT: ${MAIL_PORT:-2525}
       MAIL_USERNAME: ${MAIL_USERNAME:-}
