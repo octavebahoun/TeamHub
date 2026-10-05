@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Invitation;
 use App\Models\Membership;
 use App\Models\User;
+use App\Notifications\InvitationNotification;
 use App\Support\CurrentOrganization;
 use App\Support\OrganizationRole;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 
 class InvitationController extends Controller
@@ -71,7 +73,9 @@ class InvitationController extends Controller
             'invited_by' => $user->id,
         ]);
 
-        return response()->json($invitation, 201);
+        $this->sendInvitation($invitation);
+
+        return response()->json($invitation->withoutRelations(), 201);
     }
 
     public function destroy(Request $request, int $invitationId): JsonResponse
@@ -89,10 +93,9 @@ class InvitationController extends Controller
 
         $invitation = $this->findInCurrentOrganization($invitationId);
         $invitation->update(['expires_at' => now()->addDays(7)]);
+        $this->sendInvitation($invitation);
 
-        // TODO: renvoyer l'e-mail d'invitation quand l'envoi sera branché (aucun mail en V1).
-
-        return response()->json($invitation);
+        return response()->json($invitation->withoutRelations());
     }
 
     // Public (sans auth) : aperçu affiché sur la page d'invitation.
@@ -187,6 +190,14 @@ class InvitationController extends Controller
         return response()->json([
             'organization' => $invitation->organization,
         ]);
+    }
+
+    protected function sendInvitation(Invitation $invitation): void
+    {
+        $invitation->loadMissing('organization:id,name', 'invitedBy:id,name');
+
+        Notification::route('mail', $invitation->email)
+            ->notify(new InvitationNotification($invitation));
     }
 
     protected function guardAdmin(Request $request): void

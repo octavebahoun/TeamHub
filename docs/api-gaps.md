@@ -22,8 +22,10 @@ et `clients.address`, `reacted` sur les posts, analytics (`completed_tasks`,
 Livré côté data : `profitability` sur l’overview, `GET /analytics/summary` (bilan
 hebdomadaire) et `GET /analytics/relances` — contrat dans `docs/data-ia.md`.
 
-Reste à faire : jalons, `projects.client_id`, publications typées (`posts.kind`), envoi réel des
-e-mails d'invitation. Activité de projet et suppression de compte sont en place.
+Reste à faire : jalons, `projects.client_id`, publications typées (`posts.kind`). Activité de
+projet, suppression de compte et e-mail d'invitation (création et renvoi) sont en place.
+Tant que `MAIL_MAILER=log`, le message est écrit dans les logs Laravel ; avec un SMTP
+(Brevo ou Resend), le même e-mail part vers la boîte invitée.
 
 ## REST (`/api/v1`)
 
