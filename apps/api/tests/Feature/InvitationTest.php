@@ -4,7 +4,9 @@ use App\Models\Invitation;
 use App\Models\Membership;
 use App\Models\Organization;
 use App\Models\User;
+use App\Notifications\InvitationNotification;
 use App\Support\CurrentOrganization;
+use Illuminate\Support\Facades\Notification;
 
 function invitationOrg(): array
 {
@@ -26,15 +28,19 @@ function invitationOrg(): array
 afterEach(fn () => CurrentOrganization::set(null));
 
 it('rejects inviting someone as owner', function () {
+    Notification::fake();
     [$owner, $org] = invitationOrg();
 
     $this->actingAs($owner, 'sanctum')->withHeader('X-Organization-Id', $org->id)
         ->postJson('/api/v1/invitations', ['email' => 'new@test.com', 'role' => Membership::ROLE_OWNER])
         ->assertStatus(422)
         ->assertJsonValidationErrors(['role']);
+
+    Notification::assertNothingSent();
 });
 
 it('records who sent the invitation and rejects existing members', function () {
+    Notification::fake();
     [$owner, $org, $member] = invitationOrg();
 
     $this->actingAs($owner, 'sanctum')->withHeader('X-Organization-Id', $org->id)
@@ -42,10 +48,14 @@ it('records who sent the invitation and rejects existing members', function () {
         ->assertCreated()
         ->assertJsonPath('invited_by', $owner->id);
 
+    Notification::assertSentOnDemandTimes(InvitationNotification::class, 1);
+
     $this->actingAs($owner, 'sanctum')->withHeader('X-Organization-Id', $org->id)
         ->postJson('/api/v1/invitations', ['email' => $member->email, 'role' => Membership::ROLE_MEMBER])
         ->assertStatus(422)
         ->assertJsonValidationErrors(['email']);
+
+    Notification::assertSentOnDemandTimes(InvitationNotification::class, 1);
 });
 
 it('lists pending invitations of the current organization for owner/admin only', function () {
@@ -66,6 +76,7 @@ it('lists pending invitations of the current organization for owner/admin only',
 });
 
 it('cancels and resends an invitation, never across organizations', function () {
+    Notification::fake();
     [$owner, $org] = invitationOrg();
     [, $otherOrg] = invitationOrg();
     $invitation = Invitation::create([
@@ -80,6 +91,7 @@ it('cancels and resends an invitation, never across organizations', function () 
         ->postJson("/api/v1/invitations/{$invitation->id}/resend")
         ->assertOk();
     expect($invitation->fresh()->expires_at->greaterThan(now()->addDays(6)))->toBeTrue();
+    Notification::assertSentOnDemandTimes(InvitationNotification::class, 1);
 
     $this->actingAs($owner, 'sanctum')->withHeader('X-Organization-Id', $org->id)
         ->deleteJson("/api/v1/invitations/{$foreign->id}")
@@ -90,6 +102,55 @@ it('cancels and resends an invitation, never across organizations', function () 
         ->assertOk();
     expect(Invitation::find($invitation->id))->toBeNull();
     expect(Invitation::find($foreign->id))->not->toBeNull();
+});
+
+it('emails a frontend invitation link on create and again on resend', function () {
+    Notification::fake();
+    config(['app.frontend_url' => 'https://wine.test']);
+    [$owner, $org] = invitationOrg();
+
+    $this->actingAs($owner, 'sanctum')->withHeader('X-Organization-Id', $org->id)
+        ->postJson('/api/v1/invitations', ['email' => 'guest@test.com', 'role' => Membership::ROLE_GUEST])
+        ->assertCreated();
+
+    $invitation = Invitation::where('email', 'guest@test.com')->firstOrFail();
+
+    $assertMail = function (Invitation $invitation, string $expiresOn) use ($owner) {
+        Notification::assertSentOnDemand(
+            InvitationNotification::class,
+            function (InvitationNotification $notification, array $channels, object $notifiable) use ($invitation, $owner, $expiresOn) {
+                if ($notification->invitation->isNot($invitation)) {
+                    return false;
+                }
+
+                $mail = $notification->toMail($notifiable);
+
+                return $notifiable->routes['mail'] === 'guest@test.com'
+                    && $channels === ['mail']
+                    && $notification->acceptUrl() === 'https://wine.test/invitation/'.$invitation->token
+                    && $mail->subject === 'Invitation à rejoindre InviteCo sur WINE'
+                    && $mail->actionText === 'Rejoindre InviteCo'
+                    && collect($mail->introLines)->contains(
+                        "{$owner->name} vous invite à rejoindre InviteCo sur WINE, en tant qu'invité."
+                    )
+                    && collect($mail->outroLines)->contains(
+                        "Ce lien expire le {$expiresOn}. S'il ne vous est pas destiné, ignorez cet e-mail."
+                    );
+            }
+        );
+    };
+
+    $assertMail($invitation, $invitation->expires_at->locale('fr')->isoFormat('D MMMM YYYY'));
+
+    $this->travel(3)->days();
+
+    $this->actingAs($owner, 'sanctum')->withHeader('X-Organization-Id', $org->id)
+        ->postJson("/api/v1/invitations/{$invitation->id}/resend")
+        ->assertOk();
+
+    $invitation->refresh();
+    $assertMail($invitation, $invitation->expires_at->locale('fr')->isoFormat('D MMMM YYYY'));
+    Notification::assertSentOnDemandTimes(InvitationNotification::class, 2);
 });
 
 it('previews an invitation publicly, 404 if unknown, 410 if expired', function () {
