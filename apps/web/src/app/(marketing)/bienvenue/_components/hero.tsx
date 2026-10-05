@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { WineLogo } from "@/components/common/wine-logo";
 import { HERO, TRIAL_OFFER } from "../content";
+import { HeroPreview } from "./hero-preview";
 
 export function Hero() {
   return (
@@ -22,7 +23,7 @@ export function Hero() {
         />
       </div>
 
-      <div className="relative mx-auto max-w-3xl px-4 pt-10 pb-16 sm:px-8 sm:pt-16 sm:pb-28">
+      <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-4 pt-10 pb-16 sm:gap-16 sm:px-8 sm:pt-16 sm:pb-28 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
         <div className="min-w-0">
           <div data-reveal className="reveal mb-5">
             <WineLogo withMark className="[&_span]:text-[clamp(2rem,6vw,2.75rem)] [&_svg]:size-8 sm:[&_svg]:size-9" />
@@ -69,6 +70,10 @@ export function Hero() {
           <p data-reveal data-reveal-delay="4" className="reveal mt-5 text-sm text-muted-foreground">
             {[TRIAL_OFFER, "Sans installation", "PWA · MoMo · Devis XOF"].filter(Boolean).join(" · ")}
           </p>
+        </div>
+        {/* Pas de filter/blur reveal sur la vidéo : ça bloque souvent la lecture */}
+        <div className="min-w-0">
+          <HeroPreview />
         </div>
       </div>
     </section>

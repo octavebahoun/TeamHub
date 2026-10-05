@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { api, ApiError } from "@/lib/api/client";
 import type { Organization, User } from "@/lib/api/types";
 import { ORG_COOKIE, SESSION_COOKIE_OPTIONS, TOKEN_COOKIE } from "@/lib/session";
+import { localizeFieldErrors, localizeMessage } from "@/lib/validation/fr";
 
 export type FormState = { ok?: boolean; error?: string; fields?: Record<string, string>; values?: Record<string, string> } | undefined;
 
@@ -14,7 +15,7 @@ async function openSession(token: string, orgId?: number | null) {
   if (orgId) jar.set(ORG_COOKIE, String(orgId), SESSION_COOKIE_OPTIONS);
 }
 
-const fieldErrors = (e: ApiError) => Object.fromEntries(Object.entries(e.errors).map(([k, v]) => [k, v[0]]));
+const fieldErrors = (e: ApiError) => localizeFieldErrors(e.errors);
 
 /** Si l'utilisateur arrive d'un lien d'invitation, on l'accepte juste après la connexion. */
 function nextPath(raw: FormDataEntryValue | null) {
@@ -35,7 +36,12 @@ export async function login(_: FormState, form: FormData): Promise<FormState> {
     if (e instanceof ApiError) {
       if (e.status === 429) return { error: "Trop de tentatives. Réessayez dans une minute.", values };
       if (e.status === 503) return { error: e.message, values };
-      return { error: e.field("email") ?? e.message, fields: fieldErrors(e), values };
+      const localized = fieldErrors(e);
+      return {
+        error: localized.email ?? localizeMessage(e.message),
+        fields: localized,
+        values,
+      };
     }
     return { error: "Connexion impossible pour le moment. Vérifiez que l'API est démarrée ou activez le mode mock.", values };
   }

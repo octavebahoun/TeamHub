@@ -6,9 +6,10 @@ import { api, ApiError } from "@/lib/api/client";
 import type { Project } from "@/lib/api/types";
 import { prepareProjectBilling } from "./billing";
 import type { FormState } from "./session";
+import { localizeFieldErrors } from "@/lib/validation/fr";
 
 const str = (v: FormDataEntryValue | null) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null);
-const fields = (e: ApiError) => Object.fromEntries(Object.entries(e.errors).map(([k, v]) => [k, v[0]]));
+const fields = (e: ApiError) => localizeFieldErrors(e.errors);
 
 function readClientId(form: FormData): number | null {
   const raw = str(form.get("client_id"));

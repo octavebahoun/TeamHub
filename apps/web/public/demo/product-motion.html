@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WINE · Démo produit</title>
+    <style>
+      :root {
+        --bg: #f6f5f1;
+        --card: #fff;
+        --ink: #141413;
+        --muted: #5e5d59;
+        --line: rgba(20, 20, 19, 0.1);
+        --orange: #d63a00;
+        --orange-soft: #fbe3d6;
+        --green: #1f5e3a;
+        --green-soft: #e3efe7;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        overflow: hidden;
+      }
+      .stage {
+        width: 1280px;
+        height: 720px;
+        position: relative;
+        overflow: hidden;
+        background:
+          radial-gradient(ellipse 80% 50% at 10% -10%, rgba(214, 58, 0, 0.12), transparent 50%),
+          var(--bg);
+      }
+      .shell {
+        position: absolute;
+        inset: 28px 36px 36px;
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 28px 60px -36px rgba(20, 20, 19, 0.35);
+        overflow: hidden;
+      }
+      .side {
+        border-right: 1px solid var(--line);
+        padding: 22px 16px;
+        background: #fbfaf7;
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 28px;
+      }
+      .mark {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        background: conic-gradient(from 30deg, var(--orange), #f4b79b, var(--orange));
+        position: relative;
+      }
+      .mark::after {
+        content: "";
+        position: absolute;
+        inset: 8px;
+        border-radius: 999px;
+        background: #141413;
+      }
+      .logo strong {
+        font-family: "Source Serif 4", Georgia, serif;
+        font-size: 26px;
+        color: var(--orange);
+        letter-spacing: 0.04em;
+      }
+      .nav a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 42px;
+        padding: 0 12px;
+        border-radius: 12px;
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 15px;
+        margin-bottom: 4px;
+        transition: 0.25s ease;
+      }
+      .nav a.active {
+        background: var(--orange-soft);
+        color: #8f2700;
+        font-weight: 600;
+      }
+      .main {
+        padding: 22px 26px;
+        position: relative;
+      }
+      .top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 18px;
+      }
+      h1 {
+        margin: 0;
+        font-family: "Source Serif 4", Georgia, serif;
+        font-weight: 500;
+        font-size: 32px;
+      }
+      .badge {
+        background: var(--orange-soft);
+        color: #8f2700;
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .screen {
+        position: absolute;
+        inset: 70px 26px 26px;
+        opacity: 0;
+        transform: translateY(14px);
+        transition:
+          opacity 0.55s ease,
+          transform 0.55s ease;
+        pointer-events: none;
+      }
+      .screen.on {
+        opacity: 1;
+        transform: none;
+      }
+      .board {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        height: 100%;
+      }
+      .col {
+        background: rgba(240, 238, 232, 0.7);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 12px;
+      }
+      .col h3 {
+        margin: 0 0 12px;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #75736d;
+      }
+      .dot.o {
+        background: var(--orange);
+      }
+      .dot.g {
+        background: #2f9e5b;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 10px;
+        box-shadow: 0 8px 18px -16px rgba(0, 0, 0, 0.35);
+        animation: rise 0.6s ease both;
+      }
+      .card b {
+        display: block;
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+      .meta {
+        display: flex;
+        justify-content: space-between;
+        color: var(--muted);
+        font-size: 11px;
+        align-items: center;
+      }
+      .av {
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        background: #141413;
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 9px;
+        font-weight: 700;
+      }
+      .moving {
+        outline: 2px solid rgba(214, 58, 0, 0.35);
+        transform: translateY(-4px);
+        transition: 0.8s ease;
+      }
+      .chat {
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        gap: 14px;
+        height: 100%;
+      }
+      .channels,
+      .thread,
+      .kpis,
+      .pipe,
+      .bill {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: #fff;
+        padding: 14px;
+        height: 100%;
+      }
+      .ch {
+        padding: 10px 12px;
+        border-radius: 10px;
+        margin-bottom: 6px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .ch.on {
+        background: var(--orange-soft);
+        color: #8f2700;
+        font-weight: 600;
+      }
+      .bubble {
+        max-width: 72%;
+        margin: 10px 0;
+        padding: 12px 14px;
+        border-radius: 16px;
+        font-size: 14px;
+        line-height: 1.35;
+        opacity: 0;
+        transform: translateY(8px);
+        animation: rise 0.5s ease forwards;
+      }
+      .bubble.them {
+        background: #f0eee8;
+      }
+      .bubble.me {
+        background: var(--orange);
+        color: #fff;
+        margin-left: auto;
+      }
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .kpi {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 14px;
+        background: #fff;
+      }
+      .kpi span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+      .kpi strong {
+        font-family: "Source Serif 4", Georgia, serif;
+        font-size: 28px;
+        font-weight: 500;
+      }
+      .bars {
+        display: flex;
+        align-items: end;
+        gap: 10px;
+        height: 180px;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: #fff;
+      }
+      .bar {
+        flex: 1;
+        border-radius: 10px 10px 4px 4px;
+        background: linear-gradient(180deg, var(--orange), #f4b79b);
+        transform-origin: bottom;
+        animation: grow 1s ease both;
+      }
+      .pipe {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+      .stagecol h4 {
+        margin: 0 0 10px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .deal {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px;
+        margin-bottom: 8px;
+        background: #faf9f5;
+        font-size: 13px;
+        animation: rise 0.55s ease both;
+      }
+      .deal b {
+        display: block;
+        margin-bottom: 4px;
+      }
+      .amount {
+        color: var(--orange);
+        font-weight: 700;
+        font-size: 12px;
+      }
+      .bill .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--line);
+        font-size: 14px;
+      }
+      .ok {
+        background: var(--green-soft);
+        color: var(--green);
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .toast {
+        position: absolute;
+        left: 250px;
+        bottom: 28px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 12px 16px;
+        box-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.4);
+        opacity: 0;
+        transform: translateY(12px);
+        transition: 0.45s ease;
+        z-index: 5;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: none;
+      }
+      .toast .av {
+        width: 34px;
+        height: 34px;
+        background: var(--orange);
+        font-size: 11px;
+      }
+      .toast b {
+        display: block;
+        font-size: 13px;
+      }
+      .toast span {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      @keyframes grow {
+        from {
+          transform: scaleY(0.2);
+        }
+        to {
+          transform: scaleY(1);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage" id="stage">
+      <div class="shell">
+        <aside class="side">
+          <div class="logo"><span class="mark"></span><strong>WINE</strong></div>
+          <nav class="nav" id="nav">
+            <a href="#" data-screen="home">Accueil</a>
+            <a href="#" data-screen="tasks" class="active">Tâches</a>
+            <a href="#" data-screen="chat">Chat</a>
+            <a href="#" data-screen="crm">CRM</a>
+            <a href="#" data-screen="analytics">Analytics</a>
+            <a href="#" data-screen="billing">Facturation</a>
+          </nav>
+        </aside>
+        <section class="main">
+          <div class="top">
+            <h1 id="title">Tâches · WINE V1</h1>
+            <span class="badge" id="badge">M1 en cours</span>
+          </div>
+
+          <div class="screen on" id="tasks">
+            <div class="board">
+              <div class="col">
+                <h3><span class="dot"></span>À faire</h3>
+                <div class="card" id="card-move" style="animation-delay: 0.1s">
+                  <b>Relancer facture MoMo</b>
+                  <div class="meta"><span>Demain</span><span class="av">KA</span></div>
+                </div>
+                <div class="card" style="animation-delay: 0.2s">
+                  <b>Devis express client</b>
+                  <div class="meta"><span>12 oct.</span><span class="av">AD</span></div>
+                </div>
+              </div>
+              <div class="col" id="col-progress">
+                <h3><span class="dot o"></span>En cours</h3>
+                <div class="card" style="animation-delay: 0.25s">
+                  <b>Note vocale client</b>
+                  <div class="meta"><span>Aujourd'hui</span><span class="av">OB</span></div>
+                </div>
+                <div class="card" style="animation-delay: 0.35s">
+                  <b>Inbox WhatsApp CRM</b>
+                  <div class="meta"><span>Aujourd'hui</span><span class="av">AD</span></div>
+                </div>
+              </div>
+              <div class="col">
+                <h3><span class="dot g"></span>Terminé</h3>
+                <div class="card" style="animation-delay: 0.4s">
+                  <b>Contrat signé Contravo</b>
+                  <div class="meta"><span>28 sept.</span><span class="av">OB</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="screen" id="home">
+            <div class="grid4">
+              <div class="kpi"><span>Aujourd'hui</span><strong>3</strong></div>
+              <div class="kpi"><span>En retard</span><strong>1</strong></div>
+              <div class="kpi"><span>Projets</span><strong>4</strong></div>
+              <div class="kpi"><span>Messages</span><strong>12</strong></div>
+            </div>
+            <div class="card"><b>Relancer facture MoMo</b><div class="meta"><span>Priorité haute · Demain</span><span class="av">KA</span></div></div>
+            <div class="card"><b>Préparer revue client</b><div class="meta"><span>WINE V1 · Aujourd'hui</span><span class="av">OB</span></div></div>
+          </div>
+
+          <div class="screen" id="chat">
+            <div class="chat">
+              <div class="channels">
+                <div class="ch on"># wine-v1</div>
+                <div class="ch"># general</div>
+                <div class="ch">DM · Awa</div>
+              </div>
+              <div class="thread" id="thread">
+                <div class="bubble them" style="animation-delay: 0.1s">Le devis XOF est prêt.</div>
+                <div class="bubble them" style="animation-delay: 0.35s">On attend l'acompte MoMo pour débloquer.</div>
+                <div class="bubble me" style="animation-delay: 0.7s">Acompte reçu — projet débloqué ✅</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="screen" id="crm">
+            <div class="pipe">
+              <div class="stagecol">
+                <h4>Prospection</h4>
+                <div class="deal" style="animation-delay: 0.1s"><b>Porto-Novo Digital</b><span class="amount">800 000 XOF</span></div>
+              </div>
+              <div class="stagecol">
+                <h4>Proposition</h4>
+                <div class="deal" style="animation-delay: 0.2s"><b>Atelier Sahel</b><span class="amount">1 200 000 XOF</span></div>
+              </div>
+              <div class="stagecol">
+                <h4>Négociation</h4>
+                <div class="deal" style="animation-delay: 0.3s"><b>Casa Tech</b><span class="amount">2 400 000 XOF</span></div>
+              </div>
+              <div class="stagecol">
+                <h4>Gagné</h4>
+                <div class="deal" style="animation-delay: 0.4s"><b>Excellence Team</b><span class="amount">3 100 000 XOF</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="screen" id="analytics">
+            <div class="grid4">
+              <div class="kpi"><span>CA</span><strong>12,4M</strong></div>
+              <div class="kpi"><span>Marge</span><strong>34%</strong></div>
+              <div class="kpi"><span>Cash</span><strong>4,1M</strong></div>
+              <div class="kpi"><span>Retards</span><strong>2</strong></div>
+            </div>
+            <div class="bars">
+              <div class="bar" style="height: 48%; animation-delay: 0.1s"></div>
+              <div class="bar" style="height: 72%; animation-delay: 0.2s"></div>
+              <div class="bar" style="height: 58%; animation-delay: 0.3s"></div>
+              <div class="bar" style="height: 86%; animation-delay: 0.4s"></div>
+              <div class="bar" style="height: 64%; animation-delay: 0.5s"></div>
+              <div class="bar" style="height: 92%; animation-delay: 0.6s"></div>
+            </div>
+          </div>
+
+          <div class="screen" id="billing">
+            <div class="bill">
+              <div class="row"><span>Devis Contravo</span><span class="ok">Accepté</span></div>
+              <div class="row"><span>Contrat</span><span class="ok">Signé</span></div>
+              <div class="row"><span>Acompte MoMo</span><span class="ok">Reçu</span></div>
+              <div class="row"><span>Projet</span><span class="ok">Débloqué</span></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="toast" id="toast">
+        <span class="av">KA</span>
+        <div>
+          <b># wine-v1</b>
+          <span>« Acompte MoMo reçu — projet débloqué »</span>
+        </div>
+      </div>
+    </div>
+    <script>
+      const titles = {
+        home: ["Bonjour Amara", "Aujourd'hui"],
+        tasks: ["Tâches · WINE V1", "M1 en cours"],
+        chat: ["Chat · # wine-v1", "Temps réel"],
+        crm: ["CRM · Pipeline", "XOF"],
+        analytics: ["Analytics & IA", "Hebdo"],
+        billing: ["Facturation", "Contravo · MoMo"],
+      };
+      const order = ["tasks", "home", "chat", "crm", "analytics", "billing", "tasks"];
+      let i = 0;
+      const title = document.getElementById("title");
+      const badge = document.getElementById("badge");
+      const toast = document.getElementById("toast");
+      const nav = document.getElementById("nav");
+
+      function show(name) {
+        document.querySelectorAll(".screen").forEach((el) => el.classList.toggle("on", el.id === name));
+        nav.querySelectorAll("a").forEach((a) => a.classList.toggle("active", a.dataset.screen === name));
+        const [t, b] = titles[name];
+        title.textContent = t;
+        badge.textContent = b;
+        toast.classList.toggle("show", name === "chat" || name === "billing");
+      }
+
+      function moveCard() {
+        const card = document.getElementById("card-move");
+        const col = document.getElementById("col-progress");
+        if (!card || !col) return;
+        card.classList.add("moving");
+        setTimeout(() => {
+          col.insertBefore(card, col.children[1]);
+          card.classList.remove("moving");
+        }, 700);
+      }
+
+      show("tasks");
+      setTimeout(moveCard, 1600);
+
+      setInterval(() => {
+        i = (i + 1) % order.length;
+        show(order[i]);
+        if (order[i] === "tasks") setTimeout(moveCard, 900);
+      }, 2600);
+    </script>
+  </body>
+</html>

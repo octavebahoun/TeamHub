@@ -635,4 +635,69 @@
       transform: translateY(-6px);
     }
   }
+
+  /* Landing — démo motion zone Tâches (muette, légère) */
+  .motion-card {
+    will-change: transform, opacity;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .motion-card {
+      animation: hero-card-breathe 5.5s ease-in-out infinite;
+    }
+  }
+  @keyframes hero-card-breathe {
+    0%,
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    40% {
+      transform: translateY(-3px);
+      opacity: 0.96;
+    }
+    70% {
+      transform: translateY(1px);
+      opacity: 1;
+    }
+  }
+  @keyframes hero-focus {
+    0%,
+    100% {
+      opacity: 0;
+      transform: translate(0, 0) scale(0.98);
+    }
+    15% {
+      opacity: 0.7;
+      transform: translate(0, 8px) scale(1);
+    }
+    35% {
+      opacity: 0.55;
+      transform: translate(34%, 8px) scale(1);
+    }
+    55% {
+      opacity: 0.55;
+      transform: translate(68%, 8px) scale(1);
+    }
+    75%,
+    90% {
+      opacity: 0;
+    }
+  }
+  @keyframes hero-toast {
+    0%,
+    12% {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    22%,
+    78% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    90%,
+    100% {
+      opacity: 0.85;
+      transform: translateY(0);
+    }
+  }
 }

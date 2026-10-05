@@ -13,15 +13,18 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       illustration="login"
       aside={
         <>
+          <p className="mb-2 text-[11px] font-semibold tracking-[0.16em] text-primary-foreground/75 uppercase">
+            Work IN Excellence
+          </p>
           <p className={asideTitle}>Projets, tâches, échanges et clients au même endroit.</p>
-          <p className="mt-3 max-w-md text-[15px] leading-relaxed text-primary-foreground/90 xl:text-[16px]">
+          <p className="mt-3 text-[15px] leading-relaxed text-primary-foreground/90">
             Votre équipe arrête de jongler entre WhatsApp, Excel et les carnets.
           </p>
-          <ul className="mt-4 flex flex-wrap gap-1.5" aria-label="Modules">
+          <ul className="mt-5 flex flex-wrap gap-1.5" aria-label="Modules">
             {MODULES.map((m) => (
               <li
                 key={m}
-                className="rounded-full border border-primary-foreground/65 bg-white/10 px-2.5 py-1 text-[12px] backdrop-blur-sm xl:text-[13px]"
+                className="rounded-full border border-white/35 bg-white/12 px-2.5 py-1 text-[12px] backdrop-blur-sm"
               >
                 {m}
               </li>

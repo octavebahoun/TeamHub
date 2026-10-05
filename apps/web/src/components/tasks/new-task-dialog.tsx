@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { CharCountInput } from "@/components/ui/char-count-input";
 import { NativeSelect } from "@/components/common/native-select";
 import { FieldError } from "@/components/common/field-error";
 import { createTask } from "@/lib/actions/tasks";
@@ -52,8 +53,21 @@ export function NewTaskDialog({
             </p>
           )}
           <div className="space-y-1.5">
-            <Label htmlFor={`${id}-title`}>Titre</Label>
-            <Input id={`${id}-title`} name="title" required autoFocus aria-invalid={!!state?.fields?.title} aria-describedby={`${id}-title-err`} />
+            <Label htmlFor={`${id}-title`}>
+              Titre
+              <span className="ml-1 text-primary" aria-hidden>
+                *
+              </span>
+              <span className="sr-only"> (obligatoire)</span>
+            </Label>
+            <CharCountInput
+              id={`${id}-title`}
+              name="title"
+              required
+              autoFocus
+              maxLength={200}
+              aria-invalid={!!state?.fields?.title}
+            />
             <FieldError id={`${id}-title-err`} message={state?.fields?.title} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">

@@ -1,8 +1,8 @@
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/common/native-select";
 import { FieldError } from "@/components/common/field-error";
+import { CharCountInput, CharCountTextarea } from "@/components/ui/char-count-input";
+import { Input } from "@/components/ui/input";
 import { PROJECT_STATUS } from "@/lib/labels";
 import type { Project } from "@/lib/api/types";
 
@@ -24,8 +24,21 @@ export function ProjectFormFields({
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="project-name">Nom du projet</Label>
-        <Input id="project-name" name="name" required defaultValue={project?.name} aria-invalid={!!errors.name || undefined} />
+        <Label htmlFor="project-name">
+          Nom du projet
+          <span className="ml-1 text-primary" aria-hidden>
+            *
+          </span>
+          <span className="sr-only"> (obligatoire)</span>
+        </Label>
+        <CharCountInput
+          id="project-name"
+          name="name"
+          required
+          maxLength={200}
+          defaultValue={project?.name}
+          aria-invalid={!!errors.name || undefined}
+        />
         <FieldError message={errors.name} />
       </div>
       <div className="space-y-1.5">
@@ -42,7 +55,13 @@ export function ProjectFormFields({
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="project-description">Description</Label>
-        <Textarea id="project-description" name="description" rows={3} defaultValue={project?.description ?? ""} />
+        <CharCountTextarea
+          id="project-description"
+          name="description"
+          rows={3}
+          maxLength={2000}
+          defaultValue={project?.description ?? ""}
+        />
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
@@ -61,7 +80,13 @@ export function ProjectFormFields({
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="project-end">Échéance</Label>
-          <Input id="project-end" name="end_date" type="date" defaultValue={project?.end_date?.slice(0, 10) ?? ""} aria-invalid={!!errors.end_date || undefined} />
+          <Input
+            id="project-end"
+            name="end_date"
+            type="date"
+            defaultValue={project?.end_date?.slice(0, 10) ?? ""}
+            aria-invalid={!!errors.end_date || undefined}
+          />
           <FieldError message={errors.end_date} />
         </div>
       </div>

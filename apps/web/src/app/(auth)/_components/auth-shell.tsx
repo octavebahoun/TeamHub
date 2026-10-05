@@ -1,9 +1,28 @@
 import Link from "next/link";
+import Image from "next/image";
 import { WineLogo } from "@/components/common/wine-logo";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
-import { AuthIllustration, type AuthIllustrationVariant } from "./auth-illustration";
+import type { AuthIllustrationVariant } from "./auth-illustration";
 
-/** Écrans publics : panneau de marque à gauche, formulaire à droite — calé sur 1 viewport. */
+const ILLUSTRATIONS: Record<AuthIllustrationVariant, { src: string; alt: string }> = {
+  login: {
+    src: "/illustrations/auth-team.jpg",
+    alt: "Professionnel WINE et modules de travail",
+  },
+  register: {
+    src: "/illustrations/auth-grow.jpg",
+    alt: "Équipe lançant son espace WINE",
+  },
+  crm: {
+    src: "/illustrations/auth-crm.jpg",
+    alt: "Suivi client et CRM",
+  },
+};
+
+/**
+ * Auth : zone gauche = scène visuelle (image dominante) + carton glass pour le message.
+ * Le formulaire reste à droite, calé sur 1 viewport.
+ */
 export function AuthShell({
   aside,
   children,
@@ -13,22 +32,52 @@ export function AuthShell({
   children: React.ReactNode;
   illustration?: AuthIllustrationVariant;
 }) {
+  const art = ILLUSTRATIONS[illustration];
+
   return (
     <div className="grid h-dvh overflow-hidden lg:grid-cols-2">
-      <aside className="relative hidden min-h-0 flex-col overflow-hidden bg-gradient-to-br from-primary via-primary to-primary-hover px-8 py-6 text-primary-foreground lg:flex lg:px-10 lg:py-7 xl:px-12">
-        <div aria-hidden className="orb orb-a -top-24 -right-16 size-72 bg-white/20" />
-        <div aria-hidden className="orb orb-b -bottom-28 -left-16 size-64 bg-black/25" />
-        <div className="relative flex min-h-0 flex-1 flex-col">
-          <Link href="/" aria-label="WINE, retour à l'accueil" className="w-fit shrink-0 rounded-md transition-opacity hover:opacity-90">
+      <aside className="relative hidden min-h-0 overflow-hidden bg-primary lg:block">
+        {/* Scène : image dominante, légèrement teintée */}
+        <div className="absolute inset-0">
+          <Image
+            src={art.src}
+            alt=""
+            fill
+            priority
+            sizes="50vw"
+            className="object-cover object-center scale-[1.02]"
+            aria-hidden
+          />
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-gradient-to-t from-primary via-primary/35 to-primary/20"
+          />
+          <div
+            aria-hidden
+            className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-primary/70 to-transparent"
+          />
+        </div>
+
+        <div className="relative z-10 flex h-full flex-col p-7 xl:p-9">
+          <Link
+            href="/"
+            aria-label="WINE, retour à l'accueil"
+            className="w-fit rounded-xl bg-white/15 px-3 py-2 shadow-sm ring-1 ring-white/25 backdrop-blur-md transition-opacity hover:opacity-90"
+          >
             <WineLogo inverted withMark className="[&_span]:text-[24px] [&_svg]:size-6" />
           </Link>
-          <div className="flex min-h-0 flex-1 flex-col justify-center gap-4 py-4">
-            <div className="shrink-0">{aside}</div>
-            <AuthIllustration variant={illustration} className="min-h-0 flex-1" />
+
+          {/* Carton message : ancré en bas, lecture claire sans noyer l'image */}
+          <div className="mt-auto">
+            <div className="rounded-3xl bg-white/14 p-6 text-primary-foreground shadow-[0_24px_60px_-28px_rgb(0_0_0/0.55)] ring-1 ring-white/30 backdrop-blur-xl xl:p-7">
+              <div className="max-w-md">{aside}</div>
+              <p className="mt-5 text-[12px] text-primary-foreground/75">Un produit Excellence Team</p>
+            </div>
           </div>
-          <p className="shrink-0 text-[13px] text-primary-foreground/75">Un produit Excellence Team</p>
         </div>
+        <span className="sr-only">{art.alt}</span>
       </aside>
+
       <main id="contenu" className="app-mesh relative flex min-h-0 items-center justify-center overflow-y-auto px-5 py-6 sm:px-10">
         <div className="absolute top-3 right-3 z-10 sm:top-5 sm:right-5">
           <ThemeToggle />
@@ -55,4 +104,4 @@ export function AuthHeading({ title, subtitle }: { title: string; subtitle?: Rea
   );
 }
 
-export const asideTitle = "font-heading text-[clamp(1.45rem,2.4vw,2.35rem)] leading-[1.12]";
+export const asideTitle = "font-heading text-[clamp(1.4rem,2.2vw,2.15rem)] leading-[1.12]";

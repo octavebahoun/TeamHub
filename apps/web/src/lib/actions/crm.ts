@@ -6,9 +6,11 @@ import { api, ApiError } from "@/lib/api/client";
 import type { ActivityKind, Client, Opportunity, OpportunityStage } from "@/lib/api/types";
 import { prepareProjectBilling, provisionClient } from "./billing";
 import type { FormState } from "./session";
+import { localizeFieldErrors } from "@/lib/validation/fr";
 
 const str = (v: FormDataEntryValue | null) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null);
-const fields = (e: ApiError) => Object.fromEntries(Object.entries(e.errors).map(([k, v]) => [k, v[0]]));
+
+const fields = (e: ApiError) => localizeFieldErrors(e.errors);
 const refresh = (clientId?: number) => {
   revalidatePath("/crm");
   revalidatePath("/crm/pipeline");
