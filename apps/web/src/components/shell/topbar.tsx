@@ -18,8 +18,8 @@ export function Topbar({
   taskOptions: { projects: Option[]; members: Option[] } | null;
 }) {
   return (
-    <header className="sticky top-0 z-30 px-3 pt-2 sm:px-5 sm:pt-3 lg:px-6">
-      <div className="glass flex h-12 items-center gap-2 rounded-2xl border border-border/60 bg-background/70 px-2.5 shadow-sm backdrop-blur-xl sm:h-14 sm:gap-3 sm:px-3">
+    <header className="sticky top-0 z-40 shrink-0 px-3 pt-2 sm:px-5 sm:pt-3 lg:px-6">
+      <div className="glass flex h-12 items-center gap-2 rounded-2xl border border-border/60 bg-background/85 px-2.5 shadow-sm backdrop-blur-xl supports-backdrop-filter:bg-background/70 sm:h-14 sm:gap-3 sm:px-3">
         <Suspense>
           <SearchForm />
         </Suspense>

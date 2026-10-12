@@ -32,19 +32,21 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div className="app-mesh flex h-dvh overflow-hidden">
         <AppSidebar org={org} hidden={hidden} />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <Topbar
-            user={{ name: me.user.name, email: me.user.email, canSeeMembers: can(role, "members.view") }}
-            org={org}
-            hidden={hidden}
-            taskOptions={
-              canCreateTask
-                ? {
-                    projects: projects.filter((p) => !p.archived_at).map((p) => ({ id: p.id, name: p.name })),
-                    members: members.map((m) => ({ id: m.user_id, name: m.name })),
-                  }
-                : null
-            }
-          />
+          <div className="sticky top-0 z-40 shrink-0 bg-background/40 backdrop-blur-sm">
+            <Topbar
+              user={{ name: me.user.name, email: me.user.email, canSeeMembers: can(role, "members.view") }}
+              org={org}
+              hidden={hidden}
+              taskOptions={
+                canCreateTask
+                  ? {
+                      projects: projects.filter((p) => !p.archived_at).map((p) => ({ id: p.id, name: p.name })),
+                      members: members.map((m) => ({ id: m.user_id, name: m.name })),
+                    }
+                  : null
+              }
+            />
+          </div>
           <main id="contenu" tabIndex={-1} className="flex min-h-0 flex-1 flex-col overflow-x-clip overflow-y-auto px-3 py-5 outline-none sm:px-5 sm:py-7 lg:px-7">
             <PageEnter>{children}</PageEnter>
           </main>

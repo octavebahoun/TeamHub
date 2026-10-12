@@ -6,8 +6,8 @@ import { NAV } from "../content";
 
 export function SiteHeader() {
   return (
-    <header className="border-b bg-background px-3 sm:px-6">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 border-border/60 px-3 sm:h-16 sm:gap-4 sm:px-5">
+    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/85 px-3 backdrop-blur-xl supports-backdrop-filter:bg-background/70 sm:px-6">
+      <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-3 sm:h-16 sm:gap-4 sm:px-5">
         <Link href="/" aria-label="WINE, accueil" className="shrink-0 rounded-md">
           <WineLogo withMark className="[&_span]:text-[20px] sm:[&_span]:text-[26px] [&_svg]:size-6 sm:[&_svg]:size-7" />
         </Link>

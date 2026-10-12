@@ -54,7 +54,7 @@ export function ChatApp({ meId, people, projects, initialChannel, initialProject
       <section aria-label={active ? `Conversation ${active.name}` : "Conversation"} className="flex min-h-0 flex-col">
         {active ? (
           <>
-            <header className="flex flex-wrap items-center justify-between gap-4 border-b px-4 py-4 sm:px-8">
+            <header className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-4 border-b bg-background/85 px-4 py-4 backdrop-blur-xl supports-backdrop-filter:bg-background/70 sm:px-8">
               <div className="min-w-0">
                 <h2 className="flex min-w-0 items-center gap-1 font-sans text-[20px] font-semibold">
                   {active.type === "project" && <Hash aria-hidden className="size-5 text-primary" />}

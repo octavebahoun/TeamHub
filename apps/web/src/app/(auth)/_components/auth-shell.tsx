@@ -78,17 +78,17 @@ export function AuthShell({
         <span className="sr-only">{art.alt}</span>
       </aside>
 
-      <main id="contenu" className="app-mesh relative flex min-h-0 items-center justify-center overflow-y-auto px-5 py-6 sm:px-10">
-        <div className="absolute top-3 right-3 z-10 sm:top-5 sm:right-5">
-          <ThemeToggle />
-        </div>
-        <div className="absolute top-3 left-3 z-10 lg:hidden">
-          <Link href="/" aria-label="WINE, retour à l'accueil">
+      <main id="contenu" className="app-mesh relative flex min-h-0 flex-col overflow-y-auto">
+        <div className="sticky top-0 z-40 flex shrink-0 items-center justify-between gap-3 bg-background/85 px-5 py-3 backdrop-blur-xl supports-backdrop-filter:bg-background/70 sm:px-10">
+          <Link href="/" aria-label="WINE, retour à l'accueil" className="lg:invisible">
             <WineLogo withMark className="[&_span]:text-[22px] [&_svg]:size-6" />
           </Link>
+          <ThemeToggle />
         </div>
-        <div data-reveal className="reveal is-inview panel-premium my-auto w-full max-w-md rounded-2xl p-5 sm:p-7">
-          {children}
+        <div className="flex flex-1 items-center justify-center px-5 py-6 sm:px-10">
+          <div data-reveal className="reveal is-inview panel-premium w-full max-w-md rounded-2xl p-5 sm:p-7">
+            {children}
+          </div>
         </div>
       </main>
     </div>
