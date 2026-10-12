@@ -3,28 +3,37 @@ import { TOKEN_COOKIE } from "@/lib/session";
 
 /**
  * « / » : landing page pour les visiteurs, Accueil pour les connectés (même URL).
- * Toute autre page privée sans jeton redirige vers /connexion, et inversement.
+ * Seules les zones applicatives exigent un jeton ; le reste (404, pages publiques) passe.
  */
-const PUBLIC = ["/bienvenue", "/connexion", "/inscription", "/invitation", "/mot-de-passe-oublie", "/conditions", "/deconnexion", "/verifier-signature"];
+/** Préfixes réservés à l'espace connecté (garde auth). */
+const PRIVATE = ["/projets", "/taches", "/crm", "/social", "/analytics", "/recherche", "/parametres", "/profil", "/chat"];
+
+function requiresAuth(pathname: string): boolean {
+  return PRIVATE.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
 
 export function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
-  const isPublic = PUBLIC.some((p) => pathname === p || pathname.startsWith(`${p}/`));
   const hasToken = req.cookies.has(TOKEN_COOKIE);
 
   if (pathname === "/" && !hasToken) return NextResponse.rewrite(new URL("/bienvenue", req.url));
-  if (!isPublic && !hasToken) {
+
+  if (requiresAuth(pathname) && !hasToken) {
     const url = new URL("/connexion", req.url);
-    if (pathname !== "/") url.searchParams.set("next", pathname + search);
+    url.searchParams.set("next", pathname + search);
     return NextResponse.redirect(url);
   }
+
   if (hasToken && (pathname === "/connexion" || pathname === "/inscription")) {
     return NextResponse.redirect(new URL("/", req.url));
   }
+
   return NextResponse.next();
 }
 
 export const config = {
-  // Fichiers statiques (images, polices, vidéos) hors auth — sinon /videos/*.mp4 → /connexion
-  matcher: ["/((?!_next/|favicon.ico|.*\\.(?:png|jpe?g|svg|ico|webp|gif|avif|mp4|webm|woff2?)$).*)"],
+  // Fichiers statiques + PWA hors auth — sinon manifest / SW → /connexion
+  matcher: [
+    "/((?!_next/|favicon.ico|manifest\\.webmanifest|sw\\.js|.*\\.(?:png|jpe?g|svg|ico|webp|gif|avif|mp4|webm|woff2?)$).*)",
+  ],
 };

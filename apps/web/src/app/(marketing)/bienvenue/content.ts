@@ -6,9 +6,12 @@
 /** Offre d'essai, ex. « 30 jours offerts ». Affichée sous les boutons du hero. */
 export const TRIAL_OFFER: string | null = null;
 /** Réponse à « Combien ça coûte ? ». */
-export const PRICING_ANSWER: string | null = null;
+export const PRICING_ANSWER: string | null =
+  "Consultez la page Tarifs pour les offres en cours ; l'essai de lancement reste gratuit.";
 /** Adresse de contact (FAQ et pied de page). */
 export const CONTACT_EMAIL: string | null = null;
+/** Destinataire mailto du formulaire contact quand CONTACT_EMAIL est vide. */
+export const CONTACT_FALLBACK_MAILTO = "contact@excellence-team.com";
 
 export const NAV = [
   { href: "#fonctionnalites", label: "Fonctionnalités" },

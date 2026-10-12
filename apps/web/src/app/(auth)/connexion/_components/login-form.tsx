@@ -26,7 +26,17 @@ export function LoginForm({ next, justReset }: { next?: string; justReset?: bool
             {state.error}
           </p>
         )}
-        <FormField id="email" name="email" type="email" label="Email" autoComplete="email" required placeholder="vous@entreprise.com" defaultValue={state?.values?.email} />
+        <FormField
+          id="email"
+          name="email"
+          type="email"
+          label="Email"
+          autoComplete="email"
+          required
+          placeholder="vous@entreprise.com"
+          defaultValue={state?.values?.email}
+          error={state?.fields?.email}
+        />
         <FormField
           id="password"
           name="password"
@@ -34,6 +44,7 @@ export function LoginForm({ next, justReset }: { next?: string; justReset?: bool
           label="Mot de passe"
           autoComplete="current-password"
           required
+          error={state?.fields?.password}
           aside={
             <Link href="/mot-de-passe-oublie" className="text-sm text-primary underline underline-offset-4 hover:text-primary-hover">
               Mot de passe oublié ?

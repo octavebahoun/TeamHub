@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -14,11 +14,36 @@ const legend = "mb-2.5 text-[12px] font-semibold tracking-[0.12em] text-muted-fo
 
 export function RegisterForm() {
   const [state, action, pending] = useActionState<FormState, FormData>(register, undefined);
+  const formRef = useRef<HTMLFormElement>(null);
   const f = state?.fields ?? {};
   return (
     <>
       <AuthHeading title="Créer votre espace" subtitle="Votre compte et votre organisation, en une seule étape." />
-      <form action={action} className="space-y-4 sm:space-y-5" noValidate>
+      <form
+        ref={formRef}
+        action={action}
+        className="space-y-4 sm:space-y-5"
+        noValidate
+        onSubmit={(e) => {
+          const form = formRef.current;
+          if (!form) return;
+          const requiredIds = ["name", "email", "password", "organization_name"] as const;
+          for (const id of requiredIds) {
+            const el = form.elements.namedItem(id);
+            if (el instanceof HTMLInputElement && !el.value.trim()) {
+              e.preventDefault();
+              el.focus();
+              el.reportValidity();
+              return;
+            }
+          }
+          const terms = form.elements.namedItem("terms");
+          if (terms instanceof HTMLInputElement && !terms.checked) {
+            e.preventDefault();
+            terms.focus();
+          }
+        }}
+      >
         {state?.error && (
           <p role="alert" className="rounded-md bg-brand-soft px-4 py-3 text-sm text-brand-soft-foreground">
             {state.error}

@@ -7,7 +7,16 @@ import type { Organization, User } from "@/lib/api/types";
 import { ORG_COOKIE, SESSION_COOKIE_OPTIONS, TOKEN_COOKIE } from "@/lib/session";
 import { localizeFieldErrors, localizeMessage } from "@/lib/validation/fr";
 
-export type FormState = { ok?: boolean; error?: string; notice?: string; fields?: Record<string, string>; values?: Record<string, string> } | undefined;
+export type FormState =
+  | {
+      ok?: boolean;
+      error?: string;
+      notice?: string;
+      warning?: string;
+      fields?: Record<string, string>;
+      values?: Record<string, string>;
+    }
+  | undefined;
 
 async function openSession(token: string, orgId?: number | null) {
   const jar = await cookies();
@@ -21,6 +30,23 @@ const fieldErrors = (e: ApiError) => localizeFieldErrors(e.errors);
 function nextPath(raw: FormDataEntryValue | null) {
   const s = typeof raw === "string" ? raw : "";
   return s.startsWith("/") && !s.startsWith("//") ? s : "/";
+}
+
+function registerFieldErrors(form: FormData): Record<string, string> | null {
+  const fields: Record<string, string> = {};
+  const name = String(form.get("name") ?? "").trim();
+  const email = String(form.get("email") ?? "").trim();
+  const password = String(form.get("password") ?? "");
+  const organizationName = String(form.get("organization_name") ?? "").trim();
+
+  if (!name) fields.name = "Indiquez votre nom complet.";
+  if (!email) fields.email = "Indiquez votre adresse email.";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) fields.email = "Cette adresse email est invalide.";
+  if (!password) fields.password = "Choisissez un mot de passe.";
+  else if (password.length < 8) fields.password = "Le mot de passe doit contenir au moins 8 caractères.";
+  if (!organizationName) fields.organization_name = "Indiquez le nom de votre organisation.";
+
+  return Object.keys(fields).length ? fields : null;
 }
 
 export async function login(_: FormState, form: FormData): Promise<FormState> {
@@ -37,8 +63,9 @@ export async function login(_: FormState, form: FormData): Promise<FormState> {
       if (e.status === 429) return { error: "Trop de tentatives. Réessayez dans une minute.", values };
       if (e.status === 503) return { error: e.message, values };
       const localized = fieldErrors(e);
+      const banner = localized.email ?? localized.password ?? localizeMessage(e.message);
       return {
-        error: localized.email ?? localizeMessage(e.message),
+        error: banner,
         fields: localized,
         values,
       };
@@ -54,6 +81,8 @@ export async function register(_: FormState, form: FormData): Promise<FormState>
     email: String(form.get("email") ?? ""),
     organization_name: String(form.get("organization_name") ?? ""),
   };
+  const required = registerFieldErrors(form);
+  if (required) return { fields: required, values };
   if (form.get("terms") !== "on") {
     return { fields: { terms: "Acceptez les conditions d'utilisation pour continuer." }, values };
   }

@@ -14,9 +14,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class InvitationController extends Controller
 {
+    public const MAIL_FAILED_WARNING = 'L\'invitation a été enregistrée, mais l\'e-mail n\'a pas pu être envoyé. Copiez le lien d\'invitation ou réessayez plus tard.';
+
     // Rôles attribuables par invitation : jamais owner (un seul propriétaire par organisation).
     public const INVITABLE_ROLES = [
         Membership::ROLE_ADMIN,
@@ -74,9 +77,15 @@ class InvitationController extends Controller
             'invited_by' => $user->id,
         ]);
 
-        $this->sendInvitation($invitation);
+        $mailSent = $this->sendInvitation($invitation);
 
-        return response()->json($this->present($invitation), 201);
+        $payload = $this->present($invitation);
+        $payload['mail_sent'] = $mailSent;
+        if (! $mailSent) {
+            $payload['warning'] = self::MAIL_FAILED_WARNING;
+        }
+
+        return response()->json($payload, 201);
     }
 
     public function destroy(Request $request, int $invitationId): JsonResponse
@@ -94,9 +103,15 @@ class InvitationController extends Controller
 
         $invitation = $this->findInCurrentOrganization($invitationId);
         $invitation->update(['expires_at' => now()->addDays(7)]);
-        $this->sendInvitation($invitation);
+        $mailSent = $this->sendInvitation($invitation);
 
-        return response()->json($this->present($invitation));
+        $payload = $this->present($invitation->fresh());
+        $payload['mail_sent'] = $mailSent;
+        if (! $mailSent) {
+            $payload['warning'] = self::MAIL_FAILED_WARNING;
+        }
+
+        return response()->json($payload);
     }
 
     // Public (sans auth) : aperçu affiché sur la page d'invitation.
@@ -193,15 +208,19 @@ class InvitationController extends Controller
         ]);
     }
 
-    protected function sendInvitation(Invitation $invitation): void
+    protected function sendInvitation(Invitation $invitation): bool
     {
         $invitation->loadMissing('organization:id,name', 'invitedBy:id,name');
 
         try {
             Notification::route('mail', $invitation->email)
                 ->notify(new InvitationNotification($invitation));
-        } catch (\Throwable $e) {
+
+            return true;
+        } catch (Throwable $e) {
             report($e);
+
+            return false;
         }
     }
 
