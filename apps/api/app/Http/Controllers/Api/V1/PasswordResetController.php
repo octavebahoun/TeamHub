@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class PasswordResetController extends Controller
 {
@@ -23,9 +24,13 @@ class PasswordResetController extends Controller
             'email.email' => 'Cette adresse email est invalide.',
         ]);
 
-        // Même réponse si l'adresse est inconnue ou si une demande vient d'être faite :
-        // on ne révèle pas quels comptes existent.
-        Password::sendResetLink(['email' => $data['email']]);
+        // Même réponse si l'adresse est inconnue, si une demande vient d'être faite,
+        // ou si l'envoi SMTP échoue : on ne révèle pas quels comptes existent.
+        try {
+            Password::sendResetLink(['email' => $data['email']]);
+        } catch (Throwable $e) {
+            report($e);
+        }
 
         return response()->json(['message' => self::SENT_MESSAGE]);
     }

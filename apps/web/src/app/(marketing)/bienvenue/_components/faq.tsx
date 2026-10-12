@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Minus, Plus } from "lucide-react";
 import { CONTACT_EMAIL, FAQ } from "../content";
 import { Eyebrow, SectionTitle } from "./eyebrow";
@@ -23,7 +24,13 @@ export function Faq() {
                 .
               </>
             ) : (
-              "Posez-la à l'équipe Excellence Team, qui vous répondra."
+              <>
+                Utilisez le{" "}
+                <Link href="/contact" className="text-primary underline underline-offset-4">
+                  formulaire de contact
+                </Link>
+                .
+              </>
             )}
           </p>
         </div>
@@ -47,7 +54,19 @@ export function Faq() {
                   <Minus className="hidden size-4 group-open:block" />
                 </span>
               </summary>
-              <p className="pr-12 pb-5 pl-10 leading-relaxed text-muted-foreground sm:pl-12">{item.a}</p>
+              <p className="pr-12 pb-5 pl-10 leading-relaxed text-muted-foreground sm:pl-12">
+                {item.q === "Combien ça coûte ?" ? (
+                  <>
+                    {item.a}{" "}
+                    <Link href="/tarifs" className="text-primary underline underline-offset-4">
+                      Voir les tarifs
+                    </Link>
+                    .
+                  </>
+                ) : (
+                  item.a
+                )}
+              </p>
             </details>
           ))}
         </div>

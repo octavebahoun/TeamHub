@@ -17,7 +17,8 @@ export function useFormAction(
   return useActionState<FormState, FormData>(async (prev, form) => {
     const next = await action(prev, form);
     if (next?.ok) {
-      if (successMessage) toast.success(successMessage);
+      if (next.warning) toast.warning(next.warning);
+      else if (successMessage) toast.success(successMessage);
       onSuccess?.(next);
     } else if (next?.error && showErrors) {
       toast.error(next.error);

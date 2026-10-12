@@ -26,7 +26,7 @@ export function Hero() {
 
       <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-4 pt-10 pb-16 sm:gap-16 sm:px-8 sm:pt-16 sm:pb-28 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
         <div className="min-w-0">
-          <div data-reveal className="reveal mb-5">
+          <div data-reveal className="reveal is-inview mb-5">
             <WineLogo withMark className="[&_span]:text-[clamp(2rem,6vw,2.75rem)] [&_svg]:size-8 sm:[&_svg]:size-9" />
           </div>
           <Eyebrow>{HERO.eyebrow}</Eyebrow>
@@ -34,7 +34,7 @@ export function Hero() {
             id="hero-title"
             data-reveal
             data-reveal-delay="1"
-            className="reveal mt-3 font-heading text-[clamp(2.15rem,7vw,4.1rem)] leading-[1.04] tracking-tight"
+            className="reveal is-inview mt-3 font-heading text-[clamp(2.15rem,7vw,4.1rem)] leading-[1.04] tracking-tight"
           >
             <span className="block text-foreground">{HERO.titleLead}</span>
             <em className="text-gradient italic">{HERO.titleAccent}</em>
@@ -43,11 +43,11 @@ export function Hero() {
           <p
             data-reveal
             data-reveal-delay="2"
-            className="reveal mt-6 max-w-xl text-[16px] leading-relaxed text-muted-foreground sm:text-[18px]"
+            className="reveal is-inview mt-6 max-w-xl text-[16px] leading-relaxed text-muted-foreground sm:text-[18px]"
           >
             {HERO.subtitle}
           </p>
-          <div data-reveal data-reveal-delay="3" className="reveal mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <div data-reveal data-reveal-delay="3" className="reveal is-inview mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link
               href="/inscription"
               className={buttonVariants({
@@ -70,7 +70,7 @@ export function Hero() {
               {HERO.ctaSecondary}
             </a>
           </div>
-          <p data-reveal data-reveal-delay="4" className="reveal mt-5 text-sm text-muted-foreground">
+          <p data-reveal data-reveal-delay="4" className="reveal is-inview mt-5 text-sm text-muted-foreground">
             {[TRIAL_OFFER, "Sans installation", "PWA · MoMo · Devis XOF"].filter(Boolean).join(" · ")}
           </p>
         </div>

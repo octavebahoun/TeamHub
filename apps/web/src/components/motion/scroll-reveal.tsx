@@ -2,6 +2,12 @@
 
 import { useEffect } from "react";
 
+function isInViewport(el: HTMLElement): boolean {
+  const rect = el.getBoundingClientRect();
+  const vh = window.innerHeight || document.documentElement.clientHeight;
+  return rect.top < vh * 0.92 && rect.bottom > 0;
+}
+
 /**
  * Observe tous les `[data-reveal]` et ajoute `.is-inview` au scroll.
  * Monté une seule fois (layout) — tous les écrans en profitent.
@@ -11,8 +17,12 @@ export function ScrollReveal() {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const nodes = () => Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
 
+    const reveal = (el: HTMLElement) => {
+      if (!el.classList.contains("is-inview")) el.classList.add("is-inview");
+    };
+
     if (reduce) {
-      nodes().forEach((el) => el.classList.add("is-inview"));
+      nodes().forEach(reveal);
       return;
     }
 
@@ -20,7 +30,7 @@ export function ScrollReveal() {
       (entries) => {
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
-          entry.target.classList.add("is-inview");
+          reveal(entry.target as HTMLElement);
           io.unobserve(entry.target);
         }
       },
@@ -29,7 +39,12 @@ export function ScrollReveal() {
 
     const observeAll = () => {
       nodes().forEach((el) => {
-        if (!el.classList.contains("is-inview")) io.observe(el);
+        if (el.classList.contains("is-inview")) return;
+        if (isInViewport(el)) {
+          reveal(el);
+          return;
+        }
+        io.observe(el);
       });
     };
 

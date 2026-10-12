@@ -7,15 +7,15 @@ import type { AuthIllustrationVariant } from "./auth-illustration";
 const ILLUSTRATIONS: Record<AuthIllustrationVariant, { src: string; alt: string }> = {
   login: {
     src: "/illustrations/auth-team.jpg",
-    alt: "Professionnel WINE et modules de travail",
+    alt: "Équipe collaborant sur ordinateur et tablette dans un open space",
   },
   register: {
     src: "/illustrations/auth-grow.jpg",
-    alt: "Équipe lançant son espace WINE",
+    alt: "Responsable créant l'espace de travail de son organisation sur WINE",
   },
   crm: {
     src: "/illustrations/auth-crm.jpg",
-    alt: "Suivi client et CRM",
+    alt: "Consultant présentant un pipeline client sur écran",
   },
 };
 
@@ -87,7 +87,7 @@ export function AuthShell({
             <WineLogo withMark className="[&_span]:text-[22px] [&_svg]:size-6" />
           </Link>
         </div>
-        <div data-reveal className="reveal panel-premium my-auto w-full max-w-md rounded-2xl p-5 sm:p-7">
+        <div data-reveal className="reveal is-inview panel-premium my-auto w-full max-w-md rounded-2xl p-5 sm:p-7">
           {children}
         </div>
       </main>

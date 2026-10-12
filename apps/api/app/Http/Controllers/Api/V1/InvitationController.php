@@ -5,16 +5,22 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Invitation;
 use App\Models\Membership;
+use App\Models\Organization;
 use App\Models\User;
+use App\Notifications\OrganizationInvitationNotification;
 use App\Support\CurrentOrganization;
 use App\Support\OrganizationRole;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class InvitationController extends Controller
 {
+    public const MAIL_FAILED_WARNING = 'L\'invitation a été enregistrée, mais l\'e-mail n\'a pas pu être envoyé. Copiez le lien d\'invitation ou réessayez plus tard.';
+
     // Rôles attribuables par invitation : jamais owner (un seul propriétaire par organisation).
     public const INVITABLE_ROLES = [
         Membership::ROLE_ADMIN,
@@ -71,7 +77,15 @@ class InvitationController extends Controller
             'invited_by' => $user->id,
         ]);
 
-        return response()->json($invitation, 201);
+        $mailSent = $this->sendInvitationMail($invitation, $organization, $user->name);
+
+        $payload = $invitation->toArray();
+        $payload['mail_sent'] = $mailSent;
+        if (! $mailSent) {
+            $payload['warning'] = self::MAIL_FAILED_WARNING;
+        }
+
+        return response()->json($payload, 201);
     }
 
     public function destroy(Request $request, int $invitationId): JsonResponse
@@ -87,12 +101,20 @@ class InvitationController extends Controller
     {
         $this->guardAdmin($request);
 
+        $organization = CurrentOrganization::get();
         $invitation = $this->findInCurrentOrganization($invitationId);
         $invitation->update(['expires_at' => now()->addDays(7)]);
 
-        // TODO: renvoyer l'e-mail d'invitation quand l'envoi sera branché (aucun mail en V1).
+        $inviter = $invitation->invitedBy;
+        $mailSent = $this->sendInvitationMail($invitation, $organization, $inviter?->name);
 
-        return response()->json($invitation);
+        $payload = $invitation->fresh()->toArray();
+        $payload['mail_sent'] = $mailSent;
+        if (! $mailSent) {
+            $payload['warning'] = self::MAIL_FAILED_WARNING;
+        }
+
+        return response()->json($payload);
     }
 
     // Public (sans auth) : aperçu affiché sur la page d'invitation.
@@ -187,6 +209,20 @@ class InvitationController extends Controller
         return response()->json([
             'organization' => $invitation->organization,
         ]);
+    }
+
+    protected function sendInvitationMail(Invitation $invitation, Organization $organization, ?string $inviterName): bool
+    {
+        try {
+            Notification::route('mail', $invitation->email)
+                ->notify(new OrganizationInvitationNotification($invitation, $organization, $inviterName));
+
+            return true;
+        } catch (Throwable $e) {
+            report($e);
+
+            return false;
+        }
     }
 
     protected function guardAdmin(Request $request): void
