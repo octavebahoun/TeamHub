@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Services\FileScanner;
 use App\Models\Attachment;
 use App\Models\Membership;
 use App\Models\Project;
@@ -108,7 +109,7 @@ class AttachmentController extends Controller
                 'name' => $file->getClientOriginalName(),
                 'mime' => $file->getMimeType() ?: 'application/octet-stream',
                 'size' => $file->getSize(),
-                'scan_status' => Attachment::STATUS_READY,
+                'scan_status' => app(FileScanner::class)->scanStored($path),
             ];
 
             $attachment = $attachable

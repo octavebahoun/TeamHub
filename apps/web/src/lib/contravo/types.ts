@@ -105,6 +105,7 @@ export type InvoiceTransition = { action: "send" | "cancel" | "refund" | "mark_o
 export type RecordPayment = {
   amountCents: MoneyString | number;
   method: PaymentMethod;
+  channel?: "mtn_momo" | "moov" | "celtiis" | "bank_transfer";
   reference?: string | null;
   paidAt?: string;
 };

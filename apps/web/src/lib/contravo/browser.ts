@@ -41,6 +41,9 @@ export const contravoBrowser = {
   quotePdfHref(id: string) {
     return `/api/contravo/quotes/${encodeURIComponent(id)}/pdf`;
   },
+  contractPdfHref(id: string) {
+    return `/api/contravo/contracts/${encodeURIComponent(id)}/pdf`;
+  },
   listInvoices(params?: Record<string, string>) {
     const q = params ? `?${new URLSearchParams(params)}` : "";
     return api<Invoice[]>(`/api/contravo/invoices${q}`);
@@ -69,6 +72,13 @@ export const contravoBrowser = {
     const q = params ? `?${new URLSearchParams(params)}` : "";
     return api<Contract[]>(`/api/contravo/contracts${q}`);
   },
+  signContract(id: string, signerName: string, signerEmail?: string) {
+    return api<Contract>(`/api/contravo/contracts/${encodeURIComponent(id)}/sign`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ signerName, signerEmail }),
+    });
+  },
   createContract(body: CreateContract) {
     return api<Contract>("/api/contravo/contracts", {
       method: "POST",
@@ -80,6 +90,13 @@ export const contravoBrowser = {
     return api<{ quotes: Quote[]; invoices: Invoice[]; projects: { id: string; name: string; status: string; budgetCents: string | null }[] }>(
       `/api/contravo/clients/${encodeURIComponent(clientId)}/enrichment`
     );
+  },
+  openConversation(clientId: string, channel: "whatsapp" | "telegram") {
+    return api<ConversationThread>("/api/contravo/conversations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clientId, channel }),
+    });
   },
   listConversations(params?: Record<string, string>) {
     const q = params ? `?${new URLSearchParams(params)}` : "";

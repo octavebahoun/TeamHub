@@ -5,7 +5,9 @@ import {
   attachmentDownloadPath,
   financialFromAnalytics,
   mapInboxList,
+  briefFromWeeklySummary,
   mapWineSearch,
+  priorityHref,
   summaryFromAnalytics,
 } from "@/lib/api/wine-contract";
 
@@ -75,6 +77,10 @@ describe("analytics", () => {
       overdueTasks: 2,
       openPipelineXof: 5000,
       wonXof: 9000,
+      revenueXof: 9000,
+      cashXof: 0,
+      marginRate: 0,
+      openQuotesXof: 0,
     });
   });
 
@@ -84,6 +90,58 @@ describe("analytics", () => {
     expect(summary.summary).toContain("2 tâches en retard");
     expect(summary.bullets.some((b) => b.includes("Koffi Mensah") && b.includes("6 tâches ouvertes"))).toBe(true);
     expect(summary.scope).toBe("pipeline");
+  });
+
+  it("mappe GET /analytics/summary vers un brief cliquable", () => {
+    const brief = briefFromWeeklySummary({
+      period: { from: "2026-09-29", to: "2026-10-05" },
+      source: "gemini",
+      kpis: {
+        active_projects: 3,
+        overdue_tasks: 2,
+        completed_tasks_week: 10,
+        new_opportunities: 1,
+        won_count: 1,
+        won_amount: 1940000,
+        open_amount: 5000,
+        win_rate: 0.5,
+        messages: 4,
+        active_channels: 2,
+      },
+      workload: [],
+      profitability: {
+        won_amount: 9000,
+        lost_amount: 0,
+        open_amount: 5000,
+        won_count: 1,
+        lost_count: 0,
+        open_count: 2,
+        win_rate: 0.5,
+        won_amount_30d: 9000,
+      },
+      chat: { messages: 4, active_channels: 2, available: true },
+      headline: "Deux affaires ont avancé",
+      narrative: "La semaine a clôturé une opportunité.",
+      priorities: [
+        "Réassigner ou clôturer les tâches en retard",
+        "Relancer les opportunités ouvertes du pipeline",
+      ],
+    });
+    expect(brief.source).toBe("gemini");
+    expect(brief.from).toBe("2026-09-29");
+    expect(brief.priorities[0]).toEqual({
+      label: "Réassigner ou clôturer les tâches en retard",
+      href: "/taches",
+    });
+    expect(brief.priorities[1].href).toBe("/crm/pipeline");
+  });
+
+  it("envoie chaque priorité vers le bon écran", () => {
+    expect(priorityHref("Réassigner ou clôturer les tâches en retard")).toBe("/taches");
+    expect(priorityHref("Relancer les opportunités ouvertes du pipeline")).toBe("/crm/pipeline");
+    expect(priorityHref("Rééquilibrer la charge de Koffi")).toBe("/parametres/membres");
+    expect(priorityHref("Débloquer le projet Maison Akwa")).toBe("/projets");
+    expect(priorityHref("Relancer le canal général")).toBe("/chat");
   });
 
   it("accorde le bilan au singulier", () => {

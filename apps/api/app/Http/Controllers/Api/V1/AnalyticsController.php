@@ -3,77 +3,81 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Membership;
+use App\Services\LocalAnalytics;
 use App\Support\CurrentOrganization;
 use App\Support\OrganizationRole;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Throwable;
 
 class AnalyticsController extends Controller
 {
+    public function __construct(protected LocalAnalytics $local) {}
+
     public function overview(Request $request): JsonResponse
     {
         $this->guard($request);
-        $query = ['org' => CurrentOrganization::id()];
-        if ($userScope = $this->userScope($request)) {
-            $query['owner_id'] = $userScope;
-        }
-        return $this->fetch('/stats/overview', $query);
+        $owner = $this->userScope($request);
+        $data = $this->pull('/stats/overview', $this->query($request), fn () => $this->local->overview($owner));
+        $data['finance'] = $this->local->finance($owner);
+
+        return response()->json($data);
     }
 
     public function pipeline(Request $request): JsonResponse
     {
         $this->guard($request);
-        $query = ['org' => CurrentOrganization::id()];
-        if ($userScope = $this->userScope($request)) {
-            $query['owner_id'] = $userScope;
-        }
-        return $this->fetch('/stats/pipeline', $query);
+        $owner = $this->userScope($request);
+
+        return response()->json($this->pull('/stats/pipeline', $this->query($request), fn () => $this->local->pipeline($owner)));
     }
 
     public function activity(Request $request): JsonResponse
     {
         $this->guard($request);
-        return $this->fetch('/stats/activity', [
+
+        return response()->json($this->pull('/stats/activity', [
             'org' => CurrentOrganization::id(),
             'days' => (int) $request->integer('days', 30),
-        ]);
+        ], fn () => []));
     }
 
     public function profitability(Request $request): JsonResponse
     {
         $this->guard($request);
-        $query = ['org' => CurrentOrganization::id()];
-        if ($userScope = $this->userScope($request)) {
-            $query['owner_id'] = $userScope;
-        }
+        $owner = $this->userScope($request);
 
-        return $this->fetch('/stats/profitability', $query);
+        return response()->json($this->pull(
+            '/stats/profitability',
+            $this->query($request),
+            fn () => $this->local->profitability($owner)
+        ));
     }
 
     public function summary(Request $request): JsonResponse
     {
         $this->guard($request);
-        $query = ['org' => CurrentOrganization::id()];
-        if ($userScope = $this->userScope($request)) {
-            $query['owner_id'] = $userScope;
-        }
+        $owner = $this->userScope($request);
 
-        return $this->fetch('/summary', $query, timeout: 20);
+        return response()->json($this->pull('/summary', $this->query($request), fn () => $this->local->summary($owner), 8));
     }
 
     public function relances(Request $request): JsonResponse
     {
         $this->guard($request);
-        $query = [
+
+        return response()->json($this->pull('/relances', [
             'org' => CurrentOrganization::id(),
             'limit' => max(1, min((int) $request->integer('limit', 8), 20)),
-        ];
-        if ($userScope = $this->userScope($request)) {
-            $query['owner_id'] = $userScope;
-        }
-
-        return $this->fetch('/relances', $query, timeout: 20);
+        ] + ($this->userScope($request) ? ['owner_id' => $this->userScope($request)] : []), fn () => [
+            'as_of' => now()->toIso8601String(),
+            'source' => 'fallback',
+            'count' => 0,
+            'suggestions' => [],
+        ], 8));
     }
 
     protected function guard(Request $request): void
@@ -84,25 +88,44 @@ class AnalyticsController extends Controller
 
     protected function userScope(Request $request): ?int
     {
-        return \App\Support\OrganizationRole::of($request->user()) === \App\Models\Membership::ROLE_MANAGER
+        return OrganizationRole::of($request->user()) === Membership::ROLE_MANAGER
             ? $request->user()->id
             : null;
     }
 
-    protected function fetch(string $path, array $query, int $timeout = 5): JsonResponse
+    /** @return array<string, mixed> */
+    protected function query(Request $request): array
     {
-        $response = Http::withHeaders([
-            'X-Internal-Secret' => config('services.data.internal_secret', env('INTERNAL_SECRET', '')),
-            'Accept' => 'application/json',
-        ])
-            ->timeout($timeout)
-            ->baseUrl(config('services.data.base_url', env('DATA_SERVICE_URL', 'http://127.0.0.1:8001')))
-            ->get($path, $query);
-
-        if ($response->failed()) {
-            abort(502, 'Le service data est indisponible.');
+        $query = ['org' => CurrentOrganization::id()];
+        if ($owner = $this->userScope($request)) {
+            $query['owner_id'] = $owner;
         }
 
-        return response()->json($response->json());
+        return $query;
+    }
+
+    /**
+     * @param  callable(): array<string, mixed>  $fallback
+     * @return array<string, mixed>
+     */
+    protected function pull(string $path, array $query, callable $fallback, int $timeout = 2): array
+    {
+        try {
+            $response = Http::withHeaders([
+                'X-Internal-Secret' => (string) config('services.data.internal_secret'),
+                'Accept' => 'application/json',
+            ])
+                ->timeout($timeout)
+                ->baseUrl((string) config('services.data.base_url'))
+                ->get($path, $query);
+
+            if ($response->successful() && is_array($response->json())) {
+                return $response->json();
+            }
+        } catch (ConnectionException|Throwable) {
+            // Le service data est optionnel : les écrans restent lisibles.
+        }
+
+        return $fallback();
     }
 }

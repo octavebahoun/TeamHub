@@ -1,10 +1,58 @@
 import "server-only";
+import { cache } from "react";
+import { api } from "@/lib/api/client";
 import { ContravoError } from "./types";
 
 export const CONTRAVO_BASE = (process.env.CONTRAVO_API_URL ?? "https://contravo.excellenceteam.site/api/v1").replace(/\/$/, "");
 
 export function useContravoMocks(): boolean {
   return process.env.NEXT_PUBLIC_USE_MOCKS === "true";
+}
+
+export type BillingIssuer = { name: string; city: string | null; email: string | null };
+
+export type ContravoSettings = BillingIssuer & {
+  configured: boolean;
+  hint: string | null;
+  can_manage: boolean;
+  billing_name: string;
+  billing_city: string | null;
+  billing_email: string | null;
+};
+
+/** Clé de l'espace courant. La variable d'environnement n'est plus partagée entre les organisations. */
+export const currentContravoKey = cache(async (): Promise<string | null> => {
+  if (useContravoMocks()) return null;
+  try {
+    const res = await api<{ api_key: string | null }>("integrations/contravo/credential");
+    return res.api_key?.trim() || null;
+  } catch {
+    return null;
+  }
+});
+
+export const contravoSettings = cache(async (): Promise<ContravoSettings | null> => {
+  if (useContravoMocks()) return null;
+  try {
+    return await api<ContravoSettings>("integrations/contravo");
+  } catch {
+    return null;
+  }
+});
+
+export async function billingIssuer(): Promise<BillingIssuer> {
+  const settings = await contravoSettings();
+  return {
+    name: settings?.billing_name?.trim() || "WINE",
+    city: settings?.billing_city ?? null,
+    email: settings?.billing_email ?? null,
+  };
+}
+
+/** Sans clé pour cet espace, devis, contrats et Mobile Money restent dans WINE. */
+export async function useLocalBilling(): Promise<boolean> {
+  if (useContravoMocks()) return false;
+  return !(await currentContravoKey());
 }
 
 type FetchOptions = {
@@ -34,9 +82,9 @@ async function parseError(res: Response): Promise<string> {
 }
 
 export async function contravoFetch<T>(path: string, options: FetchOptions = {}): Promise<T> {
-  const key = process.env.CONTRAVO_API_KEY;
+  const key = await currentContravoKey();
   if (!key && !useContravoMocks()) {
-    throw new ContravoError(503, "CONTRAVO_API_KEY manquante côté serveur.");
+    throw new ContravoError(503, "Aucune clé Contravo pour cet espace.");
   }
 
   const url = buildUrl(path, options.query);
@@ -85,8 +133,8 @@ export async function contravoFetch<T>(path: string, options: FetchOptions = {})
 
 /** GET avec redirection manuelle — renvoie l'URL Location (PDF, téléchargement). */
 export async function contravoFetchRedirectUrl(path: string): Promise<string> {
-  const key = process.env.CONTRAVO_API_KEY;
-  if (!key && !useContravoMocks()) throw new ContravoError(503, "CONTRAVO_API_KEY manquante côté serveur.");
+  const key = await currentContravoKey();
+  if (!key && !useContravoMocks()) throw new ContravoError(503, "Aucune clé Contravo pour cet espace.");
 
   const url = buildUrl(path);
   const res = await fetch(url, {

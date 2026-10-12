@@ -1,9 +1,11 @@
-import { contravoFetch, contravoFetchRedirectUrl, useContravoMocks } from "./client";
+import { contravoFetch, contravoFetchRedirectUrl, useContravoMocks, useLocalBilling } from "./client";
+import * as ledger from "./ledger";
 import { mocks } from "./mocks";
 import { ContravoError, type CreateQuote, type ListQuery, type Quote, type QuoteTransition } from "./types";
 
 export async function listQuotes(query: ListQuery = {}): Promise<Quote[]> {
   if (useContravoMocks()) return mocks.listQuotes(query);
+  if (await useLocalBilling()) return ledger.listQuotes(query);
   const res = await contravoFetch<{ quotes: Quote[] }>("/quotes", { query });
   return res.quotes;
 }
@@ -16,11 +18,13 @@ export async function getQuote(id: string): Promise<Quote> {
       throw new ContravoError(404, "Devis introuvable.");
     }
   }
+  if (await useLocalBilling()) return ledger.getQuote(id);
   return contravoFetch<Quote>(`/quotes/${encodeURIComponent(id)}`);
 }
 
 export async function createQuote(input: CreateQuote): Promise<Quote> {
   if (useContravoMocks()) return mocks.createQuote(input);
+  if (await useLocalBilling()) return ledger.createQuote(input);
   return contravoFetch<Quote>("/quotes", { method: "POST", body: input });
 }
 
@@ -41,6 +45,7 @@ export async function transitionQuote(id: string, body: QuoteTransition): Promis
       throw new ContravoError(404, "Devis introuvable.");
     }
   }
+  if (await useLocalBilling()) return ledger.transitionQuote(id, body);
   return contravoFetch<Quote>(`/quotes/${encodeURIComponent(id)}/transition`, { method: "POST", body });
 }
 

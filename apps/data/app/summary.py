@@ -107,14 +107,31 @@ def _prompt(kpis: dict, workload: list[dict], start: date, end: date) -> str:
     top = ", ".join(f"{w['name']} ({w['open_tasks']})" for w in workload[:5]) or "personne"
     return (
         "Tu es l'analyste interne de WINE, une plateforme de gestion pour petites équipes "
-        "francophones. Rédige le bilan de la semaine en français, ton professionnel et concret.\n"
+        "francophones (Afrique de l'Ouest, montants en FCFA). "
+        "Rédige le bilan de la semaine en français, ton professionnel et concret. "
+        "N'invente aucun chiffre : utilise uniquement les indicateurs fournis.\n"
         f"Période : {start.isoformat()} → {end.isoformat()}\n"
         f"Indicateurs : {kpis}\n"
         f"Charge (tâches ouvertes) : {top}\n"
+        "Les priorités sont des actions concrètes (verbe à l'infinitif, max 80 caractères), "
+        "ordonnées par urgence. N'en mets pas plus de 3. "
+        "Si un indicateur est à zéro, ne propose pas d'action liée.\n"
         "Réponds uniquement par un JSON : "
         '{"headline": "phrase courte", "narrative": "2 ou 3 phrases", '
         '"priorities": ["action 1", "action 2", "action 3"]}'
     )
+
+
+def _fcfa(amount: float) -> str:
+    return f"{int(amount):,}".replace(",", "\u00a0") + " FCFA"
+
+
+def _fr_day(d: date) -> str:
+    months = (
+        "janvier février mars avril mai juin "
+        "juillet août septembre octobre novembre décembre"
+    ).split()
+    return f"{d.day} {months[d.month - 1]}"
 
 
 def _narrative(generated: dict | None, kpis: dict, start: date, end: date) -> dict:
@@ -122,19 +139,19 @@ def _narrative(generated: dict | None, kpis: dict, start: date, end: date) -> di
         headline = str(generated.get("headline") or "").strip()
         text = str(generated.get("narrative") or "").strip()
         raw_priorities = generated.get("priorities") or []
-        priorities = [str(item).strip() for item in raw_priorities if str(item).strip()][:5]
+        priorities = [str(item).strip()[:120] for item in raw_priorities if str(item).strip()][:3]
         if headline and text:
             return {"headline": headline, "narrative": text, "priorities": priorities or _fallback_priorities(kpis)}
 
     return {
         "headline": _fallback_headline(kpis),
         "narrative": (
-            f"Semaine du {start.isoformat()} au {end.isoformat()} : "
+            f"Semaine du {_fr_day(start)} au {_fr_day(end)} : "
             f"{kpis['completed_tasks_week']} tâche(s) terminée(s), "
             f"{kpis['overdue_tasks']} en retard, "
             f"{kpis['won_count']} opportunité(s) gagnée(s) "
-            f"({int(kpis['won_amount'])} FCFA). "
-            f"Pipeline ouvert : {int(kpis['open_amount'])} FCFA."
+            f"({_fcfa(kpis['won_amount'])}). "
+            f"Pipeline ouvert : {_fcfa(kpis['open_amount'])}."
         ),
         "priorities": _fallback_priorities(kpis),
     }

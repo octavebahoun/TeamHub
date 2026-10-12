@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, Smartphone } from "lucide-react";
+import { NativeSelect } from "@/components/common/native-select";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ export function BillingTab({
   contravoProjectId,
   projectName,
   opportunityId,
+  localBilling = false,
 }: {
   wineProjectId: number;
   wineClientId?: number | null;
@@ -34,7 +36,13 @@ export function BillingTab({
   contravoProjectId?: string;
   projectName: string;
   opportunityId?: number;
+  localBilling?: boolean;
 }) {
+  const channels = [
+    { id: "mtn_momo", label: "MTN MoMo" },
+    { id: "moov", label: "Moov Money" },
+    { id: "celtiis", label: "Celtiis Cash" },
+  ] as const;
   const router = useRouter();
   const ready = Boolean(contravoClientId && contravoProjectId);
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -47,16 +55,14 @@ export function BillingTab({
   const [payInvoiceId, setPayInvoiceId] = useState<string | null>(null);
   const [payAmount, setPayAmount] = useState("");
   const [payRef, setPayRef] = useState("");
-
-  const params: Record<string, string> = {};
-  if (contravoClientId) params.clientId = contravoClientId;
-  if (contravoProjectId) params.projectId = contravoProjectId;
+  const [payChannel, setPayChannel] = useState<(typeof channels)[number]["id"]>("mtn_momo");
 
   const load = useCallback(async () => {
     if (!contravoClientId || !contravoProjectId) {
       setLoading(false);
       return;
     }
+    const params: Record<string, string> = { clientId: contravoClientId, projectId: contravoProjectId };
     setLoading(true);
     const [q, c, i] = await Promise.all([
       contravoBrowser.listQuotes(params).catch((e) => {
@@ -101,7 +107,7 @@ export function BillingTab({
       return;
     }
     try {
-      await contravoBrowser.recordPayment(id, { amountCents: String(amount), method: "mobile_money", reference: payRef || "MoMo" });
+      await contravoBrowser.recordPayment(id, { amountCents: String(amount), method: "mobile_money", channel: payChannel, reference: payRef.trim() || null });
       toast.success("Paiement enregistré.");
       setPayInvoiceId(null);
       setPayAmount("");
@@ -162,6 +168,8 @@ export function BillingTab({
           contravoProjectId={contravoProjectId!}
           opportunityId={opportunityId}
           defaultTitle={projectName}
+          localBilling={localBilling}
+          onCreated={() => void load()}
         />
         <CreateContractDialog
           wineProjectId={wineProjectId}
@@ -169,12 +177,13 @@ export function BillingTab({
           contravoProjectId={contravoProjectId!}
           projectName={projectName}
           quotes={quotes}
+          onCreated={() => void load()}
         />
       </div>
       <Panel className="p-7">
         <PanelTitle className="mb-4">Devis</PanelTitle>
         {quotes.length === 0 ? (
-          <p className="text-muted-foreground">Aucun devis Contravo.</p>
+          <p className="text-muted-foreground">Aucun devis pour ce projet.</p>
         ) : (
           <ul className="divide-y border-t">
             {quotes.map((q) => {
@@ -183,9 +192,18 @@ export function BillingTab({
                 <li key={q.id} className="flex flex-wrap items-center justify-between gap-3 py-4">
                   <div>
                     <p className="font-semibold">{q.number}</p>
-                    <p className="text-sm text-muted-foreground">{money(q.totalCents)} · valide {shortDate(q.validUntil)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {money(q.totalCents)}
+                      {Number(q.discountCents) > 0 ? ` · remise −${money(q.discountCents)}` : ""}
+                      {" · "}valide {shortDate(q.validUntil)}
+                    </p>
                   </div>
-                  <ToneBadge tone={st.tone}>{st.label}</ToneBadge>
+                  <div className="flex items-center gap-2">
+                    <Button type="button" variant="outline" size="sm" onClick={() => window.open(contravoBrowser.quotePdfHref(q.id), "_blank", "noopener,noreferrer")}>
+                      PDF
+                    </Button>
+                    <ToneBadge tone={st.tone}>{st.label}</ToneBadge>
+                  </div>
                 </li>
               );
             })}
@@ -206,9 +224,41 @@ export function BillingTab({
                 <li key={c.id} className="flex flex-wrap items-center justify-between gap-3 py-4">
                   <div>
                     <p className="font-semibold">{c.title}</p>
-                    <p className="text-sm text-muted-foreground">{c.number}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {c.number}
+                      {c.signatureHash && (
+                        <>
+                          {" · "}
+                          <a className="text-primary underline" href={`/verifier-signature/${c.signatureHash}`}>
+                            Vérifier la signature
+                          </a>
+                        </>
+                      )}
+                    </p>
                   </div>
-                  <ToneBadge tone={st.tone}>{st.label}</ToneBadge>
+                  <div className="flex items-center gap-2">
+                    <Button type="button" variant="outline" size="sm" onClick={() => window.open(contravoBrowser.contractPdfHref(c.id), "_blank", "noopener,noreferrer")}>
+                      PDF
+                    </Button>
+                    <ToneBadge tone={st.tone}>{st.label}</ToneBadge>
+                    {c.status !== "signed" && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const signerName = window.prompt("Nom du signataire");
+                          if (!signerName?.trim()) return;
+                          void contravoBrowser.signContract(c.id, signerName.trim()).then(() => {
+                            toast.success("Contrat signé. Le lien de vérification est prêt.");
+                            return load();
+                          }).catch((e) => toast.error(e instanceof Error ? e.message : "Signature impossible."));
+                        }}
+                      >
+                        Signer
+                      </Button>
+                    )}
+                  </div>
                 </li>
               );
             })}
@@ -216,9 +266,10 @@ export function BillingTab({
         )}
       </Panel>
       <Panel className="p-7">
-        <PanelTitle className="mb-4">Factures</PanelTitle>
+        <PanelTitle className="mb-2">Factures et Mobile Money</PanelTitle>
+        <p className="mb-4 text-sm text-muted-foreground">Encaissement : MTN MoMo, Moov Money, Celtiis Cash. Un devis envoyé ouvre la facture et l&apos;acompte.</p>
         {invoices.length === 0 ? (
-          <p className="text-muted-foreground">Aucune facture.</p>
+          <p className="text-muted-foreground">Aucune facture pour le moment. Envoyez un devis pour encaisser un acompte.</p>
         ) : (
           <ul className="divide-y border-t">
             {invoices.map((inv) => {
@@ -249,13 +300,21 @@ export function BillingTab({
                   {payInvoiceId === inv.id && (
                     <div className="rounded-lg border bg-muted/30 p-4">
                       <p className="mb-3 text-sm font-medium">Paiement manuel · {PAYMENT_METHOD_LABEL.mobile_money}</p>
-                      <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <div className="space-y-1">
+                          <Label htmlFor={`ch-${inv.id}`}>Canal</Label>
+                          <NativeSelect id={`ch-${inv.id}`} value={payChannel} onChange={(e) => setPayChannel(e.target.value as (typeof channels)[number]["id"])}>
+                            {channels.map((channel) => (
+                              <option key={channel.id} value={channel.id}>{channel.label}</option>
+                            ))}
+                          </NativeSelect>
+                        </div>
                         <div className="space-y-1">
                           <Label htmlFor={`amt-${inv.id}`}>Montant (FCFA)</Label>
                           <Input id={`amt-${inv.id}`} value={payAmount} onChange={(e) => setPayAmount(e.target.value)} inputMode="numeric" />
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor={`ref-${inv.id}`}>Référence MoMo</Label>
+                          <Label htmlFor={`ref-${inv.id}`}>Référence</Label>
                           <Input id={`ref-${inv.id}`} value={payRef} onChange={(e) => setPayRef(e.target.value)} placeholder="TXN-…" />
                         </div>
                       </div>

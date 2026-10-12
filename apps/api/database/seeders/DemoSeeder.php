@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Activity;
+use App\Models\BillingInvoice;
 use App\Models\Client;
 use App\Models\Invitation;
 use App\Models\Membership;
@@ -15,6 +16,8 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\TaskComment;
 use App\Models\User;
+use App\Services\BillingLedger;
+use App\Services\TeamDesk;
 use App\Support\CurrentOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
@@ -75,6 +78,7 @@ class DemoSeeder extends Seeder
             [$wari, $kpayo, $sika, $ewe] = $this->crm();
             $projects = $this->projects($wari, $kpayo, $sika, $ewe);
             $this->tasks($projects);
+            $this->showcase($projects);
             $this->social();
             $guestInvitation = $this->invitations();
 
@@ -223,6 +227,9 @@ class DemoSeeder extends Seeder
     protected function projects(Opportunity $wari, Opportunity $kpayo, Opportunity $sika, Opportunity $ewe): array
     {
         $make = function (string $key, string $owner, array $attrs, array $members, ?Opportunity $from, int $createdDaysAgo) {
+            if ($from) {
+                $attrs['client_id'] = $from->client_id;
+            }
             $project = Project::create($attrs + ['owner_id' => $this->u[$owner]->id]);
             $this->stamp($project, $this->days(-$createdDaysAgo));
             $project->members()->attach(collect($members)->map(fn ($m) => $this->u[$m]->id)->all());
@@ -380,14 +387,70 @@ class DemoSeeder extends Seeder
         return $task;
     }
 
+    /** Jalons, avis, WhatsApp, acompte en attente et signature — le parcours montré à l'écran. */
+    protected function showcase(array $p): void
+    {
+        $desk = app(TeamDesk::class);
+        $desk->addMilestone($this->u['fatou'], $p['wari'], 'Maquettes validées');
+        $desk->addMilestone($this->u['fatou'], $p['wari'], 'Paiement Mobile Money en production');
+        $first = $p['wari']->milestones()->orderBy('position')->first();
+        if ($first) {
+            $desk->toggleMilestone($this->u['fatou'], $p['wari'], $first, true);
+        }
+        $desk->addDeliverable($this->u['serge'], $p['wari'], 'Maquettes du tunnel de paiement', 'tunnel-v2.pdf');
+
+        $wariClient = Client::query()->findOrFail($p['wari']->client_id);
+        $desk->addReview(
+            $this->u['fatou'],
+            $wariClient,
+            5,
+            'Le tunnel Mobile Money est clair, nos clients paient sans appeler.',
+            $p['wari']->id,
+            'Paul Ahouansou'
+        );
+        $thread = $desk->openConversation($wariClient, 'whatsapp');
+        $desk->reply($this->u['fatou'], $thread, 'Bonjour Paul, les maquettes du tunnel sont prêtes pour relecture.');
+        $this->task($p['wari'], 'Relire les frais Mobile Money avant mise en ligne', 'mariam', 'todo', 'high', 1, null, 'fatou', 50);
+
+        $ledger = app(BillingLedger::class);
+        $quote = $ledger->createQuote($p['sika'], [
+            'clientId' => 'wine-c-'.$p['sika']->client_id,
+            'validUntil' => $this->days(-1)->toDateString(),
+            'taxRateBps' => 0,
+            'discountCents' => '0',
+            'notes' => 'Acompte de lancement',
+            'items' => [
+                ['description' => 'Acompte campagne Sika Bio', 'quantity' => '1', 'unitPriceCents' => '1600000'],
+            ],
+        ]);
+        $ledger->transition($this->u['fatou'], $quote, 'send');
+        $invoice = BillingInvoice::query()->where('quote_id', $quote->id)->first();
+        if ($invoice) {
+            $ledger->recordPayment($this->u['fatou'], $invoice, [
+                'amountCents' => '400000',
+                'method' => 'mobile_money',
+                'channel' => 'mtn_momo',
+                'reference' => 'TXN-SIKA-1',
+            ]);
+        }
+
+        $contract = $ledger->createContract($this->u['kevin'], $p['ewe'], [
+            'clientId' => 'wine-c-'.$p['ewe']->client_id,
+            'title' => 'Contrat d\'audit Ewé Assurances',
+        ]);
+        $desk->sign($this->u['kevin'], $contract, 'Komi Lawson', 'komi@eweassurances.test');
+    }
+
     // ----------------------------------------------------------------- social
 
     protected function social(): void
     {
-        $post = function (string $author, string $body, int $daysAgo, bool $pinned = false, array $bravo = [], array $comments = []) {
+        $post = function (string $author, string $body, int $daysAgo, bool $pinned = false, array $bravo = [], array $comments = [], ?string $kind = null, ?array $meta = null) {
             $post = Post::create([
                 'author_id' => $this->u[$author]->id,
                 'body' => $body,
+                'kind' => $kind,
+                'meta' => $meta,
                 'pinned' => $pinned,
                 'pinned_at' => $pinned ? $this->days(-$daysAgo) : null,
             ]);
@@ -405,7 +468,9 @@ class DemoSeeder extends Seeder
             comments: [['fatou', 'Enfin ! Je migre les projets en cours dès cet après-midi.'], ['ibrahim', 'Top, l\'appli fonctionne bien sur mon téléphone.']]);
         $post('kevin', "Projet livré ✅ L'audit du portail client Ewé Assurances est terminé et le rapport est validé par Komi. Merci Mariam pour les tests d'intrusion !", 19,
             bravo: ['adjoa', 'rodrigue', 'fatou', 'mariam', 'serge'],
-            comments: [['adjoa', 'Bravo à toute l\'équipe, le client parle déjà d\'un deuxième projet.']]);
+            comments: [['adjoa', 'Bravo à toute l\'équipe, le client parle déjà d\'un deuxième projet.']],
+            kind: 'project_delivered',
+            meta: ['project' => 'Audit du portail client Ewé Assurances']);
         $post('rodrigue', "Rappel : point d'équipe vendredi à 11h (et non 10h). Ordre du jour : avancement Wari Market et Kpayo, relances CRM.", 3,
             bravo: ['fatou', 'kevin']);
         $post('fatou', "Bonne nouvelle : Sika Bio a signé pour la campagne de lancement de sa nouvelle gamme 🌿 Démarrage dans 5 jours avec Serge.", 6,
@@ -470,7 +535,7 @@ class DemoSeeder extends Seeder
             ['Rôle', 'Nom', 'E-mail', 'Mot de passe'],
             collect(self::PEOPLE)->map(fn ($p, $key) => [$p[1], $p[0], self::email($key), $password])->values()->all()
         );
-        $this->command->line('Invitation invité à accepter à l\'écran : '.rtrim((string) config('app.url'), '/').'/invitation/'.$guestInvitation->token);
+        $this->command->line('Invitation invité à accepter à l\'écran : '.rtrim((string) config('app.frontend_url'), '/').'/invitation/'.$guestInvitation->token);
         $this->command->line('Chat de démo (MongoDB) : php artisan demo:chat | node scripts/seed-demo-chat.mjs (voir docs/DEMO.md)');
     }
 }

@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FileCheck2 } from "lucide-react";
+import { FileCheck2, Plus } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { addDeliverable } from "@/lib/actions/desk";
 import { Panel, PanelTitle } from "@/components/common/panel";
 import { ToneBadge } from "@/components/common/tone-badge";
 import { contravoBrowser } from "@/lib/contravo/browser";
@@ -17,8 +21,9 @@ const DELIVERABLE_TONE: Record<Deliverable["status"], { label: string; tone: Ton
   revision_requested: { label: "Révision demandée", tone: "brand" },
 };
 
-export function DeliverablesPanel({ contravoProjectId }: { contravoProjectId: string }) {
+export function DeliverablesPanel({ contravoProjectId, canAdd = false }: { contravoProjectId: string; canAdd?: boolean }) {
   const [items, setItems] = useState<Deliverable[]>([]);
+  const [title, setTitle] = useState("");
 
   useEffect(() => {
     contravoBrowser.listDeliverables(contravoProjectId).then(setItems).catch(() => setItems([]));
@@ -29,6 +34,26 @@ export function DeliverablesPanel({ contravoProjectId }: { contravoProjectId: st
       <PanelTitle className="mb-4 flex items-center gap-2">
         <FileCheck2 aria-hidden className="size-5" /> Livrables Contravo
       </PanelTitle>
+      {canAdd && (
+        <form
+          className="mb-4 flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const wineId = Number(contravoProjectId.replace("wine-p-", ""));
+            if (!title.trim() || !Number.isFinite(wineId)) return;
+            void addDeliverable(wineId, title.trim()).then((res) => {
+              if (res.error) toast.error(res.error);
+              else {
+                setTitle("");
+                contravoBrowser.listDeliverables(contravoProjectId).then(setItems).catch(() => setItems([]));
+              }
+            });
+          }}
+        >
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Nouveau livrable" aria-label="Nouveau livrable" />
+          <Button type="submit"><Plus aria-hidden className="size-4" /> Ajouter</Button>
+        </form>
+      )}
       {items.length === 0 ? (
         <p className="text-muted-foreground">Aucun livrable soumis.</p>
       ) : (

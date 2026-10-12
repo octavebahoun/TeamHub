@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { api, ApiError } from "@/lib/api/client";
 import type { Client, Project } from "@/lib/api/types";
-import { useContravoMocks } from "@/lib/contravo/client";
+import { useContravoMocks, useLocalBilling } from "@/lib/contravo/client";
 import { createClient, findClientByEmail } from "@/lib/contravo/clients";
 import { createProject, listProjects } from "@/lib/contravo/projects";
 import { billingError, contravoClientPayload, contravoProjectPayload } from "@/lib/contravo/provision";
@@ -50,7 +50,7 @@ async function ensureContravoProject(project: Project, contravoClientId: string)
 }
 
 export async function provisionClient(clientId: number, email?: string): Promise<{ error?: string }> {
-  if (useContravoMocks()) return {};
+  if (useContravoMocks() || (await useLocalBilling())) return {};
   try {
     let client = await api<Client>(`clients/${clientId}`);
     if (!client.email && email?.trim()) {
@@ -68,7 +68,7 @@ export async function provisionClient(clientId: number, email?: string): Promise
 }
 
 export async function prepareProjectBilling(projectId: number, email?: string): Promise<{ error?: string }> {
-  if (useContravoMocks()) return {};
+  if (useContravoMocks() || (await useLocalBilling())) return {};
   try {
     const project = await api<Project>(`projects/${projectId}`);
     if (!project.client_id) return { error: "Choisissez d'abord un client pour ce projet." };

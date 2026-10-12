@@ -17,7 +17,22 @@ class Organization extends Model
         'slug',
         'owner_id',
         'plan',
+        'contravo_api_key',
+        'billing_name',
+        'billing_city',
+        'billing_email',
     ];
+
+    protected $hidden = [
+        'contravo_api_key',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'contravo_api_key' => 'encrypted',
+        ];
+    }
 
     public function owner(): BelongsTo
     {

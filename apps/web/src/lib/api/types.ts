@@ -71,6 +71,7 @@ export type Invitation = {
   token: string;
   expires_at: string;
   created_at: string;
+  accept_url?: string;
 };
 
 export type InvitationPreview = {
@@ -104,6 +105,7 @@ export type Project = {
   contravo_invoice_id?: string | null;
   contravo_contract_id?: string | null;
   contravo_project_id?: string | null;
+  funding?: { invoiced: number; paid: number; state: "none" | "awaiting" | "unlocked" | "invoiced" };
 };
 
 export type Task = {
@@ -239,6 +241,7 @@ export type AnalyticsOverview = {
   late_projects?: { id: number; name: string; overdue: number }[];
   completed_tasks?: number;
   profitability?: AnalyticsProfitability;
+  finance?: { revenue_xof: number; cash_xof: number; margin_xof: number; margin_rate: number; open_quotes_xof?: number };
 };
 
 export type AnalyticsPipeline = {

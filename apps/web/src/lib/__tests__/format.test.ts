@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compactMoney, doneTasksLabel, doneTasksShortLabel, dueLabel, initials, isDueSoon, isOverdue, longToday, money, plural } from "@/lib/format";
+import { compactMoney, dateRange, doneTasksLabel, doneTasksShortLabel, dueLabel, initials, isDueSoon, isOverdue, longToday, money, plural } from "@/lib/format";
 
 const NOW = new Date("2026-10-01T09:00:00");
 
@@ -22,6 +22,7 @@ describe("format", () => {
   });
   it("écrit la date du jour à la française", () => {
     expect(longToday(NOW)).toBe("Jeudi 1er octobre");
+    expect(dateRange("2026-09-29", "2026-10-05", NOW)).toBe("29 sept. → 5 oct.");
   });
   it("calcule initiales et pluriels", () => {
     expect(initials("Octave Bahoun")).toBe("OB");

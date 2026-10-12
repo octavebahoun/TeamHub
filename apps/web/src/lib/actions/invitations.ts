@@ -49,9 +49,9 @@ export async function registerFromInvitation(token: string, _: FormState, form: 
 export async function inviteMember(_: FormState, form: FormData): Promise<FormState> {
   const values = { email: String(form.get("email") ?? ""), role: String(form.get("role") ?? "member") };
   try {
-    await api<Invitation>("invitations", { method: "POST", body: { email: values.email, role: values.role as Role } });
+    const created = await api<Invitation>("invitations", { method: "POST", body: { email: values.email, role: values.role as Role } });
     revalidatePath("/parametres/membres");
-    return { ok: true };
+    return { ok: true, notice: created.accept_url };
   } catch (e) {
     if (e instanceof ApiError && e.status === 422) return { fields: localizeFieldErrors(e.errors), values };
     if (e instanceof ApiError) return { error: e.message, values };

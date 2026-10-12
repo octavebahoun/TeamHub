@@ -6,10 +6,24 @@ import { config } from './config.js';
 import { logger } from './logger.js';
 import { handshakeCredentials, verifyToken } from './auth.js';
 import { registerChatHandlers } from './handlers/chat.js';
+import { searchMessages } from './handlers/search.js';
 import { startRedisSubscriber } from './redisSubscriber.js';
 
 const app = express();
+app.use(express.json());
 app.get('/health', (_req, res) => res.json({ ok: true, service: 'realtime' }));
+app.get('/internal/search', async (req, res) => {
+  const secret = req.get('x-internal-secret') ?? '';
+  if (!config.internalSecret || secret !== config.internalSecret) {
+    return res.status(401).json({ message: 'unauthorized' });
+  }
+  const messages = await searchMessages({
+    organizationId: Number(req.query.organization_id),
+    userId: Number(req.query.user_id),
+    q: String(req.query.q ?? ''),
+  });
+  return res.json({ messages });
+});
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -34,7 +48,8 @@ io.use(async (socket, next) => {
 
     next();
   } catch (err) {
-    logger.warn({ msg: err.message }, 'socket auth failed');
+    const reason = err.response?.data?.message || err.message;
+    logger.warn({ msg: reason }, 'socket auth failed');
     next(new Error('unauthorized'));
   }
 });

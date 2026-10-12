@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, FolderKanban, Receipt, Search, Users } from "lucide-react";
+import { FileText, FolderKanban, MessageSquare, Receipt, Search, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { searchWine as searchApi } from "@/lib/actions/search";
 import type { SearchResults } from "@/lib/data/types";
@@ -13,7 +13,7 @@ type FlatHit = {
   href: string;
   title: string;
   subtitle?: string;
-  type: "project" | "task" | "client" | "quote";
+  type: "project" | "task" | "client" | "quote" | "message";
 };
 
 const ICONS = {
@@ -21,6 +21,7 @@ const ICONS = {
   task: FileText,
   client: Users,
   quote: Receipt,
+  message: MessageSquare,
 } as const;
 
 function flatten(res: SearchResults): FlatHit[] {
@@ -49,9 +50,16 @@ function flatten(res: SearchResults): FlatHit[] {
     ...res.quotes.map((q) => ({
       key: `q-${q.id}`,
       type: "quote" as const,
-      href: `/crm`,
+      href: q.project_id ? `/projets/${q.project_id}#facturation` : "/crm",
       title: `${q.number} — ${q.title}`,
-      subtitle: `${q.amount_xof.toLocaleString("fr-FR")} XOF`,
+      subtitle: `${q.amount_xof.toLocaleString("fr-FR")} FCFA`,
+    })),
+    ...res.messages.map((m) => ({
+      key: `m-${m.id}`,
+      type: "message" as const,
+      href: m.href,
+      title: m.body,
+      subtitle: m.label,
     })),
   ];
 }
@@ -113,8 +121,8 @@ export function CommandPalette() {
   }, [q, open]);
 
   const groups = useMemo(() => {
-    const order = ["project", "task", "client", "quote"] as const;
-    const labels = { project: "Projets", task: "Tâches", client: "Clients", quote: "Devis" } as const;
+    const order = ["project", "task", "client", "quote", "message"] as const;
+    const labels = { project: "Projets", task: "Tâches", client: "Clients", quote: "Devis", message: "Messages" } as const;
     return order
       .map((type) => ({ type, label: labels[type], items: hits.filter((h) => h.type === type) }))
       .filter((g) => g.items.length > 0);

@@ -19,7 +19,9 @@ import { NewOpportunityDialog } from "../_components/new-opportunity-dialog";
 import { CrmEnrichment } from "@/components/contravo/crm-enrichment";
 import { GenerateQuoteDialog } from "@/components/contravo/generate-quote-dialog";
 import { InboxPanel } from "@/components/contravo/inbox-panel";
-import { useContravoMocks } from "@/lib/contravo/client";
+import { ReviewForm } from "./_components/review-form";
+import { useContravoMocks, useLocalBilling } from "@/lib/contravo/client";
+import { wineClientRef, wineProjectRef } from "@/lib/contravo/refs";
 import { resolveContravoClientId, resolveContravoProjectId } from "@/lib/contravo/resolve";
 import { LinkClientBilling } from "@/components/contravo/link-client-billing";
 import { FollowUpBanner } from "./_components/follow-up-banner";
@@ -64,8 +66,17 @@ export default async function ClientPage({ params }: Props) {
     catalog.find((p) => (p.client_id === id || p.client?.id === id) && p.contravo_project_id) ??
     linked.find((p) => p?.contravo_project_id) ??
     null;
-  const contravoClientId = resolveContravoClientId(client.contravo_client_id);
-  const contravoProjectId = resolveContravoProjectId(quoteProject?.contravo_project_id ?? null);
+  const localBilling = await useLocalBilling();
+  const billingProject =
+    quoteProject ??
+    linked.find((p) => p?.id) ??
+    catalog.find((p) => p.client_id === id || p.client?.id === id) ??
+    null;
+  const externalClientId = resolveContravoClientId(client.contravo_client_id);
+  const contravoClientId = externalClientId ?? (localBilling && billingProject ? wineClientRef(id) : null);
+  const contravoProjectId =
+    resolveContravoProjectId(billingProject?.contravo_project_id ?? null) ??
+    (localBilling && billingProject ? wineProjectRef(billingProject.id) : null);
   const quoteOpp = opps.find((o) => !["won", "lost"].includes(o.stage)) ?? opps[0];
 
   return (
@@ -89,6 +100,7 @@ export default async function ClientPage({ params }: Props) {
                   contravoProjectId={contravoProjectId}
                   opportunityId={quoteOpp?.id}
                   defaultTitle={quoteOpp?.title}
+                  localBilling={localBilling}
                 />
               )}
               <NewOpportunityDialog clients={clients.map((c) => ({ id: c.id, name: c.company ?? c.name }))} clientId={id} variant="outline" />
@@ -97,7 +109,7 @@ export default async function ClientPage({ params }: Props) {
         }
       />
       {due && canEdit && <FollowUpBanner opportunity={{ ...due, client_id: id }} contact={client.name} />}
-      {!useContravoMocks() && !client.contravo_client_id && canEdit && <LinkClientBilling clientId={id} hasEmail={Boolean(client.email)} />}
+      {!useContravoMocks() && !localBilling && !client.contravo_client_id && canEdit && <LinkClientBilling clientId={id} hasEmail={Boolean(client.email)} />}
       <div className="grid grid-cols-1 gap-8 xl:grid-cols-[420px_minmax(0,1fr)]">
         <div className="space-y-8">
           <Panel className="p-7">
@@ -145,7 +157,7 @@ export default async function ClientPage({ params }: Props) {
               <p className="text-muted-foreground">Aucune opportunité.</p>
             )}
           </Panel>
-          {contravoClientId && <CrmEnrichment contravoClientId={contravoClientId} />}
+          {externalClientId && <CrmEnrichment contravoClientId={externalClientId} />}
           {linked.some(Boolean) && (
             <Panel className="p-7">
               <PanelTitle className="mb-4">Projets liés</PanelTitle>
@@ -167,7 +179,8 @@ export default async function ClientPage({ params }: Props) {
           )}
         </div>
         <div className="space-y-8">
-          {contravoClientId && <InboxPanel contravoClientId={contravoClientId} />}
+          {contravoClientId && <InboxPanel contravoClientId={contravoClientId} operatorConnected={!localBilling} />}
+          {canEdit && <ReviewForm clientId={id} />}
           <History clientId={id} items={activity} canEdit={canEdit} />
         </div>
       </div>

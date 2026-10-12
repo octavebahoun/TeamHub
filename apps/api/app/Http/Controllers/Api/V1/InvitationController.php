@@ -31,7 +31,8 @@ class InvitationController extends Controller
 
         $invitations = Invitation::where('organization_id', CurrentOrganization::id())
             ->latest()
-            ->get();
+            ->get()
+            ->map(fn (Invitation $invitation) => $this->present($invitation));
 
         return response()->json($invitations);
     }
@@ -75,7 +76,7 @@ class InvitationController extends Controller
 
         $this->sendInvitation($invitation);
 
-        return response()->json($invitation->withoutRelations(), 201);
+        return response()->json($this->present($invitation), 201);
     }
 
     public function destroy(Request $request, int $invitationId): JsonResponse
@@ -95,7 +96,7 @@ class InvitationController extends Controller
         $invitation->update(['expires_at' => now()->addDays(7)]);
         $this->sendInvitation($invitation);
 
-        return response()->json($invitation->withoutRelations());
+        return response()->json($this->present($invitation));
     }
 
     // Public (sans auth) : aperçu affiché sur la page d'invitation.
@@ -196,8 +197,20 @@ class InvitationController extends Controller
     {
         $invitation->loadMissing('organization:id,name', 'invitedBy:id,name');
 
-        Notification::route('mail', $invitation->email)
-            ->notify(new InvitationNotification($invitation));
+        try {
+            Notification::route('mail', $invitation->email)
+                ->notify(new InvitationNotification($invitation));
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
+    /** @return array<string, mixed> */
+    protected function present(Invitation $invitation): array
+    {
+        return $invitation->attributesToArray() + [
+            'accept_url' => rtrim((string) config('app.frontend_url'), '/').'/invitation/'.$invitation->token,
+        ];
     }
 
     protected function guardAdmin(Request $request): void

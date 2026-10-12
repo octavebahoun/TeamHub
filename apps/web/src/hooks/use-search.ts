@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { search as searchApi } from "@/lib/api/search";
 import type { SearchResults } from "@/lib/data/types";
 
-const empty: SearchResults = { query: "", projects: [], tasks: [], clients: [], quotes: [] };
+const empty: SearchResults = { query: "", projects: [], tasks: [], clients: [], quotes: [], messages: [] };
 
 export function useSearch(query: string, { minLength = 2, enabled = true }: { minLength?: number; enabled?: boolean } = {}) {
   const [results, setResults] = useState<SearchResults>(empty);

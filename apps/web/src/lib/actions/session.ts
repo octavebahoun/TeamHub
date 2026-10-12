@@ -7,7 +7,7 @@ import type { Organization, User } from "@/lib/api/types";
 import { ORG_COOKIE, SESSION_COOKIE_OPTIONS, TOKEN_COOKIE } from "@/lib/session";
 import { localizeFieldErrors, localizeMessage } from "@/lib/validation/fr";
 
-export type FormState = { ok?: boolean; error?: string; fields?: Record<string, string>; values?: Record<string, string> } | undefined;
+export type FormState = { ok?: boolean; error?: string; notice?: string; fields?: Record<string, string>; values?: Record<string, string> } | undefined;
 
 async function openSession(token: string, orgId?: number | null) {
   const jar = await cookies();

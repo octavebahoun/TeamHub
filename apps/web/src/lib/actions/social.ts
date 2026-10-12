@@ -9,7 +9,12 @@ export async function createPost(_: FormState, form: FormData): Promise<FormStat
   const body = String(form.get("body") ?? "").trim();
   if (!body) return { fields: { body: "Écrivez quelque chose avant de publier." } };
   try {
-    const post = await api<Post>("posts", { method: "POST", body: { body } });
+    const kind = form.get("kind") === "project_delivered" ? "project_delivered" : null;
+    const project = String(form.get("project") ?? "").trim();
+    const post = await api<Post>("posts", {
+      method: "POST",
+      body: { body, kind, meta: kind && project ? { project } : null },
+    });
     if (form.get("pinned") === "on") await api(`posts/${post.id}/pin`, { method: "POST", body: { pinned: true } });
   } catch (e) {
     if (e instanceof ApiError) return { error: e.status === 403 ? "Les invités ne peuvent pas publier." : e.message };

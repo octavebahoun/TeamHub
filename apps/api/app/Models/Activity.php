@@ -66,11 +66,17 @@ class Activity extends Model
 
         return match ($this->action) {
             'project.created' => 'a créé le projet'.$quoted,
+            'project.quote_created' => 'a créé le devis'.$quoted,
             'project.updated' => 'a mis à jour le projet'.$quoted,
             'project.status_changed' => 'a passé le projet'.$quoted.' en '.$this->statusLabel($this->meta['to'] ?? null, self::PROJECT_STATUS),
             'project.archived' => 'a archivé le projet'.$quoted,
             'project.created_from_opportunity' => 'a créé le projet depuis une opportunité',
             'project.unlocked_by_payment' => 'a débloqué le projet après un paiement',
+            'project.milestone_added' => 'a ajouté le jalon'.$quoted,
+            'project.milestone_done' => 'a terminé le jalon'.$quoted,
+            'project.milestone_reopened' => 'a rouvert le jalon'.$quoted,
+            'project.deliverable_submitted' => 'a soumis le livrable'.$quoted,
+            'project.contract_signed' => 'a enregistré la signature du contrat'.$quoted,
             'project.review_submitted' => 'a enregistré un avis client',
             'task.created' => 'a créé la tâche'.$quoted,
             'task.status_changed' => 'a passé la tâche'.$quoted.' en '.$this->statusLabel($this->meta['to'] ?? null, self::TASK_STATUS),

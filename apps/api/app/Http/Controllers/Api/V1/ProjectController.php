@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Activity;
+use App\Models\BillingInvoice;
 use App\Models\Client;
 use App\Models\Membership;
 use App\Models\Project;
 use App\Models\Task;
+use App\Services\TeamDesk;
 use App\Services\RealtimePublisher;
 use App\Support\OrganizationRole;
 use Illuminate\Http\JsonResponse;
@@ -16,7 +18,7 @@ use Illuminate\Validation\ValidationException;
 
 class ProjectController extends Controller
 {
-    public function __construct(protected RealtimePublisher $realtime) {}
+    public function __construct(protected RealtimePublisher $realtime, protected TeamDesk $desk) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -81,6 +83,20 @@ class ProjectController extends Controller
 
         $payload = $project->toArray();
         $payload['attachments'] = $project->attachments->map(fn ($a) => $a->toSummary())->values();
+        $payload['milestones'] = $this->desk->milestones($project);
+        $invoices = BillingInvoice::query()->where('project_id', $project->id)->get();
+        $paid = (int) $invoices->sum('amount_paid');
+        $due = (int) $invoices->sum(fn (BillingInvoice $invoice) => $invoice->amountDue());
+        $payload['funding'] = [
+            'invoiced' => (int) $invoices->sum('total'),
+            'paid' => $paid,
+            'state' => match (true) {
+                $invoices->isEmpty() => 'none',
+                $project->status === Project::STATUS_ON_HOLD && $due > 0 => 'awaiting',
+                $paid > 0 && $project->status === Project::STATUS_IN_PROGRESS => 'unlocked',
+                default => 'invoiced',
+            },
+        ];
 
         return response()->json($payload);
     }

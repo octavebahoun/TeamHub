@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Client;
+use Illuminate\Support\Facades\Http;
 use App\Models\Membership;
 use App\Models\Organization;
 use App\Models\Project;
@@ -134,4 +135,26 @@ it('finds a project by its description and a task by its description', function 
         ->assertOk()
         ->assertJsonCount(1, 'projects')
         ->assertJsonPath('projects.0.name', 'Sans rapport');
+});
+
+it('adds chat messages to the search results', function () {
+    ['owner' => $owner, 'org' => $org] = searchOrgWithRoles();
+    config(['services.internal.secret' => 'test-secret']);
+    Http::fake([
+        '*/internal/search*' => Http::response([
+            'messages' => [[
+                'id' => 'm1',
+                'body' => 'environnement de test',
+                'channel' => 'chat',
+                'client_name' => 'general',
+                'href' => '/chat?canal=abc',
+            ]],
+        ]),
+    ]);
+
+    $this->actingAs($owner, 'sanctum')->withHeader('X-Organization-Id', $org->id)
+        ->getJson('/api/v1/search?q=environnement')
+        ->assertOk()
+        ->assertJsonPath('messages.0.body', 'environnement de test')
+        ->assertJsonPath('messages.0.href', '/chat?canal=abc');
 });

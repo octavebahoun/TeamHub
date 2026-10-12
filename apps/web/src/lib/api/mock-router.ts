@@ -1,5 +1,5 @@
 import "server-only";
-import { mockAnalyticsOverview, mockAnalyticsPipeline } from "@/lib/data/mocks/analytics";
+import { mockAnalyticsOverview, mockAnalyticsPipeline, mockWeeklySummary } from "@/lib/data/mocks/analytics";
 import { mockClients } from "@/lib/data/mocks/clients";
 import { mockProjects } from "@/lib/data/mocks/projects";
 import {
@@ -267,6 +267,7 @@ export function resolveMock<T>(path: string, options: Options = {}): T {
   // --- Analytics ---
   if (p === "analytics/overview" && method === "GET") return structuredClone(mockAnalyticsOverview) as T;
   if (p === "analytics/pipeline" && method === "GET") return structuredClone(mockAnalyticsPipeline) as T;
+  if (p === "analytics/summary" && method === "GET") return structuredClone(mockWeeklySummary) as T;
 
   // Mutations génériques en mock : succès silencieux
   if (method !== "GET") {

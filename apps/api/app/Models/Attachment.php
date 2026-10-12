@@ -21,11 +21,14 @@ class Attachment extends Model
     public const STATUS_READY = 'ready';
     public const STATUS_REJECTED = 'rejected';
 
+    public const STATUS_INFECTED = 'infected';
+
     public const STATUSES = [
         self::STATUS_PENDING,
         self::STATUS_CLEAN,
         self::STATUS_READY,
         self::STATUS_REJECTED,
+        self::STATUS_INFECTED,
     ];
 
     // Seuls ces statuts autorisent le téléchargement (règle de la roadmap Contravo).

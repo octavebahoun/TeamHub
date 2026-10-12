@@ -19,12 +19,14 @@ export function CreateContractDialog({
   contravoProjectId,
   projectName,
   quotes,
+  onCreated,
 }: {
   wineProjectId: number;
   contravoClientId: string;
   contravoProjectId: string;
   projectName: string;
   quotes: Quote[];
+  onCreated?: () => void;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -47,6 +49,7 @@ export function CreateContractDialog({
       await linkContravoEntity({ type: "contract", id: wineProjectId, contravo_id: contract.id });
       toast.success("Contrat créé.");
       setOpen(false);
+      onCreated?.();
       router.refresh();
     } catch (error) {
       toast.error(billingError(error));

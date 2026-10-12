@@ -1,3 +1,4 @@
+import type { WeeklySummary } from "@/lib/api/types";
 import type { AnalyticsOverview, AnalyticsPipeline, ProfitabilityRow, StatsActivityItem, StatsOverview } from "@/lib/data/types";
 
 export const mockAnalyticsOverview: StatsOverview = {
@@ -95,3 +96,39 @@ export const mockProfitability: ProfitabilityRow[] = [
 
 /** Alias pour réutilisation côté écrans analytics existants. */
 export const mockOverview: AnalyticsOverview = mockAnalyticsOverview;
+
+export const mockWeeklySummary: WeeklySummary = {
+  period: { from: "2026-09-29", to: "2026-10-05" },
+  source: "fallback",
+  kpis: {
+    active_projects: 3,
+    overdue_tasks: 2,
+    completed_tasks_week: 10,
+    new_opportunities: 2,
+    won_count: 1,
+    won_amount: 1_940_000,
+    open_amount: 13_100_000,
+    win_rate: 0.42,
+    messages: 18,
+    active_channels: 4,
+  },
+  workload: mockAnalyticsOverview.workload,
+  profitability: {
+    won_amount: 12_450_000,
+    lost_amount: 900_000,
+    open_amount: 13_100_000,
+    won_count: 5,
+    lost_count: 1,
+    open_count: 9,
+    win_rate: 0.42,
+    won_amount_30d: 1_940_000,
+  },
+  chat: { messages: 18, active_channels: 4, available: true },
+  headline: "2 tâches en retard à traiter",
+  narrative:
+    "Semaine du 29 septembre au 5 octobre : 10 tâches terminées, 2 en retard, 1 opportunité gagnée (1 940 000 FCFA). Pipeline ouvert : 13 100 000 FCFA.",
+  priorities: [
+    "Réassigner ou clôturer les tâches en retard",
+    "Relancer les opportunités ouvertes du pipeline",
+  ],
+};

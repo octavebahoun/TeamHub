@@ -25,6 +25,11 @@ export function PendingInvitations({ invitations }: { invitations: Invitation[] 
               <p className="text-sm text-muted-foreground">
                 {ROLE[i.role].label} · envoyée {ago(i.created_at).toLowerCase()}
               </p>
+              {i.accept_url && (
+                <p className="mt-1 break-all text-sm">
+                  <a className="text-primary underline" href={i.accept_url}>{i.accept_url}</a>
+                </p>
+              )}
             </div>
             <Button variant="outline" disabled={pending} onClick={() => start(async () => (await resendInvitation(i.id), void toast.success(`Invitation renvoyée à ${i.email}`)))}>
               Renvoyer

@@ -40,11 +40,16 @@ class PostController extends Controller
 
         $data = $request->validate([
             'body' => ['required', 'string', 'max:5000'],
+            'kind' => ['nullable', 'in:project_delivered,milestone'],
+            'meta' => ['nullable', 'array'],
+            'meta.project' => ['nullable', 'string', 'max:160'],
         ]);
 
         $post = Post::create([
             'author_id' => $request->user()->id,
             'body' => $data['body'],
+            'kind' => $data['kind'] ?? null,
+            'meta' => $data['meta'] ?? null,
         ]);
 
         $organizationId = CurrentOrganization::id();

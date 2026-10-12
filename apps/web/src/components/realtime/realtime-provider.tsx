@@ -103,9 +103,14 @@ export function RealtimeProvider({ url, organizationId, children }: { url?: stri
         return next;
       })
     );
-    s.on("notification:new", (n: { type: string; payload: Record<string, unknown>; at: string }) =>
-      setNotifications((prev) => [{ ...n, id: `${n.at}-${prev.length}`, read: false }, ...prev].slice(0, 30))
-    );
+    s.on("notification:new", (n: { type: string; payload: Record<string, unknown>; at: string }) => {
+      setNotifications((prev) => [{ ...n, id: `${n.at}-${prev.length}`, read: false }, ...prev].slice(0, 30));
+      const title = typeof n.payload.title === "string" ? n.payload.title : "WINE";
+      const body = typeof n.payload.body === "string" ? n.payload.body : undefined;
+      if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+        new Notification(title, { body, icon: "/icons/icon-192.png" });
+      }
+    });
     return () => {
       s.close();
       setSocket(null);

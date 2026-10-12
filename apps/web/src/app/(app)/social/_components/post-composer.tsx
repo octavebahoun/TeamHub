@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,6 +39,11 @@ export function PostComposer({ me, canPin }: { me: string; canPin: boolean }) {
             <Button type="button" variant="outline" disabled aria-label="Ajouter une image (bientôt disponible)">
               <ImageIcon aria-hidden /> Image
             </Button>
+            <label htmlFor="post-win" className="flex h-10 items-center gap-2.5 rounded-md border px-3 font-normal">
+              <input id="post-win" name="kind" value="project_delivered" type="checkbox" className="size-4 accent-primary" />
+              Réussite
+            </label>
+            <Input id="post-project" name="project" placeholder="Nom du projet" className="h-10 max-w-48" />
             {canPin && (
               <div className="flex h-10 items-center gap-2.5 rounded-md border px-3">
                 <Checkbox id="post-pin" name="pinned" />

@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { api, ApiError } from "@/lib/api/client";
 import type { Client, Opportunity } from "@/lib/api/types";
 import { getClients, getOpportunities } from "@/lib/api/endpoints";
-import { contravoFetch, useContravoMocks } from "@/lib/contravo/client";
+import { contravoFetch, useContravoMocks, useLocalBilling } from "@/lib/contravo/client";
+import * as ledger from "@/lib/contravo/ledger";
 import { ContravoError, type ContravoClient, type Invoice, type Quote } from "@/lib/contravo/types";
 import {
   buildCrmItems,
@@ -14,6 +15,17 @@ import {
   sortFollowUps,
   type FollowUpItem,
 } from "@/lib/follow-ups";
+
+/** Les montants WINE sont déjà en FCFA ; le brouillon de relance divise par 100. */
+function asWholeFrancs(invoices: Invoice[]): Invoice[] {
+  const times100 = (value: string | number | null | undefined) => String(Math.round(Number(value) * 100));
+  return invoices.map((invoice) => ({
+    ...invoice,
+    totalCents: times100(invoice.totalCents),
+    amountDueCents: times100(invoice.amountDueCents),
+    amountPaidCents: times100(invoice.amountPaidCents),
+  }));
+}
 
 async function safe<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
   try {
@@ -58,6 +70,37 @@ async function loadContravoDocs(): Promise<{ invoices: Invoice[]; quotes: Quote[
 }
 
 export async function loadFollowUps(): Promise<FollowUpItem[]> {
+  if (await useLocalBilling()) {
+    const [clients, opps, docs] = await Promise.all([
+      safe(() => getClients(), [] as Client[]),
+      safe(() => getOpportunities(), [] as Opportunity[]),
+      safe(() => ledger.listFollowUps(), { invoices: [], quotes: [] }),
+    ]);
+    const names: Record<string, string> = {};
+    for (const c of clients) names[`wine-c-${c.id}`] = c.company?.trim() || c.name;
+    const invoices = buildInvoiceItems(asWholeFrancs(docs.invoices), names).map((item) => {
+      const source = docs.invoices.find((invoice) => invoice.id === item.invoiceId);
+      const projectId = source?.projectId?.replace(/^wine-p-/, "");
+      return {
+        ...item,
+        href: projectId
+          ? `/projets/${projectId}#facturation`
+          : item.contravoClientId
+            ? `/crm/${item.contravoClientId.replace("wine-c-", "")}`
+            : "/analytics",
+        channel: "Facture WINE",
+        sendLabel: "Enregistrer la relance",
+      };
+    });
+    const quotes = buildQuoteItems(docs.quotes, names).map((item) => ({
+      ...item,
+      href: item.contravoClientId ? `/crm/${item.contravoClientId.replace("wine-c-", "")}` : "/crm",
+      canSend: true,
+      channel: "Devis WINE",
+      sendLabel: "Enregistrer la relance",
+    }));
+    return sortFollowUps([...invoices, ...quotes, ...buildCrmItems(opps, clients)]).slice(0, 20);
+  }
   const [clients, opps, docs] = await Promise.all([
     safe(() => getClients(), [] as Client[]),
     safe(() => getOpportunities(), [] as Opportunity[]),
@@ -84,6 +127,16 @@ export async function sendFollowUp(
   if (!text) return { error: "Le message est vide." };
 
   try {
+    if ((await useLocalBilling()) && (item.kind === "invoice" || item.kind === "quote") && item.contravoClientId) {
+      if (item.kind === "invoice" && item.invoiceId) await ledger.sendInvoiceReminder(item.invoiceId);
+      const threads = await ledger.listConversations(item.contravoClientId);
+      const thread = threads[0] ?? (await ledger.openConversation(item.contravoClientId, "whatsapp"));
+      await ledger.sendConversationMessage(thread.id, text);
+      revalidatePath("/analytics");
+      revalidatePath("/crm");
+      return { ok: true };
+    }
+
     if (item.kind === "invoice" && item.invoiceId) {
       if (useContravoMocks()) return { error: "L'envoi de relance n'est pas disponible en mode démonstration." };
       await contravoFetch(`/invoices/${encodeURIComponent(item.invoiceId)}/reminders`, { method: "POST", body: {} });
@@ -104,9 +157,16 @@ export async function sendFollowUp(
     }
 
     if (item.kind === "crm" && item.opportunityId && item.wineClientId) {
-      const conv = await conversationIdFor(item.contravoClientId);
-      if (conv) {
-        await contravoFetch(`/conversations/${encodeURIComponent(conv)}/messages`, { method: "POST", body: { text } });
+      if (await useLocalBilling()) {
+        const ref = `wine-c-${item.wineClientId}`;
+        const threads = await ledger.listConversations(ref);
+        const thread = threads[0] ?? (await ledger.openConversation(ref, "whatsapp"));
+        await ledger.sendConversationMessage(thread.id, text);
+      } else {
+        const conv = await conversationIdFor(item.contravoClientId);
+        if (conv) {
+          await contravoFetch(`/conversations/${encodeURIComponent(conv)}/messages`, { method: "POST", body: { text } });
+        }
       }
       await api(`clients/${item.wineClientId}/activities`, { method: "POST", body: { kind: "email", body: text } });
       await api(`opportunities/${item.opportunityId}`, { method: "PATCH", body: { next_follow_up: null } });

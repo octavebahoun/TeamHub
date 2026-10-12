@@ -12,7 +12,7 @@ import type { ConversationSummary, ConversationThread } from "@/lib/contravo/typ
 import { ago } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-export function InboxPanel({ contravoClientId }: { contravoClientId?: string }) {
+export function InboxPanel({ contravoClientId, operatorConnected = false }: { contravoClientId?: string; operatorConnected?: boolean }) {
   const [threads, setThreads] = useState<ConversationSummary[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [thread, setThread] = useState<ConversationThread | null>(null);
@@ -54,6 +54,32 @@ export function InboxPanel({ contravoClientId }: { contravoClientId?: string }) 
         <PanelTitle className="flex items-center gap-2">
           <MessageCircle aria-hidden className="size-5" /> Inbox WhatsApp / Telegram
         </PanelTitle>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {operatorConnected
+            ? "Les messages partent via la clé Contravo de cet espace."
+            : "Ces échanges restent dans WINE. Pour les envoyer sur WhatsApp ou Telegram, enregistrez la clé Contravo de cet espace dans Paramètres, Intégrations."}
+        </p>
+        {operatorConnected && contravoClientId && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {(["whatsapp", "telegram"] as const).map((channel) => (
+              <Button
+                key={channel}
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  void contravoBrowser.openConversation(contravoClientId, channel).then((opened) => {
+                    setThreads((rows) => (rows.some((row) => row.id === opened.id) ? rows : [opened, ...rows]));
+                    setActiveId(opened.id);
+                    setThread(opened);
+                  }).catch((e) => toast.error(e instanceof Error ? e.message : "Conversation impossible."));
+                }}
+              >
+                {channel === "whatsapp" ? "Ouvrir WhatsApp" : "Ouvrir Telegram"}
+              </Button>
+            ))}
+          </div>
+        )}
       </div>
       <div className="grid min-h-[320px] grid-cols-1 md:grid-cols-[220px_minmax(0,1fr)]">
         <ul className="border-b md:border-r md:border-b-0">

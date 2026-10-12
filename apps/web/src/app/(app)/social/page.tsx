@@ -8,6 +8,7 @@ import { can, currentRole } from "@/lib/permissions";
 import { EmptyState } from "@/components/common/empty-state";
 import { Panel, PanelTitle } from "@/components/common/panel";
 import { UserAvatar } from "@/components/common/user-avatar";
+import { ReviewsWidget } from "@/components/contravo/reviews-widget";
 import { PostCard } from "./_components/post-card";
 import { PostComposer } from "./_components/post-composer";
 
@@ -49,6 +50,7 @@ export default async function SocialPage() {
         )}
       </div>
       <aside className="space-y-6" aria-label="En bref">
+        <ReviewsWidget />
         {wins.length > 0 && (
           <Panel className="p-6">
             <PanelTitle className="mb-4">Réussites du mois</PanelTitle>

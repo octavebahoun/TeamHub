@@ -1,6 +1,6 @@
 /* Service worker WINE — shell en cache, assets cache-first, données network-first. */
 
-const CACHE_VERSION = "wine-v1";
+const CACHE_VERSION = "wine-v2";
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const ASSET_CACHE = `${CACHE_VERSION}-assets`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
@@ -90,6 +90,28 @@ self.addEventListener("fetch", (event) => {
         })
     );
   }
+});
+
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { body: event.data ? event.data.text() : "" };
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || "WINE", {
+      body: data.body || "",
+      icon: "/icons/icon-192.png",
+      data: { url: data.url || "/" },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || "/";
+  event.waitUntil(self.clients.openWindow(url));
 });
 
 self.addEventListener("message", (event) => {

@@ -16,7 +16,7 @@ import { assignableRoles } from "@/lib/permissions";
 
 export function InviteDialog({ viewerRole }: { viewerRole: Role }) {
   const [open, setOpen] = useState(false);
-  const [state, action, pending] = useFormAction(inviteMember, { successMessage: "Invitation envoyée par e-mail", onSuccess: () => setOpen(false), showErrors: false });
+  const [state, action, pending] = useFormAction(inviteMember, { successMessage: "Invitation créée", showErrors: false });
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -27,7 +27,7 @@ export function InviteDialog({ viewerRole }: { viewerRole: Role }) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-heading text-2xl font-normal">Inviter un membre</DialogTitle>
-          <DialogDescription>Un e-mail avec le lien part tout de suite. L&apos;invitation est valable 7 jours.</DialogDescription>
+          <DialogDescription>Un e-mail part si le serveur mail est configuré. Le lien ci-dessous marche tout de suite, 7 jours.</DialogDescription>
         </DialogHeader>
         <form action={action} className="space-y-4" noValidate>
           {state?.error && <p role="alert" className="rounded-md bg-brand-soft px-3 py-2 text-sm text-brand-soft-foreground">{state.error}</p>}
@@ -43,6 +43,11 @@ export function InviteDialog({ viewerRole }: { viewerRole: Role }) {
             </NativeSelect>
             <p id="inv-role-help" className="text-sm text-muted-foreground">Vous pourrez changer le rôle plus tard.</p>
           </div>
+          {state?.notice && (
+            <p className="break-all rounded-md bg-muted px-3 py-2 text-sm">
+              Lien : <a className="text-primary underline" href={state.notice}>{state.notice}</a>
+            </p>
+          )}
           <DialogFooter>
             <Button type="submit" disabled={pending}>{pending ? "Envoi…" : "Envoyer l'invitation"}</Button>
           </DialogFooter>

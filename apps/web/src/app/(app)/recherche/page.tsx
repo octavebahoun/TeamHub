@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { searchWine } from "@/lib/actions/search";
-import { plural } from "@/lib/format";
+import { money, plural } from "@/lib/format";
 import { PROJECT_STATUS, TASK_STATUS } from "@/lib/labels";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
@@ -22,7 +22,9 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const foundProjects = results.projects;
   const foundTasks = results.tasks;
   const clients = results.clients;
-  const total = foundProjects.length + foundTasks.length + clients.length;
+  const quotes = results.quotes;
+  const messages = results.messages;
+  const total = foundProjects.length + foundTasks.length + clients.length + quotes.length + messages.length;
 
   const group = (id: string, title: string, items: { key: string | number; href: string; label: string; meta: string }[]) =>
     items.length > 0 && (
@@ -51,6 +53,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
           {group("r-projets", "Projets", foundProjects.map((p) => ({ key: p.id, href: `/projets/${p.id}`, label: p.name, meta: PROJECT_STATUS[p.status].label })))}
           {group("r-taches", "Tâches", foundTasks.map((t) => ({ key: t.id, href: `/taches/${t.id}`, label: t.title, meta: `${t.project_name} · ${TASK_STATUS[t.status].label}` })))}
           {group("r-clients", "Clients", clients.map((c) => ({ key: c.id, href: `/crm/${c.id}`, label: c.company ?? c.name, meta: c.city ?? c.name })))}
+          {group("r-devis", "Devis", quotes.map((q) => ({ key: q.id, href: q.project_id ? `/projets/${q.project_id}#facturation` : "/crm", label: q.number, meta: money(q.amount_xof) })))}
+          {group("r-messages", "Messages", messages.map((m) => ({ key: m.id, href: m.href, label: m.body, meta: m.label })))}
         </>
       )}
     </div>

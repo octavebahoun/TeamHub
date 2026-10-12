@@ -172,7 +172,8 @@ export type Notification = {
 export type SearchHitProject = { id: number; name: string; status: ProjectStatus; client_name: string | null };
 export type SearchHitTask = { id: number; title: string; status: TaskStatus; project_id: number; project_name: string };
 export type SearchHitClient = { id: number; name: string; company: string | null; city: string | null };
-export type SearchHitQuote = { id: string; number: string; title: string; amount_xof: number };
+export type SearchHitQuote = { id: string; number: string; title: string; amount_xof: number; project_id?: number };
+export type SearchHitMessage = { id: string; body: string; href: string; label: string };
 
 export type SearchResults = {
   query: string;
@@ -180,6 +181,7 @@ export type SearchResults = {
   tasks: SearchHitTask[];
   clients: SearchHitClient[];
   quotes: SearchHitQuote[];
+  messages: SearchHitMessage[];
 };
 
 export type AiSummaryScope = "project" | "client" | "pipeline";

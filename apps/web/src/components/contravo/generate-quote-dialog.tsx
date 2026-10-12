@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { addDays, format } from "date-fns";
 import { FileDown, Plus, Trash2 } from "lucide-react";
@@ -36,12 +36,16 @@ export function GenerateQuoteDialog({
   opportunityId,
   defaultTitle,
   triggerLabel = "Générer devis express",
+  localBilling = false,
+  onCreated,
 }: {
   contravoClientId: string;
   contravoProjectId: string;
   opportunityId?: number;
   defaultTitle?: string;
   triggerLabel?: string;
+  localBilling?: boolean;
+  onCreated?: () => void;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -53,6 +57,7 @@ export function GenerateQuoteDialog({
   const [validUntil, setValidUntil] = useState(format(addDays(new Date(), 30), "yyyy-MM-dd"));
   const [pending, setPending] = useState(false);
   const [createdId, setCreatedId] = useState<string | null>(null);
+  const openingPdf = useRef(false);
 
   const taxRateBps = Math.round(parseAmount(taxRate) * 100);
   const totals = useMemo(() => previewTotals(lines, parseAmount(discount), taxRateBps), [lines, discount, taxRateBps]);
@@ -84,9 +89,10 @@ export function GenerateQuoteDialog({
         await linkContravoEntity({ type: "quote", id: opportunityId, contravo_id: final.id }).catch(() => undefined);
       }
       setCreatedId(final.id);
-      toast.success(send ? "Devis créé et envoyé." : "Devis brouillon enregistré.");
+      toast.success(send ? (localBilling ? "Devis envoyé. La facture est prête pour le Mobile Money." : "Devis créé et envoyé.") : "Devis brouillon enregistré.");
+      onCreated?.();
       router.refresh();
-      if (send) window.open(contravoBrowser.quotePdfHref(final.id), "_blank", "noopener,noreferrer");
+      if (!send) setOpen(false);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Échec de la création du devis.");
     } finally {
@@ -102,7 +108,11 @@ export function GenerateQuoteDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="font-heading text-2xl font-normal">Générer devis express</DialogTitle>
-          <DialogDescription>Lignes en FCFA (XOF), TVA en %, remise globale. Envoi Contravo draft → sent.</DialogDescription>
+          <DialogDescription>
+            {localBilling
+              ? "Lignes en FCFA. Envoyer le devis crée la facture à encaisser en Mobile Money, sur ce projet."
+              : "Lignes en FCFA (XOF), TVA en %, remise globale."}
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
@@ -142,6 +152,9 @@ export function GenerateQuoteDialog({
           <div className="rounded-lg bg-muted/50 p-4 text-sm">
             <dl className="grid gap-1 sm:grid-cols-2">
               <div className="flex justify-between sm:block"><dt className="text-muted-foreground">Sous-total</dt><dd className="font-medium">{money(totals.subtotal)}</dd></div>
+              {parseAmount(discount) > 0 && (
+                <div className="flex justify-between sm:block"><dt className="text-muted-foreground">Remise</dt><dd className="font-medium">−{money(parseAmount(discount))}</dd></div>
+              )}
               <div className="flex justify-between sm:block"><dt className="text-muted-foreground">TVA ({taxRate} %)</dt><dd className="font-medium">{money(totals.tax)}</dd></div>
               <div className="flex justify-between sm:col-span-2 sm:block"><dt className="text-muted-foreground">Total TTC</dt><dd className="font-heading text-xl">{money(totals.total)}</dd></div>
             </dl>
@@ -149,10 +162,19 @@ export function GenerateQuoteDialog({
         </div>
         <DialogFooter className="flex-col gap-2 sm:flex-row">
           {createdId && (
-            <Button type="button" variant="outline" asChild>
-              <a href={contravoBrowser.quotePdfHref(createdId)} target="_blank" rel="noopener noreferrer">
-                <FileDown aria-hidden /> PDF
-              </a>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                if (openingPdf.current) return;
+                openingPdf.current = true;
+                window.open(contravoBrowser.quotePdfHref(createdId), "_blank", "noopener,noreferrer");
+                window.setTimeout(() => {
+                  openingPdf.current = false;
+                }, 1500);
+              }}
+            >
+              <FileDown aria-hidden /> PDF
             </Button>
           )}
           <Button type="button" variant="outline" disabled={pending} onClick={() => handleCreate(false)}>

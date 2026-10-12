@@ -1,3 +1,5 @@
+import re
+
 from app import summary
 from tests.conftest import seed_org
 
@@ -15,6 +17,8 @@ def test_weekly_summary_fallback_without_gemini(session, monkeypatch):
     assert result["kpis"]["messages"] == 4
     assert result["headline"]
     assert result["narrative"]
+    assert "FCFA" in result["narrative"]
+    assert not re.search(r"\d{4}-\d{2}-\d{2}", result["narrative"])
     assert result["priorities"]
 
 

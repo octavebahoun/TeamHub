@@ -1,9 +1,11 @@
-import { contravoFetch, contravoFetchRedirectUrl, useContravoMocks } from "./client";
+import { contravoFetch, contravoFetchRedirectUrl, useContravoMocks, useLocalBilling } from "./client";
+import * as ledger from "./ledger";
 import { mocks } from "./mocks";
 import { ContravoError, type Invoice, type InvoiceTransition, type ListQuery, type Payment, type RecordPayment } from "./types";
 
 export async function listInvoices(query: ListQuery = {}): Promise<Invoice[]> {
   if (useContravoMocks()) return mocks.listInvoices(query);
+  if (await useLocalBilling()) return ledger.listInvoices(query);
   const res = await contravoFetch<{ invoices: Invoice[] }>("/invoices", { query });
   return res.invoices;
 }
@@ -32,6 +34,7 @@ export async function transitionInvoice(id: string, body: InvoiceTransition): Pr
 
 export async function sendInvoiceReminder(id: string): Promise<{ ok: boolean }> {
   if (useContravoMocks()) return mocks.remindInvoice(id);
+  if (await useLocalBilling()) return ledger.sendInvoiceReminder(id);
   await contravoFetch(`/invoices/${encodeURIComponent(id)}/reminders`, { method: "POST", body: {} });
   return { ok: true };
 }
@@ -44,6 +47,7 @@ export async function recordInvoicePayment(id: string, body: RecordPayment): Pro
       throw new ContravoError(404, "Facture introuvable.");
     }
   }
+  if (await useLocalBilling()) return ledger.recordInvoicePayment(id, body);
   const res = await contravoFetch<{ payment: Payment }>(`/invoices/${encodeURIComponent(id)}/payments`, { method: "POST", body });
   return res.payment;
 }

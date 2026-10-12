@@ -7,7 +7,6 @@ use App\Notifications\TaskDueReminderNotification;
 use App\Services\InboxNotifier;
 use App\Support\CurrentOrganization;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -19,7 +18,7 @@ use Illuminate\Queue\SerializesModels;
  * par notification dans la cloche. Sans assigné : alerte le responsable du
  * projet (règle du cahier des charges), jamais les deux à la fois.
  */
-class SendTaskDueReminders implements ShouldQueue
+class SendTaskDueReminders
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 

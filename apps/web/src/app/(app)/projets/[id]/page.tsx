@@ -21,6 +21,8 @@ import { TeamPanel } from "./_components/team-panel";
 import { BillingTab } from "@/components/contravo/billing-tab";
 import { DeliverablesPanel } from "@/components/contravo/deliverables-panel";
 import { ProjectFundingStatus } from "@/components/contravo/project-funding-status";
+import { useLocalBilling } from "@/lib/contravo/client";
+import { wineClientRef, wineProjectRef } from "@/lib/contravo/refs";
 import { resolveContravoClientId, resolveContravoProjectId } from "@/lib/contravo/resolve";
 
 type Props = { params: Promise<{ id: string }> };
@@ -56,8 +58,13 @@ export default async function ProjectPage({ params }: Props) {
   const clients = can(role, "crm.view") ? await getClients().catch(() => []) : [];
   const crm = project.client_id ? await getClient(project.client_id).catch(() => null) : null;
   const quoteOpp = crm?.opportunities?.find((o) => o.stage !== "won" && o.stage !== "lost");
-  const contravoProjectId = resolveContravoProjectId(project.contravo_project_id);
-  const contravoClientId = resolveContravoClientId(project.client?.contravo_client_id ?? crm?.contravo_client_id);
+  const localBilling = await useLocalBilling();
+  const wineClientId = project.client_id ?? project.client?.id ?? null;
+  const externalProjectId = resolveContravoProjectId(project.contravo_project_id);
+  const contravoProjectId = externalProjectId ?? (localBilling && wineClientId ? wineProjectRef(id) : null);
+  const contravoClientId =
+    resolveContravoClientId(project.client?.contravo_client_id ?? crm?.contravo_client_id) ??
+    (localBilling && wineClientId ? wineClientRef(wineClientId) : null);
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-7xl">
@@ -96,7 +103,7 @@ export default async function ProjectPage({ params }: Props) {
             <PanelTitle className="mb-4">Description</PanelTitle>
             <p className="leading-relaxed">{project.description || <span className="text-muted-foreground">Pas encore de description.</span>}</p>
           </Panel>
-          {project.milestones && project.milestones.length > 0 && <Milestones items={project.milestones} />}
+          <Milestones projectId={id} items={project.milestones ?? []} />
           {activity.length > 0 && <RecentActivity items={activity} />}
           <section id="facturation" className="scroll-mt-24 space-y-8">
             <BillingTab
@@ -107,12 +114,13 @@ export default async function ProjectPage({ params }: Props) {
               contravoClientId={contravoClientId ?? undefined}
               projectName={project.name}
               opportunityId={quoteOpp?.id}
+              localBilling={localBilling}
             />
           </section>
         </div>
         <div className="min-w-0 space-y-8">
-          <ProjectFundingStatus hasInvoice={Boolean(project.contravo_invoice_id)} />
-          {contravoProjectId && <DeliverablesPanel contravoProjectId={contravoProjectId} />}
+          <ProjectFundingStatus hasInvoice={Boolean(project.contravo_invoice_id)} state={project.funding?.state} />
+          {(externalProjectId || contravoProjectId) && <DeliverablesPanel contravoProjectId={(externalProjectId ?? contravoProjectId)!} canAdd={!externalProjectId} />}
           <ProgressPanel progress={progress} counts={countByStatus(tasks)} />
           <TeamPanel
             projectId={id}

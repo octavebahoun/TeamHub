@@ -36,10 +36,15 @@ export function FinancialHealth() {
         </p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          <StatCard label="Projets actifs" value={String(stats?.activeProjects ?? "—")} hint="Analytics" active />
-          <StatCard label="Tâches en retard" value={String(stats?.overdueTasks ?? "—")} />
+          <StatCard label="Chiffre d'affaires" value={stats ? compactMoney(stats.revenueXof) : "—"} hint="Factures émises, FCFA" active />
+          <StatCard label="Cash" value={stats ? compactMoney(stats.cashXof) : "—"} hint="Encaissé, FCFA" />
+          <StatCard
+            label="Marge"
+            value={stats ? `${Math.round(stats.marginRate * 100)} %` : "—"}
+            hint="Part du CA déjà encaissée"
+          />
           <StatCard label="Pipeline ouvert" value={stats ? compactMoney(stats.openPipelineXof) : "—"} hint="FCFA, hors gagné et perdu" />
-          <StatCard label="Gagné" value={stats ? compactMoney(stats.wonXof) : "—"} hint="FCFA" />
+          <StatCard label="Devis en cours" value={stats ? compactMoney(stats.openQuotesXof) : "—"} hint="Brouillons et devis envoyés, FCFA" />
         </div>
       )}
     </Panel>

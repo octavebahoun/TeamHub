@@ -16,6 +16,12 @@ export function shortDate(value: string | null | undefined, now = new Date()): s
   return format(d, d.getFullYear() === now.getFullYear() ? "d MMM" : "d MMM yyyy", { locale: fr });
 }
 
+/** « 29 sept. → 5 oct. » */
+export function dateRange(from: string | null | undefined, to: string | null | undefined, now = new Date()): string {
+  if (!from || !to) return "";
+  return `${shortDate(from, now)} → ${shortDate(to, now)}`;
+}
+
 /** Échéance relative : Hier / Aujourd'hui / Demain / « Lun. 5 oct. » / date courte. */
 export function dueLabel(value: string | null | undefined, now = new Date()): string {
   const d = toDate(value);

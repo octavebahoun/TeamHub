@@ -16,6 +16,8 @@ class Post extends Model
         'organization_id',
         'author_id',
         'body',
+        'kind',
+        'meta',
         'pinned',
         'pinned_at',
     ];
@@ -25,6 +27,7 @@ class Post extends Model
         return [
             'pinned' => 'boolean',
             'pinned_at' => 'datetime',
+            'meta' => 'array',
         ];
     }
 

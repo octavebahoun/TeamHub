@@ -49,4 +49,8 @@ return [
         'internal_secret' => env('INTERNAL_SECRET'),
     ],
 
+    'realtime' => [
+        'base_url' => env('REALTIME_URL', 'http://127.0.0.1:4000'),
+    ],
+
 ];

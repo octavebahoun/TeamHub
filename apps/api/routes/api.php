@@ -3,10 +3,13 @@
 use App\Http\Controllers\Api\V1\AnalyticsController;
 use App\Http\Controllers\Api\V1\AttachmentController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BillingController;
 use App\Http\Controllers\Api\V1\ClientActivityController;
+use App\Http\Controllers\Api\V1\DeskController;
 use App\Http\Controllers\Api\V1\ClientController;
 use App\Http\Controllers\Api\V1\ContravoLinkController;
 use App\Http\Controllers\Api\V1\ContravoWebhookController;
+use App\Http\Controllers\Api\V1\IntegrationController;
 use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MemberController;
@@ -47,6 +50,7 @@ Route::prefix('v1')->group(function () {
 
     // Invitations publiques (lien reçu par e-mail) : aperçu et création de compte.
     Route::get('invitations/{token}', [InvitationController::class, 'show'])->middleware('throttle:30,1');
+    Route::get('signatures/{token}', [DeskController::class, 'verifySignature'])->middleware('throttle:30,1');
     Route::post('invitations/{token}/register', [InvitationController::class, 'register'])->middleware('throttle:10,1');
 
     Route::middleware('auth:sanctum')->group(function () {
@@ -81,6 +85,10 @@ Route::prefix('v1')->group(function () {
             Route::get('projects/{project}/tasks', [TaskController::class, 'index']);
             Route::post('projects/{project}/tasks', [TaskController::class, 'store']);
             Route::post('projects/{project}/attachments', [AttachmentController::class, 'storeForProject']);
+            Route::post('projects/{project}/milestones', [DeskController::class, 'storeMilestone']);
+            Route::patch('projects/{project}/milestones/{milestone}', [DeskController::class, 'updateMilestone']);
+            Route::get('projects/{project}/deliverables', [DeskController::class, 'deliverables']);
+            Route::post('projects/{project}/deliverables', [DeskController::class, 'storeDeliverable']);
             Route::get('tasks/{task}', [TaskController::class, 'show']);
             Route::patch('tasks/{task}', [TaskController::class, 'update']);
             Route::delete('tasks/{task}', [TaskController::class, 'destroy']);
@@ -94,6 +102,12 @@ Route::prefix('v1')->group(function () {
             Route::delete('attachments/{attachment}', [AttachmentController::class, 'destroy']);
 
             Route::apiResource('clients', ClientController::class);
+            Route::get('conversations', [DeskController::class, 'conversations']);
+            Route::post('conversations', [DeskController::class, 'storeConversation']);
+            Route::get('conversations/{conversation}', [DeskController::class, 'showConversation']);
+            Route::post('conversations/{conversation}/messages', [DeskController::class, 'reply']);
+            Route::get('reviews', [DeskController::class, 'reviews']);
+            Route::post('clients/{client}/reviews', [DeskController::class, 'storeReview']);
             Route::get('clients/{client}/activities', [ClientActivityController::class, 'index']);
             Route::post('clients/{client}/activities', [ClientActivityController::class, 'store']);
             Route::apiResource('opportunities', OpportunityController::class);
@@ -109,6 +123,23 @@ Route::prefix('v1')->group(function () {
             // Appelé par le frontend juste après avoir créé un objet chez Contravo,
             // pour que le webhook retour (quote.accepted, etc.) puisse le retrouver.
             Route::post('contravo/links', [ContravoLinkController::class, 'store']);
+
+            Route::get('integrations/contravo', [IntegrationController::class, 'show']);
+            Route::get('integrations/contravo/credential', [IntegrationController::class, 'credential']);
+            Route::put('integrations/contravo', [IntegrationController::class, 'update']);
+
+            Route::get('billing/quotes', [BillingController::class, 'quotes']);
+            Route::post('billing/quotes', [BillingController::class, 'storeQuote']);
+            Route::get('billing/quotes/{quote}', [BillingController::class, 'showQuote']);
+            Route::post('billing/quotes/{quote}/transition', [BillingController::class, 'transitionQuote']);
+            Route::get('billing/invoices', [BillingController::class, 'invoices']);
+            Route::post('billing/invoices/{invoice}/payments', [BillingController::class, 'payInvoice']);
+            Route::post('billing/invoices/{invoice}/reminders', [BillingController::class, 'remindInvoice']);
+            Route::get('billing/contracts', [BillingController::class, 'contracts']);
+            Route::get('billing/contracts/{contract}', [BillingController::class, 'showContract']);
+            Route::post('billing/contracts', [BillingController::class, 'storeContract']);
+            Route::post('billing/contracts/{contract}/sign', [DeskController::class, 'signContract']);
+            Route::get('billing/follow-ups', [BillingController::class, 'followUps']);
 
             Route::get('analytics/overview', [AnalyticsController::class, 'overview']);
             Route::get('analytics/pipeline', [AnalyticsController::class, 'pipeline']);

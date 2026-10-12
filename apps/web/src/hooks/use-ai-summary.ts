@@ -1,35 +1,30 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { loadPipelineSummary } from "@/lib/actions/analytics-board";
-import type { AiSummary, AiSummaryScope } from "@/lib/data/types";
+import { loadWeeklyBrief } from "@/lib/actions/analytics-board";
+import type { WeeklyBrief } from "@/lib/api/wine-contract";
 
-export function useAiSummary(scope: AiSummaryScope, scopeId: string | number | null, { enabled = true }: { enabled?: boolean } = {}) {
-  const [summary, setSummary] = useState<AiSummary | null>(null);
+export function useWeeklyBrief() {
+  const [brief, setBrief] = useState<WeeklyBrief | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    if (scopeId == null) {
-      setSummary(null);
-      return;
-    }
     setLoading(true);
     setError(null);
     try {
-      setSummary(await loadPipelineSummary());
+      setBrief(await loadWeeklyBrief());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Résumé indisponible.");
-      setSummary(null);
+      setBrief(null);
     } finally {
       setLoading(false);
     }
-  }, [scope, scopeId]);
+  }, []);
 
   useEffect(() => {
-    if (!enabled || scopeId == null) return;
     void refresh();
-  }, [enabled, scopeId, refresh]);
+  }, [refresh]);
 
-  return { summary, loading, error, refresh };
+  return { brief, loading, error, refresh };
 }

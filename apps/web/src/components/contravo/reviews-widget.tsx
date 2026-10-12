@@ -11,14 +11,14 @@ export function ReviewsWidget({ limit = 3 }: { limit?: number }) {
   const [reviews, setReviews] = useState<Review[]>([]);
 
   useEffect(() => {
-    contravoBrowser.listReviews().then((rows) => setReviews(rows.slice(0, limit))).catch(() => setReviews([]));
+    contravoBrowser.listReviews().then((rows) => setReviews(rows.filter((r) => r.rating === 5).slice(0, limit))).catch(() => setReviews([]));
   }, [limit]);
 
   if (reviews.length === 0) return null;
 
   return (
     <Panel className="p-7">
-      <PanelTitle className="mb-4">Avis clients Contravo</PanelTitle>
+      <PanelTitle className="mb-4">Avis clients 5/5</PanelTitle>
       <ul className="space-y-4">
         {reviews.map((r) => (
           <li key={r.id} className="rounded-lg border p-4">

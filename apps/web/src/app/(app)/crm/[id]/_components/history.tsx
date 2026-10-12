@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Mail, Phone, Trophy, Users } from "lucide-react";
+import { FileText, Mail, Phone, Smartphone, Trophy, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +17,7 @@ const KINDS = { note: { label: "Note", icon: FileText }, call: { label: "Appel",
 
 function describe(a: Activity) {
   if (a.kind && a.kind in KINDS) return KINDS[a.kind as keyof typeof KINDS];
+  if (a.action === "client.payment") return { label: "Paiement Mobile Money", icon: Smartphone };
   if (a.action === "opportunity.stage_changed" && (a.meta as { to?: string })?.to === "won") return { label: "Opportunité gagnée", icon: Trophy };
   if (a.action.startsWith("opportunity")) return { label: "Opportunité", icon: Trophy };
   return { label: "Mise à jour", icon: FileText };

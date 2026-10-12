@@ -14,7 +14,7 @@ const includes = (haystack: string | null | undefined, needle: string) =>
 export function mockSearch(q: string): SearchResults {
   const needle = q.trim().toLowerCase();
   if (!needle) {
-    return { query: q, projects: [], tasks: [], clients: [], quotes: [] };
+    return { query: q, projects: [], tasks: [], clients: [], quotes: [], messages: [] };
   }
   const projectById = new Map(mockProjects.map((p) => [p.id, p]));
   return {
@@ -50,6 +50,7 @@ export function mockSearch(q: string): SearchResults {
     quotes: mockQuotes
       .filter((qu) => includes(qu.number, needle) || includes(qu.title, needle))
       .map((qu) => ({ id: qu.id, number: qu.number, title: qu.title, amount_xof: qu.amount_xof })),
+    messages: [],
   };
 }
 
